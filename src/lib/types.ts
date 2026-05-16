@@ -36,7 +36,12 @@ export type Round1Result = 'Passed' | 'Failed' | 'Waiting list'
 
 export interface DashboardStats {
   totalApplicants: number
+  batch1Count: number
+  batch2Count: number
+  batch3Count: number
   passedRound1: number
+  failedRound1: number
+  waitingListRound1: number
   passRate: number
   avgGpa: number
 }
