@@ -1,4 +1,5 @@
 # Steep — Style Reference
+
 > Warm, Crisp Canvas
 
 **Theme:** light
@@ -7,22 +8,23 @@ Steep captures a 'white canvas with depth' aesthetic: crisp backgrounds, careful
 
 ## Tokens — Colors
 
-| Name | Value | Token | Role |
-|------|-------|-------|------|
-| Canvas | `#ffffff` | `--color-canvas` | Primary page and surface background, text color for dark elements. Used for the main content area, cards, and prominent UI elements |
-| Ink | `#17191c` | `--color-ink` | Primary text color, background for filled buttons, navigation elements. A dominant dark neutral that provides strong contrast |
-| Graphite | `#000000` | `--color-graphite` | Fallback dark text, outline for ghost buttons, decorative borders |
-| Warm Mist | `#fbe1d1` | `--color-warm-mist` | Subtle background for specific cards and sections, providing a soft, almost imperceptible warmth to the interface |
-| Terracotta | `#5d2a1a` | `--color-terracotta` | Accent for borders, strokes, and decorative elements within cards. A warm brown-orange that serves as a secondary brand accent |
-| Fog | `#f7f7f8` | `--color-fog` | Secondary surface background, used for subtle differentiation of cards or sections that are slightly less prominent than the primary canvas |
-| Muted Stone | `#4c4c4c` | `--color-muted-stone` | Secondary text and icon color, used for less prominent information or subtle UI details |
-| Light Steel | `#777b86` | `--color-light-steel` | Muted link color, subtle icon fills, and quiet UI elements — used for non-essential text that aids readability without drawing too much attention |
-| Hint of Grey | `#a3a6af` | `--color-hint-of-grey` | Placeholder text color for input fields, soft borders |
-| Dusk Link | `#8b8c8d` | `--color-dusk-link` | Muted icon strokes, separators, and secondary graphic details. Do not promote it to the primary CTA color |
+| Name         | Value     | Token                  | Role                                                                                                                                              |
+| ------------ | --------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canvas       | `#ffffff` | `--color-canvas`       | Primary page and surface background, text color for dark elements. Used for the main content area, cards, and prominent UI elements               |
+| Ink          | `#17191c` | `--color-ink`          | Primary text color, background for filled buttons, navigation elements. A dominant dark neutral that provides strong contrast                     |
+| Graphite     | `#000000` | `--color-graphite`     | Fallback dark text, outline for ghost buttons, decorative borders                                                                                 |
+| Warm Mist    | `#fbe1d1` | `--color-warm-mist`    | Subtle background for specific cards and sections, providing a soft, almost imperceptible warmth to the interface                                 |
+| Terracotta   | `#5d2a1a` | `--color-terracotta`   | Accent for borders, strokes, and decorative elements within cards. A warm brown-orange that serves as a secondary brand accent                    |
+| Fog          | `#f7f7f8` | `--color-fog`          | Secondary surface background, used for subtle differentiation of cards or sections that are slightly less prominent than the primary canvas       |
+| Muted Stone  | `#4c4c4c` | `--color-muted-stone`  | Secondary text and icon color, used for less prominent information or subtle UI details                                                           |
+| Light Steel  | `#777b86` | `--color-light-steel`  | Muted link color, subtle icon fills, and quiet UI elements — used for non-essential text that aids readability without drawing too much attention |
+| Hint of Grey | `#a3a6af` | `--color-hint-of-grey` | Placeholder text color for input fields, soft borders                                                                                             |
+| Dusk Link    | `#8b8c8d` | `--color-dusk-link`    | Muted icon strokes, separators, and secondary graphic details. Do not promote it to the primary CTA color                                         |
 
 ## Tokens — Typography
 
 ### Sohne — The primary typeface for all UI elements, body text, buttons, and navigation. Its condensed nature and precise tracking maintain clarity and a compact feel across the interface. · `--font-sohne`
+
 - **Substitute:** system-ui, sans-serif
 - **Weights:** 400, 430, 450, 480, 500
 - **Sizes:** 14px, 15px, 16px, 17px, 18px, 22px, 26px
@@ -31,6 +33,7 @@ Steep captures a 'white canvas with depth' aesthetic: crisp backgrounds, careful
 - **Role:** The primary typeface for all UI elements, body text, buttons, and navigation. Its condensed nature and precise tracking maintain clarity and a compact feel across the interface.
 
 ### Signifier — Used exclusively for prominent headings, this serif typeface provides a sophisticated and editorial counterpoint to the utilitarian Sohne. Its generous tracking at larger sizes gives it an open, authoritative presence. · `--font-signifier`
+
 - **Substitute:** serif
 - **Weights:** 400
 - **Sizes:** 44px, 64px, 90px
@@ -40,13 +43,13 @@ Steep captures a 'white canvas with depth' aesthetic: crisp backgrounds, careful
 
 ### Type Scale
 
-| Role | Size | Line Height | Letter Spacing | Token |
-|------|------|-------------|----------------|-------|
-| caption | 14px | 1.43 | — | `--text-caption` |
-| heading | 22px | 1.18 | — | `--text-heading` |
-| heading-lg | 26px | 1 | -0.23px | `--text-heading-lg` |
-| display | 44px | 1.1 | -0.66px | `--text-display` |
-| display-lg | 64px | 1.1 | -0.96px | `--text-display-lg` |
+| Role       | Size | Line Height | Letter Spacing | Token               |
+| ---------- | ---- | ----------- | -------------- | ------------------- |
+| caption    | 14px | 1.43        | —              | `--text-caption`    |
+| heading    | 22px | 1.18        | —              | `--text-heading`    |
+| heading-lg | 26px | 1           | -0.23px        | `--text-heading-lg` |
+| display    | 44px | 1.1         | -0.66px        | `--text-display`    |
+| display-lg | 64px | 1.1         | -0.96px        | `--text-display-lg` |
 
 ## Tokens — Spacing & Shapes
 
@@ -56,38 +59,38 @@ Steep captures a 'white canvas with depth' aesthetic: crisp backgrounds, careful
 
 ### Spacing Scale
 
-| Name | Value | Token |
-|------|-------|-------|
-| 4 | 4px | `--spacing-4` |
-| 8 | 8px | `--spacing-8` |
-| 12 | 12px | `--spacing-12` |
-| 16 | 16px | `--spacing-16` |
-| 20 | 20px | `--spacing-20` |
-| 24 | 24px | `--spacing-24` |
-| 28 | 28px | `--spacing-28` |
-| 32 | 32px | `--spacing-32` |
-| 40 | 40px | `--spacing-40` |
-| 64 | 64px | `--spacing-64` |
-| 80 | 80px | `--spacing-80` |
-| 96 | 96px | `--spacing-96` |
-| 124 | 124px | `--spacing-124` |
-| 128 | 128px | `--spacing-128` |
-| 160 | 160px | `--spacing-160` |
+| Name | Value | Token           |
+| ---- | ----- | --------------- |
+| 4    | 4px   | `--spacing-4`   |
+| 8    | 8px   | `--spacing-8`   |
+| 12   | 12px  | `--spacing-12`  |
+| 16   | 16px  | `--spacing-16`  |
+| 20   | 20px  | `--spacing-20`  |
+| 24   | 24px  | `--spacing-24`  |
+| 28   | 28px  | `--spacing-28`  |
+| 32   | 32px  | `--spacing-32`  |
+| 40   | 40px  | `--spacing-40`  |
+| 64   | 64px  | `--spacing-64`  |
+| 80   | 80px  | `--spacing-80`  |
+| 96   | 96px  | `--spacing-96`  |
+| 124  | 124px | `--spacing-124` |
+| 128  | 128px | `--spacing-128` |
+| 160  | 160px | `--spacing-160` |
 
 ### Border Radius
 
-| Element | Value |
-|---------|-------|
-| cards | 24px |
-| images | 12px |
-| inputs | 16px |
+| Element | Value         |
+| ------- | ------------- |
+| cards   | 24px          |
+| images  | 12px          |
+| inputs  | 16px          |
 | buttons | 1.67772e+07px |
-| default | 24px |
+| default | 24px          |
 
 ### Shadows
 
-| Name | Value | Token |
-|------|-------|-------|
+| Name   | Value                                                          | Token             |
+| ------ | -------------------------------------------------------------- | ----------------- |
 | subtle | `rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1)...` | `--shadow-subtle` |
 
 ### Layout
@@ -100,41 +103,49 @@ Steep captures a 'white canvas with depth' aesthetic: crisp backgrounds, careful
 ## Components
 
 ### Filled Primary Button
+
 **Role:** Main call-to-action
 
 Solid 'Ink' (#17191c) background with 'Canvas' (#ffffff) text, using a very large border-radius to create a pill shape. Padding is 0px vertical, 20px horizontal.
 
 ### Ghost Button (Dark Text)
+
 **Role:** Secondary action or link
 
 Transparent background with 'Ink' (#17191c) text. Border is 1px 'Ink' (#17191c). Pill-shaped with large border-radius. Padding is 0px vertical, 20px horizontal.
 
 ### Ghost Button (Light Text)
+
 **Role:** Secondary action on dark backgrounds
 
 Transparent background with 'Canvas' (#ffffff) text. Border is 1px 'Canvas' (#ffffff). Pill-shaped with large border-radius. Padding is 0px vertical, 20px horizontal.
 
 ### Text Link Button
+
 **Role:** Inline actions or navigational links
 
 Transparent background with 'Ink' (#17191c) text, no border. Typically used for less prominent actions, often without horizontal padding.
 
 ### Default Card
+
 **Role:** Content container
 
 Background is 'Canvas' (#ffffff) with 20px border-radius. Features a prominent shadow: rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px. Internal padding varies from 16px to 20px.
 
 ### Subtle Background Card
+
 **Role:** Secondary content container or data visualization background
 
 Background is 'Fog' (#f7f7f8) with 24px border-radius and no shadow. Internal content padding is typically 0.
 
 ### Accent Background Card
+
 **Role:** Decorative or featured content container
 
 Background is 'Warm Mist' (#fbe1d1) with 24px border-radius and no shadow. Internal content padding is typically 0. May feature 'Terracotta' borders on embedded elements.
 
 ### Input Field
+
 **Role:** User input element
 
 Placeholder text in 'Hint of Grey' (#a3a6af). Background is 'Canvas' (#ffffff) with a 1px border in 'Ink' (#17191c) on focus and 16px border-radius.
@@ -142,6 +153,7 @@ Placeholder text in 'Hint of Grey' (#a3a6af). Background is 'Canvas' (#ffffff) w
 ## Do's and Don'ts
 
 ### Do
+
 - Use 'Ink' (#17191c) for primary text and filled buttons to ensure strong contrast and clear calls to action.
 - Apply 'Canvas' (#ffffff) as the default background for most page sections and card surfaces, creating a bright and airy feel.
 - Pair the 'Signifier' font at large sizes for headlines with 'Sohne' for all body text and UI elements to leverage their distinct roles.
@@ -151,6 +163,7 @@ Placeholder text in 'Hint of Grey' (#a3a6af). Background is 'Canvas' (#ffffff) w
 - Use 'Warm Mist' (#fbe1d1) sparingly as a background accent to introduce a subtle warmth and highlight featured content.
 
 ### Don't
+
 - Avoid using highly saturated colors; the palette favors muted neutrals with a single warm accent.
 - Do not use 'Signifier' for body text, UI labels, or buttons; its distinctive character is reserved for large display headings.
 - Refrain from sharp, 0px border-radii for interactive elements or containers; maintain the consistent rounded aesthetic.
@@ -161,11 +174,11 @@ Placeholder text in 'Hint of Grey' (#a3a6af). Background is 'Canvas' (#ffffff) w
 
 ## Surfaces
 
-| Level | Name | Value | Purpose |
-|-------|------|-------|---------|
-| 1 | Canvas | `#ffffff` | Primary page background and default card surface. Bright, high-contrast base. |
-| 2 | Fog | `#f7f7f8` | Secondary background for subtly differentiated sections or cards, offering a slight visual break from the main canvas. |
-| 3 | Warm Mist | `#fbe1d1` | Accent background for featured cards or UI elements, introducing a soft, warm hue. |
+| Level | Name      | Value     | Purpose                                                                                                                |
+| ----- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 1     | Canvas    | `#ffffff` | Primary page background and default card surface. Bright, high-contrast base.                                          |
+| 2     | Fog       | `#f7f7f8` | Secondary background for subtly differentiated sections or cards, offering a slight visual break from the main canvas. |
+| 3     | Warm Mist | `#fbe1d1` | Accent background for featured cards or UI elements, introducing a soft, warm hue.                                     |
 
 ## Elevation
 
@@ -182,6 +195,7 @@ The page model alternates between a full-bleed hero and a max-width 1280px conta
 ## Agent Prompt Guide
 
 ### Quick Color Reference
+
 text: #17191c
 background: #ffffff
 border: #17191c
@@ -189,6 +203,7 @@ accent: #fbe1d1
 primary action: #17191c (filled action)
 
 ### Example Component Prompts
+
 1. Create a Primary Action Button: #17191c background, #ffffff text, 9999px radius, compact pill padding. Use this filled treatment for the main CTA.
 2. Design a Feature Card: Use a 'Default Card' with 'Canvas' (#ffffff) background. Place a small 'Terracotta' (#5d2a1a) line at the top. The title is 'Sohne' 22px weight 500, color 'Ink' (#17191c). Body text is 'Sohne' 15px weight 400, color 'Muted Stone' (#4c4c4c). Include 20px padding.
 
@@ -218,8 +233,12 @@ primary action: #17191c (filled action)
   --color-dusk-link: #8b8c8d;
 
   /* Typography — Font Families */
-  --font-sohne: 'Sohne', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-signifier: 'Signifier', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sohne:
+    'Sohne', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-signifier:
+    'Signifier', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
 
   /* Typography — Scale */
   --text-caption: 14px;
@@ -278,11 +297,13 @@ primary action: #17191c (filled action)
   --radius-cards: 24px;
   --radius-images: 12px;
   --radius-inputs: 16px;
-  --radius-buttons: 1.67772e+07px;
+  --radius-buttons: 1.67772e7px;
   --radius-default: 24px;
 
   /* Shadows */
-  --shadow-subtle: rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
+  --shadow-subtle:
+    rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px,
+    rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
 
   /* Surfaces */
   --surface-canvas: #ffffff;
@@ -308,8 +329,12 @@ primary action: #17191c (filled action)
   --color-dusk-link: #8b8c8d;
 
   /* Typography */
-  --font-sohne: 'Sohne', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-signifier: 'Signifier', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sohne:
+    'Sohne', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-signifier:
+    'Signifier', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
 
   /* Typography — Scale */
   --text-caption: 14px;
@@ -351,6 +376,8 @@ primary action: #17191c (filled action)
   --radius-3xl: 24px;
 
   /* Shadows */
-  --shadow-subtle: rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
+  --shadow-subtle:
+    rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px,
+    rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
 }
 ```

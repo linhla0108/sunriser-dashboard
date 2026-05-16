@@ -11,6 +11,7 @@ Thư mục `material/` chứa toàn bộ hệ thống thiết kế của project
 Tài liệu thiết kế chính (single source of truth cho con người và LLMs).
 
 **Bao gồm:**
+
 - **Màu sắc** — 10 màu với vai trò rõ ràng (`canvas`, `ink`, `graphite`, `warm-mist`, `terracotta`, `fog`, `muted-stone`, `light-steel`, `hint-of-grey`, `dusk-link`)
 - **Font chữ** — hai font: `Sohne` (UI/body, condensed sans-serif) và `Signifier` (display/heading, serif)
 - **Type scale** — 5 heading sizes từ 14px đến 90px với line-height và letter-spacing cụ thể
@@ -54,11 +55,11 @@ File Excel — **không đọc được nội dung trong CLI**. Có thể là sp
 
 ## Quick Reference cho LLMs
 
-| Bạn muốn làm gì | Dùng file nào |
-|---|---|
-| Hiểu rõ thiết kế, tạo component mới | `DESIGN.md` |
-| Tạo component theo theme | `DESIGN.md` → section **Agent Prompt Guide** |
-| Đổi giá trị token | `tokens.json` (SSoT), rồi regenerate CSS |
-| Dùng token trong Tailwind | Import `theme.css` |
-| Dùng token trong CSS thuần | Import `variables.css` |
-| Thêm font mới | Cập nhật cả 4 file: `DESIGN.md`, `tokens.json`, `theme.css`, `variables.css` |
+| Bạn muốn làm gì                     | Dùng file nào                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| Hiểu rõ thiết kế, tạo component mới | `DESIGN.md`                                                                  |
+| Tạo component theo theme            | `DESIGN.md` → section **Agent Prompt Guide**                                 |
+| Đổi giá trị token                   | `tokens.json` (SSoT), rồi regenerate CSS                                     |
+| Dùng token trong Tailwind           | Import `theme.css`                                                           |
+| Dùng token trong CSS thuần          | Import `variables.css`                                                       |
+| Thêm font mới                       | Cập nhật cả 4 file: `DESIGN.md`, `tokens.json`, `theme.css`, `variables.css` |
