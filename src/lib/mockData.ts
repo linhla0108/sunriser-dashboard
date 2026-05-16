@@ -872,7 +872,7 @@ export const mockApplicants: Applicant[] = [
 ]
 
 // Summary statistics
-export const dashboardStats = {
+export const dashboardStats: DashboardStats = {
   totalApplicants: 646,
   batch1Count: 119,
   batch2Count: 343,
@@ -882,9 +882,8 @@ export const dashboardStats = {
   waitingListRound1: 91,
   passRate: Math.round((127 / 646) * 100 * 10) / 10,
   avgGpa:
-    Math.round(
-      (mockApplicants.reduce((sum, a) => sum + a.gpa, 0) / mockApplicants.length) * 10
-    ) / 10,
+    Math.round((mockApplicants.reduce((sum, a) => sum + a.gpa, 0) / mockApplicants.length) * 10) /
+    10,
 }
 
 export const positionBreakdown = [
