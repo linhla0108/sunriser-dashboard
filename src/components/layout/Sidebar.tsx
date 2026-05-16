@@ -1,14 +1,12 @@
 'use client'
 
-import { LayoutDashboard, Table2, Upload, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Table2 } from 'lucide-react'
 
-export type View = 'dashboard' | 'table' | 'upload' | 'chat'
+export type View = 'dashboard' | 'table'
 
 const navItems: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'table', label: 'Table', icon: Table2 },
-  { id: 'upload', label: 'Upload', icon: Upload },
-  { id: 'chat', label: 'Chat', icon: MessageSquare },
 ]
 
 interface SidebarProps {
@@ -19,52 +17,51 @@ interface SidebarProps {
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
     <aside
-      className="fixed left-0 top-0 h-full w-[240px] bg-white flex flex-col z-10"
-      style={{
-        borderRight: '1px solid rgba(4, 23, 43, 0.06)',
-      }}
+      data-cid="sidebar"
+      className="fixed top-0 left-0 z-10 hidden h-full w-16 flex-col bg-white sm:flex lg:w-[240px]"
+      style={{ borderRight: '1px solid rgba(4, 23, 43, 0.06)' }}
     >
       {/* Logo */}
-      <div className="px-6 pt-8 pb-6">
-        <div className="mb-1">
-          <span
-            className="text-[22px] font-bold tracking-tight text-[#17191c]"
-            style={{ fontFamily: "'Signifier', Georgia, 'Times New Roman', serif" }}
-          >
+      <div className="px-3 pt-5 pb-4 lg:px-4">
+        <div className="mb-1 flex items-center justify-center lg:justify-start">
+          <span className="hidden text-[22px] font-bold tracking-tight text-[#1b1b1b] lg:block">
             SUN.RISER
           </span>
+          <span className="text-[20px] font-bold tracking-tight text-[#FF5533] lg:hidden">S</span>
         </div>
-        <p className="text-xs text-[#777b86] font-medium tracking-wide uppercase">
+        <p className="hidden text-xs font-medium tracking-wide text-[#6B5549] uppercase lg:block">
           2026 Dashboard
         </p>
       </div>
 
-      <div className="mx-4 mb-4 h-px bg-[#f7f7f8]" />
+      <div className="mx-3 mb-4 h-px bg-[#f9f9f9] lg:mx-4" />
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 space-y-0.5 px-2 lg:px-3">
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeView === id
           return (
             <button
               key={id}
+              data-cid={`nav-item-${id}`}
               onClick={() => onViewChange(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left ${
+              title={label}
+              className={`flex w-full items-center justify-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-sm font-medium transition-all duration-150 lg:justify-start lg:px-3 ${
                 isActive
-                  ? 'bg-[#17191c] text-white'
-                  : 'text-[#4c4c4c] hover:bg-[#f7f7f8] hover:text-[#17191c]'
-              }`}
+                  ? 'bg-[#FF5533] text-white'
+                  : 'text-[#555555] hover:bg-[#f9f9f9] hover:text-[#1b1b1b]'
+              } `}
             >
-              <Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} />
-              <span>{label}</span>
+              <Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} className="flex-shrink-0" />
+              <span className="hidden lg:block">{label}</span>
             </button>
           )
         })}
       </nav>
 
-      <div className="px-6 pb-6">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#fbe1d1]" />
-          <span className="text-xs text-[#a3a6af] font-mono">v2026</span>
+      <div className="px-3 pb-4 lg:px-4">
+        <div className="flex items-center justify-center gap-2 lg:justify-start">
+          <div className="h-2 w-2 rounded-full bg-[#ffdad3]" />
+          <span className="hidden font-mono text-xs text-[#767676] lg:block">v2026</span>
         </div>
       </div>
     </aside>
