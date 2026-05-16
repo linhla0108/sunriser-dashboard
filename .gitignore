@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent/tooling artifacts
+.claude/
+.superpowers/
+agent-skills/
+a11y-audit.md
+C*Usersleanh.sshknown_hosts
