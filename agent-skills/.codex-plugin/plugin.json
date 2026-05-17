@@ -1,0 +1,40 @@
+{
+  "name": "agent-skills",
+  "version": "1.0.0",
+  "description": "Production-grade engineering skills for AI coding agents, covering the full software development lifecycle from spec to ship.",
+  "author": {
+    "name": "Sunriser Team",
+    "url": "https://github.com/linhla0108/sunriser-dashboard"
+  },
+  "homepage": "https://github.com/linhla0108/sunriser-dashboard/tree/main/agent-skills",
+  "repository": "https://github.com/linhla0108/sunriser-dashboard",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "agents",
+    "engineering",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Skills",
+    "shortDescription": "Engineering skills for agentic development workflows.",
+    "longDescription": "Agent Skills adds reusable development workflows for planning, testing, debugging, review, shipping, security, performance, and documentation.",
+    "developerName": "Sunriser Team",
+    "category": "Engineering",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/linhla0108/sunriser-dashboard",
+    "privacyPolicyURL": "https://github.com/linhla0108/sunriser-dashboard",
+    "termsOfServiceURL": "https://github.com/linhla0108/sunriser-dashboard",
+    "defaultPrompt": [
+      "Use agent skills for this task",
+      "Review this change with agent skills",
+      "Plan this implementation with skills"
+    ],
+    "brandColor": "#FF5533",
+    "screenshots": []
+  }
+}

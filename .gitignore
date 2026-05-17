@@ -43,6 +43,11 @@ next-env.d.ts
 # local agent/tooling artifacts
 .claude/
 .superpowers/
-agent-skills/
 a11y-audit.md
 C*Usersleanh.sshknown_hosts
+
+# Keep the shared plugin vendored in this repository.
+!agent-skills/
+!agent-skills/**
+!agent-skills/.claude/
+!agent-skills/.claude/**
