@@ -32,7 +32,7 @@ describe("RequireAuth", () => {
     expect(screen.queryByText("app")).not.toBeInTheDocument()
   })
 
-  it("renders children when a valid session exists", () => {
+  it("renders children when a valid session exists", async () => {
     localStorage.setItem(
       "v2.auth.session",
       JSON.stringify({
@@ -49,6 +49,6 @@ describe("RequireAuth", () => {
       { wrapper: TestProviders }
     )
 
-    expect(screen.getByText("app")).toBeInTheDocument()
+    expect(await screen.findByText("app")).toBeInTheDocument()
   })
 })

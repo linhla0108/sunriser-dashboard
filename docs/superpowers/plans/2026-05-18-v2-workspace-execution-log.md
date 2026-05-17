@@ -80,3 +80,35 @@ Short English notes for each completed feature in `2026-05-18-v2-workspace-plan.
   - Verified `npm.cmd test -- RequireAuth`: PASS.
   - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
   - Commit step is not marked complete because no commit was requested in this run.
+
+- **2026-05-18 - Task 2.1: Add collapsible V2 sidebar**
+  - Added `V2Sidebar` with persisted collapsed state, hover peek behavior, active route styling, and ActionTooltip labels.
+  - Added reusable `useShortcut` for keyboard shortcuts, including the sidebar `meta+\` toggle.
+  - Added tests for persisted collapse and hover peek expansion.
+  - Verified `npm.cmd test -- V2Sidebar`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 2.2: Add V2 top bar**
+  - Added sticky `V2TopBar` with title/subtitle slots, AI and Notes icon triggers, persistent Create Report and Export Data actions, and optional extra action slots.
+  - Added an account dropdown showing mock user name, email, role badge, and Sign out.
+  - Added tests for action handlers and account menu details.
+  - Verified `npm.cmd test -- V2TopBar`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 2.3: Add floating ThemeSwitcher**
+  - Added a floating theme widget with Theme A, Theme B, Theme C chips, light/dark mode toggle, and hide control.
+  - Mounted the widget in `/v2/layout.tsx` next to the global Toaster.
+  - Added tests for changing to Theme B and hiding the widget.
+  - Verified `npm.cmd test -- ThemeSwitcher`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 2.4-2.5: Add dashboard page and wire workspace shell**
+  - Added `/v2/(app)/dashboard` with four existing dashboard stat cards and the existing overview charts.
+  - Updated `/v2/(app)/layout.tsx` to wrap protected pages with `V2Sidebar` and `V2TopBar`.
+  - Kept drawer and pinned toolbar imports out until their later feature phases create those components.
+  - Verified `npm.cmd test -- V2Sidebar V2TopBar ThemeSwitcher`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.

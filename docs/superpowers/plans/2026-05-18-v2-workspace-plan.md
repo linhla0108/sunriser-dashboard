@@ -986,7 +986,7 @@ function onChange(i: number, v: string) {
 - Create: `src/components/v2/layout/V2Sidebar.tsx`
 - Create: `src/components/v2/layout/__tests__/V2Sidebar.test.tsx`
 
-- [ ] **Step 1**: Test: toggle persists + hover-expand timeout
+- [x] **Step 1**: Test: toggle persists + hover-expand timeout
   ```tsx
   it("toggle button collapses sidebar and persists", async () => {
     render(
@@ -999,7 +999,7 @@ function onChange(i: number, v: string) {
     expect(JSON.parse(localStorage.getItem("v2.sidebar.collapsed")!)).toBe(true)
   })
   ```
-- [ ] **Step 2**: Implementation (extends existing `Sidebar`)
+- [x] **Step 2**: Implementation (extends existing `Sidebar`)
 
   ```tsx
   // src/components/v2/layout/V2Sidebar.tsx
@@ -1085,7 +1085,7 @@ function onChange(i: number, v: string) {
   }
   ```
 
-- [ ] **Step 3**: Add keyboard shortcut hook (separate file)
+- [x] **Step 3**: Add keyboard shortcut hook (separate file)
   ```ts
   // src/lib/v2/keyboard/useShortcut.ts
   "use client"
@@ -1103,7 +1103,7 @@ function onChange(i: number, v: string) {
     }, [combo.key, combo.meta, combo.ctrl, handler])
   }
   ```
-- [ ] **Step 4**: Run tests, commit
+- [x] **Step 4**: Run tests (commit not requested yet for this phase slice)
 
 ### Task 2.2: V2TopBar
 
@@ -1115,9 +1115,9 @@ function onChange(i: number, v: string) {
 
 Acceptance:
 
-- Each icon button wrapped in `ActionTooltip` with label + shortcut
-- Avatar dropdown shows name + email + role badge + Sign out
-- Sticky top on scroll
+- [x] Each icon button wrapped in `ActionTooltip` with label + shortcut
+- [x] Avatar dropdown shows name + email + role badge + Sign out
+- [x] Sticky top on scroll
 
 Pattern reuse: extend the layout idea from `src/components/layout/TopBar.tsx` but accept additional `drawerSlots` prop.
 
@@ -1128,7 +1128,7 @@ Pattern reuse: extend the layout idea from `src/components/layout/TopBar.tsx` bu
 - Create: `src/components/v2/theme/ThemeSwitcher.tsx`
 - Create: `src/components/v2/theme/__tests__/ThemeSwitcher.test.tsx`
 
-- [ ] **Step 1**: Test
+- [x] **Step 1**: Test
   ```tsx
   it("clicking chip B sets html data-theme to b", async () => {
     render(
@@ -1140,7 +1140,7 @@ Pattern reuse: extend the layout idea from `src/components/layout/TopBar.tsx` bu
     expect(document.documentElement.getAttribute("data-theme")).toBe("b")
   })
   ```
-- [ ] **Step 2**: Implementation
+- [x] **Step 2**: Implementation
 
   ```tsx
   // src/components/v2/theme/ThemeSwitcher.tsx
@@ -1204,8 +1204,8 @@ Pattern reuse: extend the layout idea from `src/components/layout/TopBar.tsx` bu
   }
   ```
 
-- [ ] **Step 3**: Mount in `/v2/layout.tsx` next to `<Toaster />`
-- [ ] **Step 4**: Run tests + commit
+- [x] **Step 3**: Mount in `/v2/layout.tsx` next to `<Toaster />`
+- [x] **Step 4**: Run tests (commit not requested yet for this phase slice)
 
 ### Task 2.4: /v2/dashboard page
 
@@ -1217,9 +1217,9 @@ Reuse `StatsCard` (existing) + `OverviewCharts` (existing). Wrap with V2Sidebar 
 
 Acceptance:
 
-- Renders 4 StatsCards + Charts
-- Title "Overview" / subtitle "SUN.RISER 2026 · Internship Recruitment"
-- Action buttons in TopBar: `Create Report`, `Export Data`
+- [x] Renders 4 StatsCards + Charts
+- [x] Title "Overview" / subtitle "SUN.RISER 2026 · Internship Recruitment"
+- [x] Action buttons in TopBar: `Create Report`, `Export Data`
 
 ### Task 2.5: Update `/v2/(app)/layout.tsx` with shell
 
@@ -1254,6 +1254,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 ```
 
 Acceptance: All routes under `/v2/(app)/*` render with sidebar + topbar + drawer slots.
+
+Status: Shell wired with `V2Sidebar` and `V2TopBar`. Drawer and pinned toolbar slots will be added when their feature phases create those components.
 
 ---
 
