@@ -291,6 +291,50 @@ Tren Windows hien co cac plugin groups quan trong:
 
 Neu tren Mac chua co cac marketplace/plugin official, install/enable lai trong Codex UI hoac bang co che plugin cua Codex. Rieng `agent-skills` la repo-local, chi can clone repo va them marketplace local nhu tren.
 
+## MCP And Tool Servers
+
+Important: Handoff truoc chua ghi rieng MCP. Snapshot hien tai:
+
+- Repo nay khong co `.mcp.json` o root, va scan trong repo khong thay file `.mcp.json`.
+- `agent-skills` co noi dung huong dan MCP, nhung khong tu cau hinh MCP server cho Codex.
+- `browser-testing-with-devtools` trong `agent-skills` yeu cau Chrome DevTools MCP neu muon dung dung theo Claude/Gemini docs.
+- `shadcn` standalone skill co tai lieu ve shadcn MCP, nhung MCP shadcn chua duoc cau hinh trong repo nay.
+
+Callable MCP/tool namespaces visible in this current Codex session:
+
+| Namespace | Source | What it is for |
+| --- | --- | --- |
+| `mcp__playwright__*` | `playwright@claude-plugins-official` | Browser automation: navigate, click, fill, screenshots, console/network checks |
+| `mcp__node_repl__*` | Node REPL MCP server | Persistent JavaScript execution, package inspection, browser-adjacent automation helpers |
+| `mcp__codex_apps__vercel_*` | Vercel app/plugin tools | Vercel deploys, deployment lookup/logs, project/team listing, Vercel docs search |
+| `functions.list_mcp_resources`, `functions.read_mcp_resource`, `functions.list_mcp_resource_templates` | Codex MCP resource helpers | Discover/read resources exposed by configured MCP servers |
+
+Enabled plugins that may expose tools or skills, depending on Codex session/plugin loading:
+
+| Plugin | Enabled now | Notes |
+| --- | --- | --- |
+| `playwright@claude-plugins-official` | yes | Provides the visible `mcp__playwright__*` tools |
+| `vercel@openai-curated` / `vercel@claude-plugins-official` | yes | Vercel app tools are visible in this session |
+| `browser@openai-bundled` | yes | In-app browser plugin enabled; use if Codex exposes Browser tools in the session |
+| `chrome@openai-bundled` | yes | Chrome plugin enabled; use for user-profile/browser tasks if tools are exposed |
+| `supabase@claude-plugins-official` | yes | Supabase plugin enabled, but no Supabase MCP tools are visible in this current session |
+| `agent-skills@sunriser-dashboard` | yes | Repo-local skills plugin; not an MCP server by itself |
+
+MCP configs to consider on macOS:
+
+```json
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["@anthropic/chrome-devtools-mcp@latest"]
+    }
+  }
+}
+```
+
+Only add this if the macOS Codex/Claude environment supports `.mcp.json` style MCP config and you want `agent-skills/browser-testing-with-devtools` to work through Chrome DevTools MCP. For Codex in this repo, Playwright is already the practical browser verification tool when the `playwright` plugin is enabled.
+
 ## Workflow Goi Y Cho Codex Tren Mac
 
 1. Clone repo:
