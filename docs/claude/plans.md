@@ -13,6 +13,8 @@ docs/plans/
 
 This rule applies to **all agents** (Claude Code, Codex, OpenCode, GitHub Copilot). Never create standalone plan or report files scattered across the source tree.
 
+**Language:** All plans and reports must be written in **English**. Use clear, simple, and direct language that is easy for LLMs to parse — short sentences, concrete nouns, no ambiguous pronouns, no filler phrases.
+
 ---
 
 ## `plan.md` — written before implementation

@@ -121,6 +121,8 @@ docs/plans/
 
 Never create standalone plan/report files scattered across the source tree.
 
+**Language:** All plans and reports must be written in **English**. Use clear, simple, direct language — short sentences, concrete nouns, no ambiguous pronouns, no filler phrases. Easy for LLMs to parse.
+
 **`plan.md`** must include: Goal, Scope, Steps, Files to touch.
 
 **`report.md`** must include: Status, a table of `File | Description` (relative paths, one sentence each), Notes.
