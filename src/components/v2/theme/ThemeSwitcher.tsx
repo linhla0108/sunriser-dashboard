@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { Moon, Sun, X } from "lucide-react"
 import { z } from "zod"
 import { ActionTooltip } from "@/components/v2/common/ActionTooltip"
@@ -14,10 +15,13 @@ const THEME_CHIPS: Array<{ key: V2Theme; label: string; color: string }> = [
 ]
 
 export function ThemeSwitcher() {
+  const pathname = usePathname()
   const [hidden, setHidden] = usePersistedState("v2.theme.widgetHidden", false, z.boolean())
   const { effectiveMode, setMode, setTheme, theme } = useTheme()
 
   if (hidden) return null
+  // Public share routes should look clean for external viewers; hide the workspace widget.
+  if (pathname?.startsWith("/v2/public")) return null
 
   const nextMode = effectiveMode === "dark" ? "light" : "dark"
 

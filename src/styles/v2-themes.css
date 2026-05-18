@@ -77,3 +77,21 @@
     color 200ms ease,
     border-color 200ms ease;
 }
+
+@media print {
+  .public-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  nav,
+  footer {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-root,
+  .v2-root * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

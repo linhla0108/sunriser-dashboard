@@ -205,3 +205,49 @@ Short English notes for each completed feature in `2026-05-18-v2-workspace-plan.
   - Verified `npm.cmd run lint`: PASS.
   - Verified `npx.cmd prettier --check src/app/v2 src/components/v2 src/lib/v2 docs/superpowers/plans/2026-05-18-v2-workspace-plan.md docs/superpowers/plans/2026-05-18-v2-workspace-execution-log.md`: PASS.
   - Verified `npm.cmd run build`: PASS.
+
+- **2026-05-18 - Task 7.1: Report template + mock streaming**
+  - Added `ReportSection`/`ReportSnapshot` types, `buildReportSections`, and `useReport` with staged reveal + abort.
+
+- **2026-05-18 - Task 7.2: ReportModal**
+  - Added shadcn-Dialog-based `ReportModal` with Regenerate / Share / Download / Close actions, ActionTooltip-wrapped, sequential section reveal, and `nanoid(10)` share IDs persisted to `v2.report.shares`.
+  - Wired Create Report TopBar button and `⌘R` shortcut through `V2WorkspaceShell`.
+
+- **2026-05-18 - Task 7.3: /v2/public/results**
+  - Added `/v2/public` layout, `AdmittedGrid` (avatar + name + position), and position filter.
+  - Added print-friendly grid CSS and `prefers-reduced-motion` block to `v2-themes.css` (covers Task 9.3).
+
+- **2026-05-18 - Task 7.4: /v2/public/report/[shareId]**
+  - Added `anonymize` helper, `PublicReport` client component (uses `useSyncExternalStore` to read shares from localStorage without effect-state writes), and Next 16 async-params page.
+  - Added `/v2/public` index page redirect to `/v2/public/results` to keep typed-routes inference happy.
+
+- **2026-05-18 - Task 8: Settings**
+  - Added `/v2/(app)/settings` shell with shadcn Tabs.
+  - `AppearanceTab`: 3 theme cards, light/dark/system radio, compact/comfortable density radio, "show theme switcher" toggle bound to `v2.theme.widgetHidden`.
+  - `WorkspaceTab`: default view + sort dropdowns, en/vi language toggle (UI only), keyboard shortcuts reference table.
+  - `AccountTab`: avatar/name/email/role card, mock change-password form, sign-out confirm Dialog.
+
+- **2026-05-18 - Task 9: Polish + QA**
+  - Added `useShortcut` hook tests (meta/ctrl parity, unmatched keys) and a `V2WorkspaceShell` integration test that asserts ⌘R opens the report modal end-to-end.
+  - `prefers-reduced-motion` global rule landed with Task 7.3 CSS append.
+  - **Task 9.1 (ActionTooltip audit)**: confirmed existing coverage by grepping `<button|Link>` across `src/components/v2` / `src/app/v2`; icon-only triggers in TopBar, ThemeSwitcher, PinnedToolbar, ReportModal, ViewPillNav, and drawer shells are all wrapped — no naked clickables found. No new wraps needed.
+  - **Task 9.4 (Mobile review)**: deferred to a follow-up — not exercised in this slice (no breakpoint walkthrough performed).
+
+- **2026-05-18 - Code review fixes**
+  - Hydration: `PublicReport` now drops the `typeof window` gate so server + first-client paint both render via `getServerSnapshot`. No hydration warning.
+  - `reportTemplate.ts`: "Most represented role" now computes by frequency (was first-by-insertion); appended a "Roles covered" list.
+  - `useViewState`: initial default reads from `v2.workspace.defaultView` so the WorkspaceTab setting actually controls first-session view; settings `VIEWS` enum aligned to `chart` (was `charts`).
+  - `ThemeSwitcher`: hides on `/v2/public/*` so external share viewers see a clean page.
+  - `ReportSnapshot`: added `aliases?: string[]` and stopped overwriting `sourceApplicants` with alias strings inside `anonymize` — IDs and aliases now live on distinct fields.
+  - `ReportModal.handleShare`: now `await`s `clipboard.writeText` and toasts a different message on rejection ("Share link ready — copy manually").
+  - `AppearanceTab` density preview redesigned so compact (tight gap/padding) and comfortable (loose) are visibly distinct.
+  - `/v2/public/page.tsx` annotated with a one-line comment explaining why it exists.
+  - `PublicReport`: comment notes that `storage` events are cross-tab only and that this is intentional.
+  - New tests: `anonymize` (alias mapping, ID preservation, longer-name-first sort, regex-metachar escape).
+
+- **2026-05-18 - Final QA (post-fixes)**
+  - Verified `npx.cmd tsc --noEmit`: PASS.
+  - Verified `npm.cmd run lint`: PASS.
+  - Verified `npm.cmd test -- --run`: 37 files / 257 tests PASS.
+  - Verified `npx.cmd prettier --check src/app/v2 src/components/v2 src/lib/v2`: PASS.
+  - Verified `npm.cmd run build`: PASS (16 routes; share-report dynamic).
