@@ -3,12 +3,14 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Eye, GripVertical } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Applicant } from '@/lib/types'
 
 interface DraggableRowProps {
   applicant: Applicant
   index: number
   onViewDetail?: (applicant: Applicant) => void
+  pinAction?: ReactNode
 }
 
 function Round1Badge({ result }: { result?: string }) {
@@ -29,7 +31,7 @@ function Round1Badge({ result }: { result?: string }) {
   )
 }
 
-export default function DraggableRow({ applicant, index, onViewDetail }: DraggableRowProps) {
+export default function DraggableRow({ applicant, index, onViewDetail, pinAction }: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
   })
@@ -53,8 +55,10 @@ export default function DraggableRow({ applicant, index, onViewDetail }: Draggab
       style={style}
       className={`border-b border-[#f9f9f9] text-sm transition-colors hover:bg-[#f9f9f9]/70 ${rowBg}`}
     >
+      {pinAction ? <td className="py-3 pr-1 pl-4">{pinAction}</td> : null}
+
       {/* Drag handle */}
-      <td className="py-3 pr-2 pl-4">
+      <td className={`py-3 pr-2 ${pinAction ? 'pl-1' : 'pl-4'}`}>
         <button
           {...attributes}
           {...listeners}

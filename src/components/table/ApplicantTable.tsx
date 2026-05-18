@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,7 @@ import DraggableRow from './DraggableRow'
 interface ApplicantTableProps {
   data: Applicant[]
   onViewDetail?: (applicant: Applicant) => void
+  renderPinAction?: (applicant: Applicant) => ReactNode
 }
 
 type SortKey = 'name' | 'gpa' | 'batch' | 'university'
@@ -49,7 +50,7 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
   )
 }
 
-export default function ApplicantTable({ data, onViewDetail }: ApplicantTableProps) {
+export default function ApplicantTable({ data, onViewDetail, renderPinAction }: ApplicantTableProps) {
   const [items, setItems] = useState<Applicant[]>(data)
   const [search, setSearch] = useState('')
   const [positionFilter, setPositionFilter] = useState('')
@@ -225,6 +226,7 @@ export default function ApplicantTable({ data, onViewDetail }: ApplicantTablePro
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-[#f9f9f9]">
+                  {renderPinAction ? <th className="w-8 py-3 pr-1 pl-4" /> : null}
                   <th className="w-8 py-3 pr-2 pl-4" />
                   <th className="w-8 px-3 py-3 text-left text-xs font-semibold tracking-wider text-[#767676] uppercase">
                     #
@@ -298,11 +300,12 @@ export default function ApplicantTable({ data, onViewDetail }: ApplicantTablePro
                         applicant={applicant}
                         index={i}
                         onViewDetail={onViewDetail}
+                        pinAction={renderPinAction?.(applicant)}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="px-4 py-10 text-center">
+                      <td colSpan={renderPinAction ? 13 : 12} className="px-4 py-10 text-center">
                         <div className="flex flex-col items-center gap-3">
                           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f9f9f9]">
                             <Search size={20} className="text-[#767676]" />

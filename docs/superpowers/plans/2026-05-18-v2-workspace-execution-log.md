@@ -112,3 +112,96 @@ Short English notes for each completed feature in `2026-05-18-v2-workspace-plan.
   - Verified `npm.cmd test -- V2Sidebar V2TopBar ThemeSwitcher`: PASS.
   - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
   - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 3.1: Add ViewPillNav and persisted view state**
+  - Added `useViewState` with `v2.view.current` persistence and schema fallback.
+  - Added V2 `ViewPillNav` with four icon-only view controls, ActionTooltip labels, scroll auto-hide, and keyboard shortcuts 1-4.
+  - Added focused tests for persistence, click switching, keyboard switching, and scroll visibility.
+  - Verified `npm.cmd test -- ViewPillNav useViewState`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 3.2: Add TableView wrapper with pin column render slot**
+  - Added V2 `TableView` around the existing `ApplicantTable`.
+  - Added optional table and row render slots so V2 can show a pin star per row without changing existing `/` route behavior.
+  - Added focused tests for row rendering and pin state toggling.
+  - Verified `npm.cmd test -- TableView`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+  - Commit step is not marked complete yet for this phase slice.
+
+- **2026-05-18 - Task 3.3: Add PipelineView**
+  - Added a V2 pipeline board with Round 1, position, and batch grouping plus sortable candidate cards.
+  - Added Theme B/C skeleton exports through the shared `ThemedView` selector.
+  - Verified `npm.cmd test -- PipelineGallery`: PASS.
+  - Verified TypeScript with `npx.cmd tsc --noEmit`: PASS.
+
+- **2026-05-18 - Task 3.4: Add GalleryView**
+  - Added responsive draggable candidate cards with avatar initials, position, GPA, Round 1 status, batch tags, and pin actions.
+  - Verified `npm.cmd test -- PipelineGallery`: PASS.
+  - Browser checked `/v2/candidates` gallery switching with no console errors.
+
+- **2026-05-18 - Task 3.5: Add ChartView**
+  - Added a chart view that reuses `OverviewCharts` and adds draggable mini charts for universities, monthly applicants, and GPA bands.
+  - Verified `npm.cmd run build`: PASS.
+
+- **2026-05-18 - Task 3.6: Wire /v2/candidates views**
+  - Added `/v2/candidates` with Table, Pipeline, Gallery, and Chart rendering through persisted view state.
+  - Fixed same-page view sync so `ViewPillNav`, saved views, and page content update together.
+  - Browser checked Table to Pipeline to Gallery switching with no console errors.
+
+- **2026-05-18 - Task 3.7: Add saved views**
+  - Added `useSavedViews` persistence under `v2.view.savedViews`.
+  - Added a compact Saved Views menu in `ViewPillNav` for saving, loading, and deleting view presets.
+  - Verified `npm.cmd test -- ViewPillNav useViewState`: PASS.
+
+- **2026-05-18 - Task 4.1: Add AI drawer**
+  - Added chat message types, mock response matching, persisted chat history, and `AiDrawer` float UI.
+  - Added a send-message test that confirms a mock assistant reply appears.
+  - Verified `npm.cmd test -- AiDrawer`: PASS.
+
+- **2026-05-18 - Task 4.2: Add dock mode and drawer layout**
+  - Added `DrawerRegistryProvider` with float/dock mode, persisted dock widths, resize handling, and main content offset.
+  - Added shared `DrawerShell` so drawer behavior is consistent across AI and Notes.
+  - Browser checked floating drawer placement and fixed overlap with the theme switcher.
+
+- **2026-05-18 - Task 4.3: Wire TopBar AI trigger**
+  - Connected the TopBar AI button and `Ctrl/Cmd+J` shortcut through the workspace shell.
+  - Browser checked opening AI drawer and sending a message with no console errors.
+
+- **2026-05-18 - Task 5.1: Add Notes drawer**
+  - Added `NotesDrawer` using the shared drawer shell pattern.
+  - Added a focused test for creating and editing a note.
+  - Verified `npm.cmd test -- NotesDrawer`: PASS.
+
+- **2026-05-18 - Task 5.2: Add notes state**
+  - Added `useNotes` with local persistence, global/candidate scope support, create, update, and delete actions.
+  - Browser checked creating a note from the Notes drawer.
+
+- **2026-05-18 - Task 5.3: Add drawer coexistence rule**
+  - Added one-docked-drawer enforcement in `DrawerRegistryProvider`; the second drawer falls back to floating with a toast.
+  - Connected the TopBar Notes button and `Ctrl/Cmd+N` shortcut.
+
+- **2026-05-18 - Task 6.1: Add usePinned hook**
+  - Added `usePinned` with max 5 candidates, add/remove/clear helpers, local persistence, and same-page state sync.
+  - Added tests for add, remove, clear, and blocking the 6th pin.
+  - Verified `npm.cmd test -- usePinned`: PASS.
+
+- **2026-05-18 - Task 6.2: Add PinStarButton**
+  - Added shared `PinStarButton` with disabled full-state handling and ActionTooltip labeling.
+  - Verified `npm.cmd test -- TableView PipelineGallery`: PASS.
+
+- **2026-05-18 - Task 6.3: Add PinnedToolbar**
+  - Added a sticky pinned toolbar with candidate chips, remove actions, Compare button, and Clear confirmation.
+  - Browser checked toolbar updates immediately after pinning.
+
+- **2026-05-18 - Task 6.4: Add /v2/compare page**
+  - Added `/v2/compare` and `ComparePage` with max 5 side-by-side candidates, field rows, difference tinting, and print/PDF action.
+  - Browser checked compare navigation and rendering with no console errors.
+
+- **2026-05-18 - Task 6.5: Wire pins across views**
+  - Wired `PinStarButton` into Table, Pipeline, and Gallery views.
+  - Fixed shared pin sync so all V2 surfaces see pinned candidates immediately.
+  - Verified `npm.cmd test -- v2`: PASS.
+  - Verified `npm.cmd run lint`: PASS.
+  - Verified `npx.cmd prettier --check src/app/v2 src/components/v2 src/lib/v2 docs/superpowers/plans/2026-05-18-v2-workspace-plan.md docs/superpowers/plans/2026-05-18-v2-workspace-execution-log.md`: PASS.
+  - Verified `npm.cmd run build`: PASS.

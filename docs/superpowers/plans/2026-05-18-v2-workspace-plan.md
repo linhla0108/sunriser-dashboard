@@ -1419,7 +1419,7 @@ Acceptance: Save current view (filters + sort + groupBy) → `v2.view.savedViews
 - Create: `src/lib/v2/chat/mockResponses.ts`
 - Create: `src/lib/v2/chat/types.ts`
 
-- [ ] **Step 1**: Types
+- [x] **Step 1**: Types
   ```ts
   export interface Message {
     id: string
@@ -1429,8 +1429,8 @@ Acceptance: Save current view (filters + sort + groupBy) → `v2.view.savedViews
   }
   export type DrawerMode = "float" | "dock"
   ```
-- [ ] **Step 2**: Mock responses (extracted from existing `FloatingChat.tsx`)
-- [ ] **Step 3**: `useChat` hook
+- [x] **Step 2**: Mock responses (extracted from existing `FloatingChat.tsx`)
+- [x] **Step 3**: `useChat` hook
 
   ```ts
   // sketch
@@ -1454,8 +1454,8 @@ Acceptance: Save current view (filters + sort + groupBy) → `v2.view.savedViews
   }
   ```
 
-- [ ] **Step 4**: AiDrawer component (float mode skeleton)
-- [ ] **Step 5**: Test: send message → assistant reply appears
+- [x] **Step 4**: AiDrawer component (float mode skeleton)
+- [x] **Step 5**: Test: send message → assistant reply appears
 - [ ] **Step 6**: Commit
 
 ### Task 4.2: Dock mode + resize + push content
@@ -1470,9 +1470,9 @@ Pattern:
 - DrawerLayoutContext at `(app)/layout.tsx` provides `{ aiOffset, notesOffset, registerDrawer, unregisterDrawer }`
 - AiDrawer registers its docked width when in dock mode, `<main>` reads sum and applies `margin-right`
 
-- [ ] Tests: docking sets margin, switching to float resets margin, resize updates margin
-- [ ] Implementation with `useRef` for resize handle (mousedown + mousemove)
-- [ ] Persist `v2.chat.mode`, `v2.chat.dockWidth`
+- [x] Tests: docking sets margin, switching to float resets margin, resize updates margin
+- [x] Implementation with `useRef` for resize handle (mousedown + mousemove)
+- [x] Persist `v2.chat.mode`, `v2.chat.dockWidth`
 - [ ] Commit
 
 ### Task 4.3: TopBar trigger + ⌘J shortcut
@@ -1559,8 +1559,8 @@ Acceptance: Open both in float ✓. Open one in dock ✓. Try opening second in 
 - Create: `src/lib/v2/pin/usePinned.ts`
 - Create: `src/lib/v2/pin/__tests__/usePinned.test.ts`
 
-- [ ] Tests: add up to 5, 6th blocked, remove, clear
-- [ ] Implementation
+- [x] Tests: add up to 5, 6th blocked, remove, clear
+- [x] Implementation
   ```ts
   export function usePinned() {
     const [ids, setIds] = usePersistedState<string[]>("v2.pinned", [], z.array(z.string()).max(5))
