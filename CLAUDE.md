@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @docs/claude/skills.md
 @docs/claude/design-system.md
 @docs/claude/tooling.md
+@docs/claude/plans.md
 @docs/claude/feedback-turbopack.md
 @docs/claude/feedback-dndkit.md
 @docs/claude/feedback-tailwind-v4.md
