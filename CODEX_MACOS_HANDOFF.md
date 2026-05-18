@@ -80,13 +80,13 @@ enabled = true
 [plugins."vercel@openai-curated"]
 enabled = true
 
+[plugins."agent-skills@sunriser-dashboard"]
+enabled = true
+
 [plugins."browser@openai-bundled"]
 enabled = true
 
 [plugins."chrome@openai-bundled"]
-enabled = true
-
-[plugins."agent-skills@sunriser-dashboard"]
 enabled = true
 ```
 
@@ -217,6 +217,47 @@ Skills trong plugin `agent-skills`:
 
 Plugin nay cung co commands/agent files cho Claude/Gemini/OpenCode, nhung voi Codex phan quan trong nhat la `.codex-plugin/plugin.json` va `skills/`.
 
+## Active Project Skills And Workflows
+
+Trong project nay, khi user go slash-style names, Codex nen map sang cac skill/workflow sau. Day la tap dang duoc dung gan day cho Sunriser Dashboard:
+
+| Requested name | Where it comes from | Codex action |
+| --- | --- | --- |
+| `/karpathy-guidelines` | Standalone skill in `~/.agents/skills/karpathy-guidelines` | Use before writing/reviewing/refactoring code; keep changes surgical and verifiable |
+| `/frontend-design` | Standalone skill in `~/.agents/skills/frontend-design` and also official plugin skill | Use for UI/page/component work |
+| `/ui-ux-pro-max` | Standalone skill in `~/.agents/skills/ui-ux-pro-max` | Use for UX, accessibility, responsive behavior, interaction quality |
+| `/impeccable` | Standalone skill in `~/.agents/skills/impeccable` | Use for frontend polish, design critique, product UI refinement |
+| `/tailwind-css-patterns` | Standalone skill in `~/.agents/skills/tailwind-css-patterns` | Use for Tailwind v4 layout/styling/token work |
+| `/performance-optimization` | Repo-local `agent-skills/skills/performance-optimization` unless installed globally | Use for charts, tables, render cost, bundle/load/Core Web Vitals work |
+| `/agent-skills:build` | Claude slash workflow at `agent-skills/.claude/commands/build.md` | Treat as a Codex workflow: use `incremental-implementation`, `test-driven-development`, and `frontend-ui-engineering` |
+| `/agent-skills:code-simplify` | Claude slash workflow at `agent-skills/.claude/commands/code-simplify.md` | Treat as a Codex workflow: use `code-simplification`, preserve behavior, verify after each simplification |
+| `/agent-skills:review` | Claude slash workflow at `agent-skills/.claude/commands/review.md` | Treat as a Codex workflow: use `code-review-and-quality`; lead with findings and risks |
+
+Important: `/agent-skills:build`, `/agent-skills:code-simplify`, and `/agent-skills:review` are Claude-style command files in this repo, not separate Codex plugin tools. On Codex, use them as named workflows and invoke the mapped skills.
+
+Standalone skills found on the current Windows machine under `C:\Users\leanh\.agents\skills`:
+
+| Skill | Purpose in this project |
+| --- | --- |
+| `deploy-to-vercel` | Deploy applications and websites to Vercel |
+| `karpathy-guidelines` | Minimal, disciplined code changes and explicit verification criteria |
+| `frontend-design` | Production-grade UI implementation |
+| `impeccable` | UI polish, hierarchy, spacing, micro-interactions, product interface refinement |
+| `next-cache-components` | Next.js cache components, PPR, cache tags/life when relevant |
+| `prompt-master` | Prompt writing/improvement when explicitly requested |
+| `shadcn` | shadcn/ui component management |
+| `tailwind-css-patterns` | Tailwind CSS v4 utility and responsive layout patterns |
+| `typescript-advanced-types` | TypeScript advanced type-system help |
+| `ui-ux-pro-max` | Accessibility, UX patterns, interaction states, responsive behavior |
+| `vercel-cli-with-tokens` | Vercel CLI workflows that use token-based auth |
+| `vercel-composition-patterns` | React composition patterns for scalable component APIs |
+| `vercel-react-best-practices` | React/Next.js performance and architecture guidance |
+| `vercel-react-native-skills` | React Native and Expo guidance |
+| `vercel-react-view-transitions` | React View Transition API guidance |
+| `web-design-guidelines` | UI/accessibility review when explicitly requested |
+
+On macOS, these standalone skills are not guaranteed to sync automatically. If Codex does not list them, copy/install the needed skill folders into `~/.agents/skills` or enable the matching plugin when available. The repo-local `agent-skills` plugin will be available after the marketplace config points at this repo and Codex restarts.
+
 ## Repo Instructions Quan Trong
 
 File `AGENTS.md` cua repo yeu cau:
@@ -233,8 +274,10 @@ File `docs/claude/skills.md` yeu cau truoc cac task feature/fix/refactor/UI:
 - `impeccable`
 - `frontend-design`
 - `ui-ux-pro-max`
+- `tailwind-css-patterns`
+- `performance-optimization`
 
-Neu cac skills nay co trong Codex session moi, hay dung chung voi repo instructions. Neu khong co, Codex nen doc file docs nay va ap dung noi dung tuong duong.
+Neu cac skills nay co trong Codex session moi, hay dung chung voi repo instructions. Neu khong co, Codex nen doc file docs nay va ap dung noi dung tuong duong. Rieng `performance-optimization` co san trong `agent-skills` plugin.
 
 ## Installed/Enabled Plugin Groups Hien Tai
 
@@ -277,6 +320,7 @@ trust_level = "trusted"
 
 ```text
 Read CODEX_MACOS_HANDOFF.md, AGENTS.md, docs/claude/skills.md, then inspect available skills/plugins.
+Map slash-style requests like /karpathy-guidelines, /frontend-design, /ui-ux-pro-max, /impeccable, /performance-optimization, /tailwind-css-patterns, /agent-skills:build, /agent-skills:code-simplify, and /agent-skills:review to the skills/workflows documented in the handoff.
 ```
 
 5. Kiem tra plugin da load:
@@ -290,4 +334,3 @@ Read CODEX_MACOS_HANDOFF.md, AGENTS.md, docs/claude/skills.md, then inspect avai
 - Khong commit token/API key
 - Khong copy Windows path sang Mac
 - Khong push `.codex/`, `.cache/`, `node_modules/`, `.next/`
-

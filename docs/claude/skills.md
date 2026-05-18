@@ -32,7 +32,7 @@ The following Claude Code style slash names should map to Codex skill names in t
 | `/frontend-design` | `frontend-design` | Global Codex skill copied from Claude Code |
 | `/ui-ux-pro-max` | `ui-ux-pro-max` | Global Codex skill copied from Claude Code |
 | `/impeccable` | `impeccable` | Global Codex skill copied from Claude Code |
-| `/performance-optimization` | `performance-optimization` | Agent skill copied into Codex |
+| `/performance-optimization` | `performance-optimization` | Provided by the repo-local `agent-skills` plugin unless installed globally |
 | `/tailwind-css-patterns` | `tailwind-css-patterns` | Global Codex skill copied from Claude Code |
 | `/agent-skills:build` | `incremental-implementation`, `test-driven-development`, `frontend-ui-engineering` | `build` is a Claude slash workflow, not a single Codex skill |
 | `/agent-skills:code-simplify` | `code-simplification` | Behavior-preserving simplification |
