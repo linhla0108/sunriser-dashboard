@@ -8,6 +8,7 @@ import { PinnedToolbar } from "@/components/v2/pin/PinnedToolbar"
 import { ReportModal } from "@/components/v2/report/ReportModal"
 import { V2Sidebar } from "@/components/v2/layout/V2Sidebar"
 import { V2TopBar } from "@/components/v2/layout/V2TopBar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { DrawerRegistryProvider, useDrawerRegistry } from "@/lib/v2/drawer/DrawerRegistry"
 import { useShortcut } from "@/lib/v2/keyboard/useShortcut"
 
@@ -33,19 +34,21 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
   useShortcut({ key: "r", meta: true }, openReport)
 
   return (
-    <div className="flex h-screen bg-[var(--v2-bg)]">
-      <V2Sidebar />
-      <main
-        className="min-w-0 flex-1 overflow-y-auto transition-[margin] duration-200 lg:mr-[var(--v2-docked-width)]"
-        style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
-      >
-        <V2TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
-        <PinnedToolbar />
-        {children}
-      </main>
-      <AiDrawer />
-      <NotesDrawer />
-      <ReportModal open={reportOpen} onOpenChange={setReportOpen} />
-    </div>
+    <SidebarProvider style={{ "--sidebar-width": "15rem", "--sidebar-width-icon": "4rem", "--sidebar-icon-button-size": "calc(var(--sidebar-width-icon) - 1rem)" } as React.CSSProperties}>
+      <div data-v2-workspace="" className="bg-background flex h-screen w-full">
+        <V2Sidebar />
+        <SidebarInset
+          className="overflow-y-auto transition-[margin] duration-200 lg:mr-[var(--v2-docked-width)]"
+          style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
+        >
+          <V2TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
+          <PinnedToolbar />
+          {children}
+        </SidebarInset>
+        <AiDrawer />
+        <NotesDrawer />
+        <ReportModal open={reportOpen} onOpenChange={setReportOpen} />
+      </div>
+    </SidebarProvider>
   )
 }

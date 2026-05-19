@@ -7,9 +7,23 @@ import { ThemeProvider } from "@/lib/v2/theme/ThemeProvider"
 import { V2WorkspaceShell } from "../V2WorkspaceShell"
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/v2/dashboard",
+  usePathname: () => "/dashboard",
   useRouter: () => ({ push: vi.fn() }),
 }))
+
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
 
 function setupSession() {
   localStorage.setItem(
@@ -38,7 +52,7 @@ describe("V2WorkspaceShell keyboard shortcuts", () => {
     setupSession()
   })
 
-  it("⌘R opens the report modal", async () => {
+  it("Ctrl+R opens the report modal", async () => {
     render(
       <V2WorkspaceShell>
         <div>page</div>
@@ -49,7 +63,7 @@ describe("V2WorkspaceShell keyboard shortcuts", () => {
     await screen.findByText("page")
     expect(screen.queryByText("Generated report")).not.toBeInTheDocument()
 
-    await userEvent.keyboard("{Meta>}r{/Meta}")
+    await userEvent.keyboard("{Control>}r{/Control}")
 
     await waitFor(() => expect(screen.getByText("Generated report")).toBeInTheDocument())
   })

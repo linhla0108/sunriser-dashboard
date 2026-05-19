@@ -1,5 +1,5 @@
-import { ComparePage } from "@/components/v2/pin/ComparePage"
+import { redirect } from "next/navigation"
 
-export default function V2ComparePage() {
-  return <ComparePage />
+export default function V2CompareRedirect() {
+  redirect("/candidates")
 }

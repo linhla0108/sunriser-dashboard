@@ -8,18 +8,18 @@ function Probe({ combo, onFire }: { combo: { key: string; meta?: boolean; ctrl?:
 }
 
 describe("useShortcut", () => {
-  it("fires when matching meta combo is pressed", () => {
+  it("fires when matching ctrl combo is pressed", () => {
     const handler = vi.fn()
     render(<Probe combo={{ key: "j", meta: true }} onFire={handler} />)
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true }))
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", ctrlKey: true }))
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
-  it("treats ctrl as meta for cross-platform parity", () => {
+  it("does not fire on meta/cmd key when ctrl is required", () => {
     const handler = vi.fn()
     render(<Probe combo={{ key: "n", meta: true }} onFire={handler} />)
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "n", ctrlKey: true }))
-    expect(handler).toHaveBeenCalledTimes(1)
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "n", metaKey: true }))
+    expect(handler).not.toHaveBeenCalled()
   })
 
   it("does not fire on bare letter when meta is required", () => {

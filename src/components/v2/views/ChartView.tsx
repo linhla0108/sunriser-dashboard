@@ -8,10 +8,15 @@ import { GripVertical } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import OverviewCharts from "@/components/dashboard/OverviewCharts"
 import type { Applicant } from "@/lib/types"
+import { Button } from "@/components/ui/button"
 
 interface ChartViewProps {
   data: Applicant[]
 }
+
+const MINI_CHART_FILL = "var(--v2-chart-1, #FF5533)"
+const MINI_CHART_GRID = "color-mix(in srgb, var(--muted-foreground, #6B5549) 14%, transparent)"
+const MINI_CHART_TICK = "var(--muted-foreground, #6B5549)"
 
 const CHART_IDS = ["university", "month", "gpa"] as const
 
@@ -57,11 +62,16 @@ function MiniChart({ id, title, data }: { id: string; title: string; data: Array
     <article
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
+      data-v2-card=""
       className={`rounded-3xl bg-white p-4 shadow-[rgba(4,23,43,0.05)_0px_0px_0px_1px,rgba(0,0,0,0.1)_0px_20px_25px_-5px,rgba(0,0,0,0.1)_0px_8px_10px_-6px] ${isDragging ? "opacity-60" : ""}`}
     >
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-semibold tracking-widest text-[#6B5549] uppercase">{title}</h3>
-        <button
+        <h3 data-v2-muted="" className="text-xs font-semibold tracking-widest text-[#6B5549] uppercase">
+          {title}
+        </h3>
+        <Button
+          variant="plain"
+          size="plain"
           {...attributes}
           {...listeners}
           type="button"
@@ -69,15 +79,15 @@ function MiniChart({ id, title, data }: { id: string; title: string; data: Array
           className="cursor-grab rounded-lg p-1 text-[#767676] hover:bg-[#f9f9f9]"
         >
           <GripVertical className="size-4" />
-        </button>
+        </Button>
       </div>
       <ResponsiveContainer width="100%" height={180}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f9f9f9" vertical={false} />
-          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#6B5549" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: "#6B5549" }} axisLine={false} tickLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={MINI_CHART_GRID} vertical={false} />
+          <XAxis dataKey="name" tick={{ fontSize: 10, fill: MINI_CHART_TICK }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: MINI_CHART_TICK }} axisLine={false} tickLine={false} />
           <Tooltip />
-          <Bar dataKey="count" fill="#FF5533" radius={[6, 6, 0, 0]} maxBarSize={34} />
+          <Bar dataKey="count" fill={MINI_CHART_FILL} radius={[6, 6, 0, 0]} maxBarSize={34} />
         </BarChart>
       </ResponsiveContainer>
     </article>

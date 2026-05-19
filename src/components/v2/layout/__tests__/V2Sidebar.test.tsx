@@ -1,45 +1,55 @@
-import { act, fireEvent, render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { V2Sidebar } from "../V2Sidebar"
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/v2/dashboard",
+  usePathname: () => "/dashboard",
 }))
 
+// SidebarProvider uses useIsMobile which calls window.matchMedia
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+
 function TestProviders({ children }: { children: React.ReactNode }) {
-  return <TooltipProvider delay={0}>{children}</TooltipProvider>
+  return (
+    <TooltipProvider delay={0}>
+      <SidebarProvider defaultOpen>{children}</SidebarProvider>
+    </TooltipProvider>
+  )
 }
 
 describe("V2Sidebar", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    vi.useRealTimers()
-  })
-
-  it("toggle button collapses sidebar and persists", async () => {
+  it("renders all nav links", () => {
     render(<V2Sidebar />, { wrapper: TestProviders })
 
-    await userEvent.click(screen.getByRole("button", { name: /collapse sidebar/i }))
-
-    expect(JSON.parse(localStorage.getItem("v2.sidebar.collapsed")!)).toBe(true)
-    expect(screen.getByRole("button", { name: /expand sidebar/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /candidates/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /settings/i })).toBeInTheDocument()
   })
 
-  it("hover expands a collapsed sidebar after the peek delay", async () => {
-    vi.useFakeTimers()
-    localStorage.setItem("v2.sidebar.collapsed", JSON.stringify(true))
-
+  it("marks the active link with data-active", () => {
     render(<V2Sidebar />, { wrapper: TestProviders })
 
-    expect(screen.queryByText("Workspace V2")).not.toBeInTheDocument()
+    const dashboardLink = screen.getByRole("link", { name: /dashboard/i })
+    expect(dashboardLink).toHaveAttribute("data-active")
+  })
 
-    fireEvent.mouseEnter(screen.getByTestId("v2-sidebar"))
-    act(() => {
-      vi.advanceTimersByTime(300)
-    })
+  it("renders the sidebar trigger button", () => {
+    render(<V2Sidebar />, { wrapper: TestProviders })
 
-    expect(screen.getByText("Workspace V2")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
   })
 })

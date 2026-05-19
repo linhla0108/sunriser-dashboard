@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { Maximize2, Minimize2, X } from "lucide-react"
 import { ActionTooltip } from "@/components/v2/common/ActionTooltip"
 import { type V2DrawerId, useDrawerRegistry } from "@/lib/v2/drawer/DrawerRegistry"
+import { Button } from "@/components/ui/button"
 
 interface DrawerShellProps {
   id: V2DrawerId
@@ -36,10 +37,11 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
   return (
     <aside
       data-testid={`v2-${id}-drawer`}
+      data-v2-glass-panel="strong"
       className={
         docked
-          ? "fixed inset-y-0 right-0 z-40 hidden border-l border-[var(--v2-ink)]/10 bg-[var(--v2-surface)] shadow-[-20px_0_44px_rgba(15,23,42,0.10)] lg:flex"
-          : "fixed inset-x-3 bottom-24 z-50 flex max-h-[calc(100vh-7rem)] flex-col rounded-3xl border border-[var(--v2-ink)]/10 bg-[var(--v2-surface)] shadow-[0_24px_64px_rgba(15,23,42,0.18)] sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]"
+          ? "border-foreground/10 bg-card/80 fixed inset-y-0 right-0 z-40 hidden border-l shadow-[-20px_0_44px_rgba(15,23,42,0.10)] backdrop-blur-xl lg:flex"
+          : "border-foreground/10 bg-card/80 fixed inset-x-3 bottom-24 z-50 flex max-h-[calc(100vh-7rem)] flex-col rounded-3xl border shadow-[0_24px_64px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]"
       }
       style={docked ? { width } : undefined}
     >
@@ -49,32 +51,36 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
           aria-label={`Resize ${title}`}
           onPointerDown={startResize}
           onPointerMove={resize}
-          className="absolute inset-y-0 left-0 w-1 cursor-ew-resize hover:bg-[var(--v2-primary)]/40"
+          className="hover:bg-primary/40 absolute inset-y-0 left-0 w-1 cursor-ew-resize"
         />
       ) : null}
-      <header className="flex items-start justify-between gap-3 border-b border-[var(--v2-ink)]/10 p-4">
+      <header className="border-foreground/10 flex items-start justify-between gap-3 border-b p-4">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-[var(--v2-ink)]">{title}</h2>
-          {subtitle ? <p className="mt-0.5 truncate text-sm text-[var(--v2-muted)]">{subtitle}</p> : null}
+          <h2 className="text-foreground truncate text-base font-semibold">{title}</h2>
+          {subtitle ? <p className="text-muted-foreground mt-0.5 truncate text-sm">{subtitle}</p> : null}
         </div>
         <div className="flex items-center gap-1">
           <ActionTooltip label={docked ? "Float drawer" : "Dock drawer"}>
-            <button
+            <Button
+              variant="plain"
+              size="plain"
               type="button"
               onClick={() => registry.setMode(id, docked ? "float" : "dock")}
-              className="flex size-8 items-center justify-center rounded-full text-[var(--v2-muted)] hover:bg-[var(--v2-ink)]/5"
+              className="text-muted-foreground hover:bg-foreground/5 flex size-8 items-center justify-center rounded-full"
             >
               {docked ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-            </button>
+            </Button>
           </ActionTooltip>
           <ActionTooltip label="Close drawer">
-            <button
+            <Button
+              variant="plain"
+              size="plain"
               type="button"
               onClick={() => registry.close(id)}
-              className="flex size-8 items-center justify-center rounded-full text-[var(--v2-muted)] hover:bg-[var(--v2-ink)]/5"
+              className="text-muted-foreground hover:bg-foreground/5 flex size-8 items-center justify-center rounded-full"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </ActionTooltip>
         </div>
       </header>

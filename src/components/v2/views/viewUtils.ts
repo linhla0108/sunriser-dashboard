@@ -24,7 +24,7 @@ export function round1Tone(result?: Applicant["round1Result"]) {
   if (result === "Passed") return "bg-emerald-50 text-emerald-700 ring-emerald-200"
   if (result === "Failed") return "bg-rose-50 text-rose-700 ring-rose-200"
   if (result === "Waiting list") return "bg-amber-50 text-amber-700 ring-amber-200"
-  return "bg-[var(--v2-ink)]/5 text-[var(--v2-muted)] ring-[var(--v2-ink)]/10"
+  return "bg-foreground/5 text-muted-foreground ring-foreground/10"
 }
 
 export function groupApplicants(items: Applicant[], groupBy: "round1" | "position" | "batch") {
@@ -32,6 +32,8 @@ export function groupApplicants(items: Applicant[], groupBy: "round1" | "positio
     return ROUND_1_GROUPS.map(group => ({
       key: group.key,
       label: group.label,
+      /** rawKey is the full position1 value used for mutations; not needed for round1. */
+      rawKey: null as string | null,
       items: items.filter(group.test),
     }))
   }
@@ -42,5 +44,12 @@ export function groupApplicants(items: Applicant[], groupBy: "round1" | "positio
     map.set(key, [...(map.get(key) ?? []), item])
   }
 
-  return Array.from(map, ([label, grouped]) => ({ key: label, label, items: grouped }))
+  return Array.from(map, ([label, grouped]) => ({
+    key: label,
+    label,
+    /** rawKey stores the original position1 string so updateItemColumn can restore it
+     *  without having to find a sample item (which fails on empty target columns). */
+    rawKey: groupBy === "position" ? (grouped[0]?.position1 ?? null) : null,
+    items: grouped,
+  }))
 }

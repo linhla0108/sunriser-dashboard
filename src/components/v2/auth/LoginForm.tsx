@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { CheckCircle2, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,11 +14,17 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
+  const [readyToNavigate, setReadyToNavigate] = useState(false)
+
+  // Navigate only after React commits the auth state — avoids RequireAuth race condition
+  useEffect(() => {
+    if (readyToNavigate && user) onSuccess?.()
+  }, [readyToNavigate, user, onSuccess])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,13 +39,19 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       return
     }
 
-    onSuccess?.()
+    setReadyToNavigate(true)
   }
 
-  function fillQuickLogin(user: (typeof MOCK_USERS)[number]) {
-    setEmail(user.email)
-    setPassword(user.password)
+  async function quickLogin(demoUser: (typeof MOCK_USERS)[number]) {
+    setPending(true)
     setError("")
+    const result = await signIn(demoUser.email, demoUser.password)
+    setPending(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setReadyToNavigate(true)
   }
 
   return (
@@ -79,24 +91,23 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <div className="grid grid-cols-2 gap-2">
         {MOCK_USERS.map(user => (
           <ActionTooltip key={user.id} label={`Use ${user.role} demo login`}>
-            <button
+            <Button
+              variant="plain"
+              size="plain"
               type="button"
-              className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--v2-ink)]/10 px-3 text-sm font-medium text-[var(--v2-ink)] transition hover:bg-[var(--v2-ink)]/5"
-              onClick={() => fillQuickLogin(user)}
+              className="border-foreground/10 text-foreground hover:bg-foreground/5 flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
+              onClick={() => quickLogin(user)}
+              disabled={pending}
             >
-              <CheckCircle2 className="size-4 text-[var(--v2-primary)]" />
+              <CheckCircle2 className="text-primary size-4" />
               {user.role === "admin" ? "Admin" : "Member"}
-            </button>
+            </Button>
           </ActionTooltip>
         ))}
       </div>
 
       <ActionTooltip label="Sign in to workspace">
-        <Button
-          type="submit"
-          className="h-11 w-full rounded-[var(--v2-radius-button)] bg-[var(--v2-primary)] text-white hover:bg-[var(--v2-primary-hover)]"
-          disabled={pending}
-        >
+        <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg" disabled={pending}>
           <LogIn className="size-4" />
           {pending ? "Signing in" : "Sign in"}
         </Button>

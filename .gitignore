@@ -51,3 +51,6 @@ C*Usersleanh.sshknown_hosts
 !agent-skills/**
 !agent-skills/.claude/
 !agent-skills/.claude/**
+
+# Playwright test artifacts
+.playwright-mcp

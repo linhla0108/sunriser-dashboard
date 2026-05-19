@@ -9,6 +9,7 @@ import { ActionTooltip } from "@/components/v2/common/ActionTooltip"
 import { usePinned } from "@/lib/v2/pin/usePinned"
 import { useReport } from "@/lib/v2/report/useReport"
 import type { ReportSnapshot } from "@/lib/v2/report/types"
+import { Button } from "@/components/ui/button"
 
 interface ReportModalProps {
   open: boolean
@@ -50,7 +51,7 @@ export function ReportModal({ open, onOpenChange }: ReportModalProps) {
       sourceApplicants: ids,
     }
     writeShare(snapshot)
-    const url = `${window.location.origin}/v2/public/report/${shareId}`
+    const url = `${window.location.origin}/public/report/${shareId}`
     try {
       await navigator.clipboard.writeText(url)
       toast("Share link copied!", { description: url })
@@ -67,67 +68,76 @@ export function ReportModal({ open, onOpenChange }: ReportModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[85vh] w-full max-w-2xl overflow-hidden bg-[var(--v2-surface)] text-[var(--v2-ink)] sm:max-w-2xl"
+        data-v2-glass-panel="strong"
+        className="bg-card/90 text-foreground max-h-[85vh] w-full max-w-2xl overflow-hidden backdrop-blur-xl sm:max-w-2xl"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <DialogTitle className="font-heading text-lg text-[var(--v2-ink)]">Generated report</DialogTitle>
-            <p className="mt-1 text-xs text-[var(--v2-muted)]">
+            <DialogTitle className="font-heading text-foreground text-lg">Generated report</DialogTitle>
+            <p className="text-muted-foreground mt-1 text-xs">
               {ids.length} pinned candidate{ids.length === 1 ? "" : "s"} · mock generation
             </p>
           </div>
           <div className="flex items-center gap-1">
             <ActionTooltip label="Regenerate" shortcut="R">
-              <button
+              <Button
+                variant="plain"
+                size="plain"
                 type="button"
                 onClick={regenerate}
                 disabled={pending}
-                className="flex size-8 items-center justify-center rounded-lg text-[var(--v2-muted)] transition hover:bg-[var(--v2-ink)]/5 hover:text-[var(--v2-ink)] disabled:opacity-50"
+                className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground flex size-8 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw className={`size-4 ${pending ? "animate-spin" : ""}`} />
-              </button>
+              </Button>
             </ActionTooltip>
             <ActionTooltip label="Copy share link">
-              <button
+              <Button
+                variant="plain"
+                size="plain"
                 type="button"
                 onClick={handleShare}
-                className="flex size-8 items-center justify-center rounded-lg text-[var(--v2-muted)] transition hover:bg-[var(--v2-ink)]/5 hover:text-[var(--v2-ink)]"
+                className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground flex size-8 items-center justify-center rounded-lg transition"
               >
                 <Share2 className="size-4" />
-              </button>
+              </Button>
             </ActionTooltip>
             <ActionTooltip label="Download as PDF">
-              <button
+              <Button
+                variant="plain"
+                size="plain"
                 type="button"
                 onClick={handleDownload}
-                className="flex size-8 items-center justify-center rounded-lg text-[var(--v2-muted)] transition hover:bg-[var(--v2-ink)]/5 hover:text-[var(--v2-ink)]"
+                className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground flex size-8 items-center justify-center rounded-lg transition"
               >
                 <Download className="size-4" />
-              </button>
+              </Button>
             </ActionTooltip>
             <ActionTooltip label="Close report">
-              <button
+              <Button
+                variant="plain"
+                size="plain"
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="flex size-8 items-center justify-center rounded-lg text-[var(--v2-muted)] transition hover:bg-[var(--v2-ink)]/5 hover:text-[var(--v2-ink)]"
+                className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground flex size-8 items-center justify-center rounded-lg transition"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </ActionTooltip>
           </div>
         </div>
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
-          {sections.length === 0 && !pending ? <p className="py-10 text-center text-sm text-[var(--v2-muted)]">No content yet.</p> : null}
+          {sections.length === 0 && !pending ? <p className="text-muted-foreground py-10 text-center text-sm">No content yet.</p> : null}
           {sections.map(section => (
-            <section key={section.id} className="rounded-2xl border border-[var(--v2-ink)]/10 bg-[var(--v2-bg)]/40 p-4">
-              <h3 className="font-heading text-sm font-semibold text-[var(--v2-ink)]">{section.title}</h3>
-              <p className="mt-2 text-sm whitespace-pre-line text-[var(--v2-ink)]/85">{section.content}</p>
+            <section key={section.id} data-v2-card="" className="border-foreground/10 bg-background/40 rounded-2xl border p-4">
+              <h3 className="font-heading text-foreground text-sm font-semibold">{section.title}</h3>
+              <p className="text-foreground/85 mt-2 text-sm whitespace-pre-line">{section.content}</p>
             </section>
           ))}
           {pending ? (
-            <div className="flex items-center gap-2 text-xs text-[var(--v2-muted)]">
-              <span className="size-2 animate-pulse rounded-full bg-[var(--v2-primary)]" />
+            <div className="text-muted-foreground flex items-center gap-2 text-xs">
+              <span className="bg-primary size-2 animate-pulse rounded-full" />
               Generating next section…
             </div>
           ) : null}

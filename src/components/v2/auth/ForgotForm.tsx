@@ -32,7 +32,7 @@ export function ForgotForm() {
       <ActionTooltip label="Send reset instructions">
         <Button
           type="submit"
-          className="h-11 w-full rounded-[var(--v2-radius-button)] bg-[var(--v2-primary)] text-white hover:bg-[var(--v2-primary-hover)]"
+          className="h-11 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <MailCheck className="size-4" />
           Send reset link

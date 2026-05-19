@@ -1,6 +1,6 @@
-import { PublicReport } from "@/components/v2/public/PublicReport"
+import { redirect } from "next/navigation"
 
-export default async function V2PublicReportPage({ params }: { params: Promise<{ shareId: string }> }) {
+export default async function V2PublicReportRedirect({ params }: { params: Promise<{ shareId: string }> }) {
   const { shareId } = await params
-  return <PublicReport shareId={shareId} />
+  redirect(`/public/report/${shareId}`)
 }

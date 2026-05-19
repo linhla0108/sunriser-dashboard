@@ -17,16 +17,16 @@ describe("ViewPillNav", () => {
   it("switches views with icon buttons and persists the active view", async () => {
     render(<ViewPillNav />, { wrapper: TestProviders })
 
-    await userEvent.click(screen.getByRole("button", { name: /gallery view/i }))
+    await userEvent.click(screen.getByRole("button", { name: /pipeline view/i }))
 
-    expect(screen.getByRole("button", { name: /gallery view/i })).toHaveAttribute("aria-pressed", "true")
-    expect(JSON.parse(localStorage.getItem("v2.view.current")!)).toBe("gallery")
+    expect(screen.getByRole("button", { name: /pipeline view/i })).toHaveAttribute("aria-pressed", "true")
+    expect(JSON.parse(localStorage.getItem("v2.view.current")!)).toBe("pipeline")
   })
 
-  it("switches views with keyboard shortcuts 1-4", async () => {
+  it("switches views with keyboard shortcuts 1-3", async () => {
     render(<ViewPillNav />, { wrapper: TestProviders })
 
-    await userEvent.keyboard("4")
+    await userEvent.keyboard("3")
 
     expect(screen.getByRole("button", { name: /chart view/i })).toHaveAttribute("aria-pressed", "true")
   })

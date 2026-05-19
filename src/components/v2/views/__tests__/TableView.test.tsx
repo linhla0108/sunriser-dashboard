@@ -46,6 +46,7 @@ const applicants: Applicant[] = [
     discoveryChannel: "Facebook",
     submittedAt: "2026-05-01",
     batch: 1,
+    pic: "Quỳnh",
     round1Result: "Passed",
   },
   {
@@ -64,6 +65,7 @@ const applicants: Applicant[] = [
     discoveryChannel: "LinkedIn",
     submittedAt: "2026-05-02",
     batch: 2,
+    pic: "Nhiên",
     round1Result: "Waiting list",
   },
 ]
@@ -92,5 +94,59 @@ describe("TableView", () => {
     await userEvent.click(within(row!).getByRole("button", { name: /pin to compare/i }))
 
     expect(within(row!).getByRole("button", { name: /unpin candidate/i })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("emits updated table data when a round chip option changes", async () => {
+    const onDataChange = vi.fn()
+
+    render(<TableView data={applicants} onDataChange={onDataChange} />, { wrapper: TestProviders })
+
+    const row = screen.getByText("An Nguyen").closest("tr")
+    expect(row).not.toBeNull()
+
+    await userEvent.click(within(row!).getByRole("button", { name: /passed/i }))
+    await userEvent.click(screen.getByRole("button", { name: /failed/i }))
+
+    expect(onDataChange).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "a1",
+          round1Result: "Failed",
+        }),
+      ])
+    )
+  })
+
+  it("emits updated table data when batch and PIC chips change", async () => {
+    const onDataChange = vi.fn()
+
+    render(<TableView data={applicants} onDataChange={onDataChange} />, { wrapper: TestProviders })
+
+    const row = screen.getByText("An Nguyen").closest("tr")
+    expect(row).not.toBeNull()
+
+    await userEvent.click(within(row!).getByRole("button", { name: /batch 1/i }))
+    await userEvent.click(screen.getByRole("button", { name: /batch 3/i }))
+
+    expect(onDataChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "a1",
+          batch: 3,
+        }),
+      ])
+    )
+
+    await userEvent.click(within(row!).getByRole("button", { name: /quỳnh/i }))
+    await userEvent.click(screen.getByRole("button", { name: /huy/i }))
+
+    expect(onDataChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "a1",
+          pic: "Huy",
+        }),
+      ])
+    )
   })
 })

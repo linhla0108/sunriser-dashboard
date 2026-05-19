@@ -38,11 +38,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!match) return { ok: false, error: "Invalid credentials" }
 
-      setSession({
+      const newSession: V2Session = {
         userId: match.id,
         role: match.role,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      })
+      }
+
+      // Write synchronously so RequireAuth on the next page reads it before React commits state
+      try { window.localStorage.setItem("v2.auth.session", JSON.stringify(newSession)) } catch {}
+      setSession(newSession)
 
       return { ok: true }
     },

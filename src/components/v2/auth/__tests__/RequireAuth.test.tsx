@@ -6,7 +6,7 @@ import { RequireAuth } from "../RequireAuth"
 const push = vi.fn()
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/v2/dashboard",
+  usePathname: () => "/dashboard",
   useRouter: () => ({ push }),
 }))
 
@@ -28,7 +28,7 @@ describe("RequireAuth", () => {
       { wrapper: TestProviders }
     )
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/v2/login?from=%2Fv2%2Fdashboard"))
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/login?from=%2Fdashboard"))
     expect(screen.queryByText("app")).not.toBeInTheDocument()
   })
 

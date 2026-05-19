@@ -18,21 +18,19 @@ export interface Applicant {
   submittedAt: string
   batch: number
   pic?: string
-  round1Result?: 'Passed' | 'Failed' | 'Waiting list'
+  round1Result?: string
   round1Notes?: string
   round2Result?: string
 }
 
 export type Position =
-  | 'AI Engineering Intern'
-  | 'Data Analysis Intern'
-  | 'Game Design Intern'
-  | 'Unity Development Intern'
-  | 'Game User Acquisition Intern'
-  | 'Human Resources Intern'
-  | 'Game Quality Assurance Intern'
-
-export type Round1Result = 'Passed' | 'Failed' | 'Waiting list'
+  | "AI Engineering Intern"
+  | "Data Analysis Intern"
+  | "Game Design Intern"
+  | "Unity Development Intern"
+  | "Game User Acquisition Intern"
+  | "Human Resources Intern"
+  | "Game Quality Assurance Intern"
 
 export interface DashboardStats {
   totalApplicants: number

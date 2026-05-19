@@ -16,9 +16,9 @@ describe("useViewState", () => {
   it("persists the selected view", () => {
     const { result } = renderHook(() => useViewState())
 
-    act(() => result.current.setView("gallery"))
+    act(() => result.current.setView("pipeline"))
 
-    expect(JSON.parse(localStorage.getItem("v2.view.current")!)).toBe("gallery")
+    expect(JSON.parse(localStorage.getItem("v2.view.current")!)).toBe("pipeline")
   })
 
   it("falls back to table for an invalid stored view", () => {

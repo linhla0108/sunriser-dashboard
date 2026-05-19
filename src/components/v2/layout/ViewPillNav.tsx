@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { BarChart3, Kanban, LayoutGrid, Table2 } from "lucide-react"
 import { ActionTooltip } from "@/components/v2/common/ActionTooltip"
-import { SavedViewsMenu } from "@/components/v2/views/SavedViewsMenu"
 import { V2_VIEW_KEYS, type V2View, useViewState } from "@/lib/v2/views/useViewState"
+import { Button } from "@/components/ui/button"
 
 const VIEWS: Array<{
   key: V2View
@@ -13,8 +13,8 @@ const VIEWS: Array<{
 }> = [
   { key: "table", label: "Table view", Icon: Table2 },
   { key: "pipeline", label: "Pipeline view", Icon: Kanban },
-  { key: "gallery", label: "Gallery view", Icon: LayoutGrid },
   { key: "chart", label: "Chart view", Icon: BarChart3 },
+  { key: "gallery", label: "Gallery view", Icon: LayoutGrid },
 ]
 
 function getScrollY(event: Event) {
@@ -48,6 +48,10 @@ export function ViewPillNav() {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      // Don't intercept number keys while the user is typing in an input or textarea.
+      const tag = (event.target as HTMLElement).tagName
+      if (tag === "INPUT" || tag === "TEXTAREA" || (event.target as HTMLElement).isContentEditable) return
+
       const index = Number(event.key) - 1
       const nextView = V2_VIEW_KEYS[index]
       if (!nextView) return
@@ -64,7 +68,8 @@ export function ViewPillNav() {
     <nav
       aria-label="Candidate view options"
       data-testid="v2-view-pill-nav"
-      className={`fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full border border-[var(--v2-ink)]/10 bg-[var(--v2-surface)]/95 p-1.5 text-[var(--v2-ink)] shadow-[0_18px_44px_rgba(15,23,42,0.16)] backdrop-blur transition-opacity duration-200 sm:bottom-6 ${visible ? "opacity-100" : "pointer-events-none opacity-0"}`}
+      data-v2-glass-panel="strong"
+      className={`border-border bg-card/70 text-foreground ring-foreground/5 fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full border p-1.5 shadow-[0_18px_44px_rgba(15,23,42,0.16)] ring-1 backdrop-blur-xl transition-opacity duration-200 sm:bottom-6 ${visible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
       {VIEWS.map((item, index) => {
         const Icon = item.Icon
@@ -72,22 +77,20 @@ export function ViewPillNav() {
 
         return (
           <ActionTooltip key={item.key} label={item.label} shortcut={String(index + 1)}>
-            <button
+            <Button
+              variant="plain"
+              size="plain"
               type="button"
               onClick={() => setView(item.key)}
               aria-label={item.label}
               aria-pressed={active}
-              className={`flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--v2-primary)] ${
-                active ? "bg-[var(--v2-primary)] text-white" : "text-[var(--v2-muted)] hover:bg-[var(--v2-ink)]/5 hover:text-[var(--v2-ink)]"
-              }`}
+              className={`focus-visible:outline-primary flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"}`}
             >
               <Icon className="size-4" aria-hidden="true" />
-            </button>
+            </Button>
           </ActionTooltip>
         )
       })}
-      <div className="mx-1 h-6 w-px bg-[var(--v2-ink)]/10" />
-      <SavedViewsMenu />
     </nav>
   )
 }

@@ -1,5 +1,5 @@
-import { AdmittedGrid } from "@/components/v2/public/AdmittedGrid"
+import { redirect } from "next/navigation"
 
-export default function V2PublicResultsPage() {
-  return <AdmittedGrid />
+export default function V2PublicResultsRedirect() {
+  redirect("/public/results")
 }

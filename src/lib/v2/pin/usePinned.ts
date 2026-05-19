@@ -4,13 +4,12 @@ import { useCallback, useEffect, useRef } from "react"
 import { z } from "zod"
 import { usePersistedState } from "@/lib/v2/persistence/usePersistedState"
 
-const pinnedSchema = z.array(z.string()).max(5)
+const pinnedSchema = z.array(z.string())
 const pinnedChangeEvent = "v2:pinned-change"
 
 export function usePinned() {
   const [ids, setStoredIds] = usePersistedState<string[]>("v2.pinned", [], pinnedSchema)
   const idsRef = useRef(ids)
-  const max = 5
 
   useEffect(() => {
     idsRef.current = ids
@@ -43,7 +42,7 @@ export function usePinned() {
   const add = useCallback(
     (id: string) => {
       const current = idsRef.current
-      if (current.includes(id) || current.length >= max) return false
+      if (current.includes(id)) return false
       setIds([...current, id])
       return true
     },
@@ -65,5 +64,5 @@ export function usePinned() {
     return ids.includes(id)
   }
 
-  return { ids, max, add, remove, clear, has, isFull: ids.length >= max }
+  return { ids, add, remove, clear, has }
 }

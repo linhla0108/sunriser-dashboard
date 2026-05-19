@@ -15,7 +15,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    if (ready && !user) router.push(`/v2/login?from=${encodeURIComponent(pathname)}`)
+    if (ready && !user) router.push(`/login?from=${encodeURIComponent(pathname)}`)
   }, [pathname, ready, router, user])
 
   if (!ready || !user) return null

@@ -38,11 +38,11 @@ export function PublicReport({ shareId }: { shareId: string }) {
   if (!snapshot) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-        <h1 className="font-heading text-2xl font-semibold text-[var(--v2-ink)]">Report not found</h1>
-        <p className="mt-2 text-sm text-[var(--v2-muted)]">This share link is invalid or has expired on this device.</p>
+        <h1 className="font-heading text-2xl font-semibold text-foreground">Report not found</h1>
+        <p className="mt-2 text-sm text-muted-foreground">This share link is invalid or has expired on this device.</p>
         <Link
-          href="/v2/login"
-          className="mt-6 inline-flex items-center rounded-full bg-[var(--v2-primary)] px-4 py-2 text-sm font-semibold text-white"
+          href="/login"
+          className="mt-6 inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
         >
           Return to login
         </Link>
@@ -56,18 +56,18 @@ export function PublicReport({ shareId }: { shareId: string }) {
   return (
     <section className="mx-auto max-w-3xl px-4 pb-12 sm:px-6">
       <header className="mb-6">
-        <p className="text-xs tracking-widest text-[var(--v2-muted)] uppercase">Shared report</p>
-        <h1 className="font-heading mt-1 text-2xl font-semibold text-[var(--v2-ink)]">
+        <p className="text-xs tracking-widest text-muted-foreground uppercase">Shared report</p>
+        <h1 className="font-heading mt-1 text-2xl font-semibold text-foreground">
           {candidateCount} candidate{candidateCount === 1 ? "" : "s"} reviewed
         </h1>
-        <p className="mt-1 text-xs text-[var(--v2-muted)]">Generated {generated}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Generated {generated}</p>
       </header>
 
       <div className="space-y-4">
         {snapshot.sections.map(section => (
-          <article key={section.id} className="rounded-2xl border border-[var(--v2-ink)]/10 bg-[var(--v2-surface)] p-5">
-            <h2 className="font-heading text-base font-semibold text-[var(--v2-ink)]">{section.title}</h2>
-            <p className="mt-2 text-sm whitespace-pre-line text-[var(--v2-ink)]/85">{section.content}</p>
+          <article key={section.id} className="rounded-2xl border border-foreground/10 bg-card p-5">
+            <h2 className="font-heading text-base font-semibold text-foreground">{section.title}</h2>
+            <p className="mt-2 text-sm whitespace-pre-line text-foreground/85">{section.content}</p>
           </article>
         ))}
       </div>

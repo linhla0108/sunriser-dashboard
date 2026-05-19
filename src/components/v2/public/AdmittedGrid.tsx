@@ -25,8 +25,8 @@ export function AdmittedGrid() {
     <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-[var(--v2-ink)]">Admitted candidates</h1>
-          <p className="mt-1 text-sm text-[var(--v2-muted)]">
+          <h1 className="font-heading text-2xl font-semibold text-foreground">Admitted candidates</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {visible.length} of {admitted.length} candidates cleared Round 1.
           </p>
         </div>
@@ -49,13 +49,13 @@ export function AdmittedGrid() {
         {visible.map(candidate => (
           <li
             key={candidate.id}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-[var(--v2-ink)]/10 bg-[var(--v2-surface)] p-4 text-center"
+            className="flex flex-col items-center gap-2 rounded-2xl border border-foreground/10 bg-card p-4 text-center"
           >
             <Avatar className="size-14">
               <AvatarFallback>{getInitials(candidate.name)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm font-semibold text-[var(--v2-ink)]">{candidate.name}</span>
-            <span className="text-xs text-[var(--v2-muted)]">{candidate.position1}</span>
+            <span className="text-sm font-semibold text-foreground">{candidate.name}</span>
+            <span className="text-xs text-muted-foreground">{candidate.position1}</span>
           </li>
         ))}
       </ul>

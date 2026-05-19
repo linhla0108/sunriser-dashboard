@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { usePersistedState } from "@/lib/v2/persistence/usePersistedState"
 
-const VIEWS = ["table", "pipeline", "gallery", "chart"] as const
+const VIEWS = ["table", "pipeline", "chart"] as const
 const SORTS = ["name", "gpa", "submittedAt"] as const
 const LANGS = ["en", "vi"] as const
 
@@ -14,11 +14,11 @@ type SortKey = (typeof SORTS)[number]
 type Lang = (typeof LANGS)[number]
 
 const SHORTCUTS: Array<{ keys: string; action: string }> = [
-  { keys: "⌘ \\", action: "Toggle sidebar" },
-  { keys: "⌘ J", action: "Open AI drawer" },
-  { keys: "⌘ N", action: "Open notes drawer" },
-  { keys: "⌘ R", action: "Create report" },
-  { keys: "1 – 4", action: "Switch view (Table / Pipeline / Gallery / Charts)" },
+  { keys: "Ctrl+\\", action: "Toggle sidebar" },
+  { keys: "Ctrl+J", action: "Open AI drawer" },
+  { keys: "Ctrl+N", action: "Open notes drawer" },
+  { keys: "Ctrl+R", action: "Create report" },
+  { keys: "1 – 3", action: "Switch view (Table / Pipeline / Charts)" },
   { keys: "P", action: "Pin focused candidate" },
 ]
 
@@ -31,7 +31,7 @@ export function WorkspaceTab() {
     <div className="mt-6 space-y-6">
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="default-view" className="text-xs font-semibold text-[var(--v2-muted)] uppercase">
+          <Label htmlFor="default-view" className="text-xs font-semibold text-muted-foreground uppercase">
             Default view
           </Label>
           <Select value={defaultView} onValueChange={value => setDefaultView((value as ViewKey) ?? "table")}>
@@ -49,7 +49,7 @@ export function WorkspaceTab() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="default-sort" className="text-xs font-semibold text-[var(--v2-muted)] uppercase">
+          <Label htmlFor="default-sort" className="text-xs font-semibold text-muted-foreground uppercase">
             Default sort
           </Label>
           <Select value={defaultSort} onValueChange={value => setDefaultSort((value as SortKey) ?? "submittedAt")}>
@@ -65,7 +65,7 @@ export function WorkspaceTab() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="lang" className="text-xs font-semibold text-[var(--v2-muted)] uppercase">
+          <Label htmlFor="lang" className="text-xs font-semibold text-muted-foreground uppercase">
             Language
           </Label>
           <Select value={lang} onValueChange={value => setLang((value as Lang) ?? "en")}>
@@ -80,15 +80,15 @@ export function WorkspaceTab() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[var(--v2-ink)]/10 p-4">
-        <h2 className="font-heading text-sm font-semibold text-[var(--v2-ink)]">Keyboard shortcuts</h2>
+      <section className="rounded-2xl border border-foreground/10 p-4">
+        <h2 className="font-heading text-sm font-semibold text-foreground">Keyboard shortcuts</h2>
         <table className="mt-3 w-full text-sm">
           <tbody>
             {SHORTCUTS.map(shortcut => (
-              <tr key={shortcut.action} className="border-t border-[var(--v2-ink)]/5 first:border-0">
-                <td className="py-2 text-[var(--v2-ink)]/85">{shortcut.action}</td>
+              <tr key={shortcut.action} className="border-t border-foreground/5 first:border-0">
+                <td className="py-2 text-foreground/85">{shortcut.action}</td>
                 <td className="py-2 text-right">
-                  <kbd className="rounded-md border border-[var(--v2-ink)]/15 bg-[var(--v2-bg)] px-2 py-0.5 font-mono text-xs text-[var(--v2-ink)]">
+                  <kbd className="rounded-md border border-foreground/15 bg-background px-2 py-0.5 font-mono text-xs text-foreground">
                     {shortcut.keys}
                   </kbd>
                 </td>

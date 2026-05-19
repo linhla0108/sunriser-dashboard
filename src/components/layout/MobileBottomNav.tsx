@@ -1,7 +1,8 @@
-'use client'
+"use client"
 
-import { LayoutDashboard, Table2 } from 'lucide-react'
-import type { View } from './Sidebar'
+import { LayoutDashboard, Table2 } from "lucide-react"
+import type { View } from "./Sidebar"
+import { Button } from "@/components/ui/button"
 
 interface MobileBottomNavProps {
   activeView: View
@@ -9,8 +10,8 @@ interface MobileBottomNavProps {
 }
 
 const navItems: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'table', label: 'Table', icon: Table2 },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "table", label: "Table", icon: Table2 },
 ]
 
 export default function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavProps) {
@@ -22,25 +23,17 @@ export default function MobileBottomNav({ activeView, onViewChange }: MobileBott
       {navItems.map(({ id, label, icon: Icon }) => {
         const isActive = activeView === id
         return (
-          <button
+          <Button
+            variant="plain"
+            size="plain"
             key={id}
             data-cid={`nav-item-${id}`}
             onClick={() => onViewChange(id)}
             className="flex min-w-[64px] flex-col items-center gap-1 py-2"
           >
-            <Icon
-              size={20}
-              strokeWidth={isActive ? 2.2 : 1.8}
-              className={isActive ? 'text-[#FF5533]' : 'text-[#767676]'}
-            />
-            <span
-              className={`text-[11px] font-medium ${
-                isActive ? 'text-[#FF5533]' : 'text-[#767676]'
-              }`}
-            >
-              {label}
-            </span>
-          </button>
+            <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} className={isActive ? "text-[#FF5533]" : "text-[#767676]"} />
+            <span className={`text-[11px] font-medium ${isActive ? "text-[#FF5533]" : "text-[#767676]"}`}>{label}</span>
+          </Button>
         )
       })}
     </nav>

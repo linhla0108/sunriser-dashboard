@@ -23,19 +23,13 @@ describe("usePinned", () => {
     expect(result.current.ids).toEqual([])
   })
 
-  it("blocks the 6th pinned id", () => {
+  it("allows more than five pinned ids", () => {
     const { result } = renderHook(() => usePinned())
 
     act(() => {
-      ;["1", "2", "3", "4", "5"].forEach(id => result.current.add(id))
+      ;["1", "2", "3", "4", "5", "6", "7"].forEach(id => result.current.add(id))
     })
 
-    expect(result.current.isFull).toBe(true)
-
-    act(() => {
-      result.current.add("6")
-    })
-
-    expect(result.current.ids).toEqual(["1", "2", "3", "4", "5"])
+    expect(result.current.ids).toEqual(["1", "2", "3", "4", "5", "6", "7"])
   })
 })

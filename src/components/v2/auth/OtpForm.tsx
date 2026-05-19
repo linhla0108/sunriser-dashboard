@@ -64,7 +64,7 @@ export function OtpForm({ onSuccess }: OtpFormProps) {
             value={digit}
             onChange={event => updateDigit(index, event.target.value)}
             onPaste={pasteDigits}
-            className="h-12 rounded-lg border border-[var(--v2-ink)]/15 bg-transparent text-center text-lg font-semibold transition outline-none focus:border-[var(--v2-primary)] focus:ring-3 focus:ring-[var(--v2-primary)]/20"
+            className="h-12 rounded-lg border border-foreground/15 bg-transparent text-center text-lg font-semibold transition outline-none focus:border-primary focus:ring-3 focus:ring-primary/20"
           />
         ))}
       </div>
@@ -78,7 +78,7 @@ export function OtpForm({ onSuccess }: OtpFormProps) {
       <ActionTooltip label="Verify code">
         <Button
           type="submit"
-          className="h-11 w-full rounded-[var(--v2-radius-button)] bg-[var(--v2-primary)] text-white hover:bg-[var(--v2-primary-hover)]"
+          className="h-11 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <ShieldCheck className="size-4" />
           Verify
