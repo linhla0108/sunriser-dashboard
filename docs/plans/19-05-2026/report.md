@@ -1,3 +1,20 @@
+# Reports — 19 May 2026
+
+## Summary
+
+| # | Plan | Status | Commit |
+|---|------|--------|--------|
+| 1 | Candidates Page — DnD Fix, Pipeline Kanban, Code Review & Full Fixes | ✅ Done | `d0bae68` |
+| 2 | Table Editable Chips for Round, Batch, and PIC | ✅ Done | `d0bae68` |
+| 3 | V2 Glassmorphism Themes | ✅ Done | `d0bae68` |
+| 4 | Clickable Controls Shadcn Button Normalization | ✅ Done | `d0bae68` |
+| 5 | HR Staff Route, Mock CRUD, and Custom Color System | ✅ Done | `75c43ba` |
+| 6 | V2 Replaces V1 at Root | ✅ Done | `75c43ba` |
+
+**Final state:** 38 test files · 269 tests pass · 0 lint errors · branch `codex/v2-workspace-plan`
+
+---
+
 # Report: Candidates Page — DnD Fix, Pipeline Kanban, Code Review & Full Fixes
 
 ## Status
@@ -111,7 +128,7 @@ Completed
 - Dribbble page fetch was blocked by WAF through plain shell access, but the browser session exposed the CDN image URLs. The implementation sampled the CDN images directly.
 - Sampled orange colors: `#d26c30`, `#efc385`, `#da8f48`, and `#f0c07c`.
 - Sampled blue colors: `#7bbfe7`, `#8dd1f6`, `#bce3fb`, and `#94c6e3`.
-- Verification passed: `npm run lint` with two warnings, `npx tsc --noEmit`, `npm test`, `npm run build`, and browser checks for `/v2/settings`, `/v2/dashboard`, and `/v2/candidates`.
+- Verification passed: `npm run lint` with two warnings, `npx tsc --noEmit`, `npm test`, `npm run build`, and browser checks for `/v2/settings`, `/v2/dashboard`, and `/v2/candidates`. Note: those `/v2/*` paths are now compatibility redirects to `/settings`, `/dashboard`, and `/candidates` after the V2-replaces-V1 migration.
 - The remaining lint warnings are pre-existing or accepted warnings: unused `hasFilters` in `CandidateFiltersBar` and `<img>` usage in `V2Sidebar`.
 
 ---
@@ -136,7 +153,7 @@ Completed
 | `src/components/ui/slider.tsx` | Added pointer, grab, grabbing, and not-allowed cursor states to slider controls. |
 | `src/components/ui/input.tsx` | Preserved disabled not-allowed cursor and added pointer cursor to file input button. |
 | `src/components/ui/sidebar.tsx` | Converted sidebar trigger raw button and added cursor states to sidebar button variants. |
-| `src/app/page.tsx` | Converted top-bar action buttons to shared `Button`. |
+| `src/app/page.tsx` | Converted top-bar action buttons to shared `Button`. (Now replaced by a redirect to `/dashboard` in the V2-replaces-V1 migration.) |
 | `src/components/upload/GlobalDropZone.tsx` | Converted upload popup actions and backdrop close surface to shared `Button`. |
 | `src/components/upload/UploadZone.tsx` | Converted clickable upload drop zone and actions to shared `Button`. |
 | `src/components/layout/Sidebar.tsx` | Converted navigation buttons to shared `Button`. |

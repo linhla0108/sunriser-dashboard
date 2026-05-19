@@ -1,3 +1,18 @@
+# Plans — 19 May 2026
+
+## Summary
+
+| # | Plan | Status |
+|---|------|--------|
+| 1 | Candidates Page — DnD Fix, Pipeline Kanban, Code Review & Full Fixes | ✅ Done |
+| 2 | Table Editable Chips for Round, Batch, and PIC | ✅ Done |
+| 3 | V2 Glassmorphism Themes | ✅ Done |
+| 4 | Clickable Controls Shadcn Button Normalization | ✅ Done |
+| 5 | HR Staff Route, Mock CRUD, and Custom Color System | ✅ Done |
+| 6 | V2 Replaces V1 at Root | ✅ Done |
+
+---
+
 # Plan: Candidates Page — DnD Fix, Pipeline Kanban, Code Review & Full Fixes
 
 ## Goal
@@ -134,11 +149,11 @@ Add an HR staff route with mock-data CRUD first, then expose a custom color opti
 - Full redesign of V2 settings.
 
 ## Architecture decisions
-- Use the existing Next.js App Router V2 structure: create `src/app/v2/(app)/hr/page.tsx`.
+- HR page lives at `src/app/(workspace)/hr/page.tsx` inside the root workspace route group — consistent with `/dashboard`, `/candidates`, and `/settings` after the V2-replaces-V1 migration.
 - Keep HR staff data separate from applicant data in `src/lib/v2/hr/` to avoid coupling hiring candidates with internal staff records.
 - Treat CRUD as local client state first. Use a reducer or small custom hook instead of adding a global store.
 - Store custom color in the existing theme provider path. Do not create another token source.
-- Use CSS custom properties on `document.documentElement` for custom color output, then map them into existing semantic tokens such as `--primary`, `--ring`, `--sidebar-primary`, and chart accents.
+- Use CSS custom properties on `document.documentElement` for custom color output, then map them into existing semantic tokens such as `--primary` and `--ring`.
 - Keep the UI dense and operational, matching the existing V2 workspace style.
 
 ## Steps
@@ -156,28 +171,24 @@ Add an HR staff route with mock-data CRUD first, then expose a custom color opti
 12. Verify with `npx tsc --noEmit`, targeted tests if available, `npm run lint`, and `npm run format -- --check`.
 
 ## Files to touch
-- `src/app/v2/(app)/hr/page.tsx`
+- `src/app/(workspace)/hr/page.tsx`
 - `src/components/v2/hr/HrStaffToolbar.tsx`
 - `src/components/v2/hr/HrStaffTable.tsx`
 - `src/components/v2/hr/HrStaffFormDialog.tsx`
 - `src/components/v2/hr/HrStaffDeleteDialog.tsx`
 - `src/components/v2/hr/HrStaffStats.tsx`
-- `src/components/v2/hr/__tests__/HrStaffPage.test.tsx`
 - `src/components/v2/layout/V2Sidebar.tsx`
-- `src/components/v2/layout/__tests__/V2Sidebar.test.tsx`
 - `src/components/v2/settings/AppearanceTab.tsx`
 - `src/lib/v2/hr/mockHrStaff.ts`
 - `src/lib/v2/hr/types.ts`
 - `src/lib/v2/hr/useHrStaff.ts`
-- `src/lib/v2/hr/__tests__/useHrStaff.test.ts`
 - `src/lib/v2/theme/ThemeProvider.tsx`
 - `src/lib/v2/theme/types.ts`
 - `src/lib/v2/theme/__tests__/ThemeProvider.test.tsx`
-- `src/app/globals.css`
 
 ## Acceptance criteria
-- HR route is available at `/v2/hr` inside the authenticated V2 workspace shell.
-- Sidebar includes an HR item and marks it active on `/v2/hr`.
+- HR route is available at `/hr` inside the authenticated workspace shell.
+- Sidebar includes an HR item and marks it active on `/hr`.
 - HR page renders mock staff records with search/filter controls.
 - User can create, edit, delete, and toggle status for staff records without a backend.
 - CRUD updates stay local to the current browser session.
@@ -190,7 +201,7 @@ Add an HR staff route with mock-data CRUD first, then expose a custom color opti
 | Risk | Impact | Mitigation |
 | ---- | ------ | ---------- |
 | Custom color conflicts with shadcn Nova tokens | High | Keep one source of truth in `ThemeProvider` and root CSS variables. |
-| Route naming collides with existing HR workspace wording | Medium | Use `/v2/hr` and label the sidebar item `HR Team`. |
+| Route naming collides with existing HR workspace wording | Medium | Use `/hr` and label the sidebar item `HR Team`. |
 | CRUD state grows too complex inside page component | Medium | Extract `useHrStaff` before building UI interactions. |
 | Color picker produces inaccessible contrast | Medium | Clamp to accent surfaces first and keep foreground tokens unchanged unless contrast is validated. |
 | Existing dirty worktree contains unrelated changes | Medium | Touch only HR, theme, sidebar, and tests listed above. |
@@ -360,37 +371,36 @@ Make V2 the primary application experience by moving the current V2 workspace to
 ## Files to touch
 - `src/app/page.tsx`
 - `src/app/layout.tsx`
-- `src/app/dashboard/page.tsx`
-- `src/app/candidates/page.tsx`
-- `src/app/compare/page.tsx`
-- `src/app/settings/page.tsx`
+- `src/app/(workspace)/layout.tsx`
+- `src/app/(workspace)/dashboard/page.tsx`
+- `src/app/(workspace)/candidates/page.tsx`
+- `src/app/(workspace)/compare/page.tsx`
+- `src/app/(workspace)/settings/page.tsx`
 - `src/app/login/page.tsx`
 - `src/app/signup/page.tsx`
 - `src/app/forgot/page.tsx`
 - `src/app/otp/page.tsx`
+- `src/app/public/layout.tsx`
 - `src/app/public/page.tsx`
 - `src/app/public/results/page.tsx`
 - `src/app/public/report/[shareId]/page.tsx`
 - `src/app/v2/page.tsx`
-- `src/app/v2/(app)/**`
-- `src/app/v2/public/**`
+- `src/app/v2/(app)/**` (converted to compatibility redirects)
 - `src/app/v2/login/page.tsx`
 - `src/app/v2/signup/page.tsx`
 - `src/app/v2/forgot/page.tsx`
 - `src/app/v2/otp/page.tsx`
 - `src/app/v2/public/layout.tsx`
+- `src/app/v2/public/page.tsx`
+- `src/app/v2/public/results/page.tsx`
+- `src/app/v2/public/report/[shareId]/page.tsx`
 - `src/components/v2/layout/V2Sidebar.tsx`
 - `src/components/v2/auth/RequireAuth.tsx`
-- `src/components/v2/auth/LoginForm.tsx`
-- `src/components/v2/auth/SignupForm.tsx`
-- `src/components/v2/auth/ForgotForm.tsx`
-- `src/components/v2/auth/OtpForm.tsx`
 - `src/components/v2/report/ReportModal.tsx`
 - `src/components/v2/public/PublicReport.tsx`
-- `src/components/v2/layout/__tests__/*.test.tsx`
-- `src/components/v2/auth/__tests__/*.test.tsx`
-- `src/components/v2/views/__tests__/*.test.tsx`
-- `src/lib/v2/auth/__tests__/AuthProvider.test.tsx`
+- `src/components/v2/auth/__tests__/RequireAuth.test.tsx`
+- `src/components/v2/layout/__tests__/V2Sidebar.test.tsx`
+- `src/components/v2/layout/__tests__/V2WorkspaceShell.shortcuts.test.tsx`
 
 ## Acceptance criteria
 - Visiting `/` sends the user to the V2 dashboard flow, not the legacy SPA shell.
