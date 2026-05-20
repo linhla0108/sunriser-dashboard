@@ -13,7 +13,7 @@ export function AiDrawer() {
 
   return (
     <DrawerShell id="chat" title="AI Assistant" subtitle="Mock recruiting analyst">
-      <div className="flex min-h-[420px] flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="min-h-0 flex-1 space-y-3 overflow-auto">
           {messages.map(message => (
             <div

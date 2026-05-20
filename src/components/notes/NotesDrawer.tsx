@@ -11,7 +11,7 @@ export function NotesDrawer() {
 
   return (
     <DrawerShell id="notes" title="Notes" subtitle="Auto-saved local workspace notes">
-      <div className="space-y-3">
+      <div className="min-h-0 flex-1 space-y-3 overflow-auto">
         <ActionTooltip label="New note">
           <Button
             variant="plain"
