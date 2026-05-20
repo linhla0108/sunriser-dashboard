@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { X, FileSpreadsheet, FileText, File, AlertCircle, CheckCircle2, Plus } from "lucide-react"
+import { X, FileSpreadsheet, FileText, File, AlertCircle, CheckCircle2, Plus, UploadCloud } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Button } from "@/components/ui/button"
 
@@ -299,7 +299,10 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
         <div
           data-cid="drop-zone-backdrop"
           className="fixed inset-0 z-40 flex items-end justify-center sm:items-center"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          style={{
+            backgroundColor: dropState === "dragging" ? "rgba(252,252,252,0.82)/20" : "rgba(0,0,0,0.35)",
+            backdropFilter: dropState === "dragging" ? "blur(24px)" : undefined,
+          }}
         >
           {dropState === "popup-open" && (
             <Button
@@ -312,9 +315,63 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
             />
           )}
 
-          {/* Drag hint */}
+          {/* Drag hint — full-screen professional overlay */}
           {dropState === "dragging" && (
-            <p className="pointer-events-none mb-40 text-xl font-semibold tracking-tight text-white">Drop your file to analyze</p>
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              style={{ animation: "slideUpFade 200ms ease-out" }}
+            >
+              {/* Dashed border inset */}
+              <div className="absolute inset-5 rounded-3xl border-2 border-dashed border-[#FF5533]/60" />
+
+              {/* Centered content */}
+              <div className="relative flex flex-col items-center gap-5 px-8 text-center">
+                {/* Animated floating icon */}
+                <div
+                  className="flex h-24 w-24 items-center justify-center rounded-full"
+                  style={{
+                    animation: "dropzoneFloat 2.6s ease-in-out infinite",
+                    background: "radial-gradient(circle, rgba(255,85,51,0.22) 0%, rgba(255,85,51,0.06) 70%)",
+                    boxShadow: "0 0 0 1px rgba(255,85,51,0.25), 0 0 48px rgba(255,85,51,0.18)",
+                  }}
+                >
+                  <div
+                    className="flex h-16 w-16 items-center justify-center rounded-full"
+                    style={{
+                      background: "rgba(255,218,211,0.15)",
+                      animation: "dropzoneRing 2.2s ease-out infinite",
+                    }}
+                  >
+                    <UploadCloud size={34} strokeWidth={1.6} className="text-[#FF5533]" />
+                  </div>
+                </div>
+
+                {/* Labels */}
+                <div className="space-y-2">
+                  <p className="text-2xl font-bold tracking-tight text-[#1b1b1b]">Drop your file here</p>
+                  <p className="text-sm font-medium text-[#6B5549]">Release to parse and prepare for analysis</p>
+                </div>
+
+                {/* Format pills + size limit */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[".xlsx", ".xls", ".csv", ".tsv", ".json"].map(ext => (
+                    <span
+                      key={ext}
+                      className="rounded-full border border-[#e2e2e2] px-3 py-1 text-xs font-medium text-[#555555]"
+                      style={{ background: "rgba(249,249,249,0.9)" }}
+                    >
+                      {ext}
+                    </span>
+                  ))}
+                  <span
+                    className="rounded-full border border-[#FF5533]/40 px-3 py-1 text-xs font-semibold text-[#FF5533]"
+                    style={{ background: "rgba(255,85,51,0.08)" }}
+                  >
+                    Max 50 MB
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Processing spinner */}
