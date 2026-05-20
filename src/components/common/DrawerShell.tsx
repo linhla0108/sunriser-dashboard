@@ -18,6 +18,7 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
   const registry = useDrawerRegistry()
   const startX = useRef(0)
   const startWidth = useRef(0)
+  const dragStart = useRef<{ pointerX: number; pointerY: number; panelX: number; panelY: number } | null>(null)
   const draggingHeader = useRef(false)
 
   if (!registry.open[id]) return null
@@ -25,6 +26,7 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
   const docked = registry.mode[id] === "dock"
   const placement = registry.getDockPlacement(id)
   const width = placement?.width ?? registry.width[id]
+  const floatPos = registry.floatPos[id]
 
   function startResize(event: React.PointerEvent<HTMLDivElement>) {
     startX.current = event.clientX
@@ -37,8 +39,8 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
     registry.setWidth(id, startWidth.current + startX.current - event.clientX)
   }
 
+  // Dock drag — reorder between docked panels
   function startHeaderDrag(event: React.PointerEvent<HTMLButtonElement>) {
-    if (!docked) return
     draggingHeader.current = true
     event.currentTarget.setPointerCapture(event.pointerId)
   }
@@ -51,11 +53,47 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
     if (overId && overId !== id) registry.moveDock(id, overId)
   }
 
+  // Float drag — move panel freely on screen
+  function startFloatDrag(event: React.PointerEvent<HTMLButtonElement>) {
+    const pos = registry.floatPos[id]
+    let panelX: number
+    let panelY: number
+    if (pos) {
+      panelX = pos.x
+      panelY = pos.y
+    } else {
+      const aside = event.currentTarget.closest("aside")
+      const rect = aside?.getBoundingClientRect()
+      panelX = rect?.left ?? 0
+      panelY = rect?.top ?? 0
+    }
+    dragStart.current = { pointerX: event.clientX, pointerY: event.clientY, panelX, panelY }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function moveFloatDrag(event: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragStart.current) return
+    const dx = event.clientX - dragStart.current.pointerX
+    const dy = event.clientY - dragStart.current.pointerY
+    const maxX = window.innerWidth - width
+    const maxY = window.innerHeight - 60
+    registry.setFloatPos(id, {
+      x: Math.max(0, Math.min(dragStart.current.panelX + dx, maxX)),
+      y: Math.max(0, Math.min(dragStart.current.panelY + dy, maxY)),
+    })
+  }
+
+  function endFloatDrag() {
+    dragStart.current = null
+  }
+
   const dockStyle = placement
     ? registry.dockLayout === "stack"
       ? { width, top: placement.top, height: placement.height, right: 0 }
       : { width, top: 0, bottom: 0, right: placement.right }
     : undefined
+
+  const floatStyle = floatPos ? { left: floatPos.x, top: floatPos.y, width } : { width }
 
   return (
     <aside
@@ -68,11 +106,12 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
         docked
           ? "fixed z-40 hidden border-l shadow-[-20px_0_44px_rgba(15,23,42,0.10)] lg:flex"
           : cn(
-              "fixed inset-x-3 bottom-24 max-h-[calc(100vh-7rem)] rounded-3xl border shadow-[0_24px_64px_rgba(15,23,42,0.18)] sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]",
+              "fixed max-h-[calc(100vh-7rem)] rounded-3xl border shadow-[0_24px_64px_rgba(15,23,42,0.18)]",
+              floatPos ? "" : "inset-x-3 bottom-24 sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]",
               registry.activeFloatId === id ? "z-50" : "z-40"
             )
       )}
-      style={docked ? dockStyle : { width }}
+      style={docked ? dockStyle : floatStyle}
     >
       <div
         role="separator"
@@ -89,9 +128,11 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
           <button
             type="button"
             aria-label={`Drag ${title} dock`}
-            onPointerDown={startHeaderDrag}
-            onPointerUp={endHeaderDrag}
-            className={cn("text-muted-foreground hover:bg-foreground/5 mt-0.5 rounded-full p-1", docked ? "cursor-grab active:cursor-grabbing" : "cursor-default opacity-40")}
+            onPointerDown={docked ? startHeaderDrag : startFloatDrag}
+            onPointerMove={docked ? undefined : moveFloatDrag}
+            onPointerUp={docked ? endHeaderDrag : endFloatDrag}
+            onPointerCancel={docked ? undefined : endFloatDrag}
+            className={cn("text-muted-foreground hover:bg-foreground/5 mt-0.5 cursor-grab rounded-full p-1 active:cursor-grabbing")}
           >
             <GripHorizontal className="size-4" />
           </button>

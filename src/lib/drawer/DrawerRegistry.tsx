@@ -33,6 +33,8 @@ interface DrawerRegistryValue {
   moveDock: (id: V2DrawerId, overId: V2DrawerId) => void
   activeFloatId: V2DrawerId | null
   setActiveFloat: (id: V2DrawerId) => void
+  floatPos: Record<V2DrawerId, { x: number; y: number } | null>
+  setFloatPos: (id: V2DrawerId, pos: { x: number; y: number } | null) => void
 }
 
 const DRAWER_IDS: V2DrawerId[] = ["chat", "notes"]
@@ -41,6 +43,7 @@ const modeSchema = z.enum(["float", "dock"])
 const dockLayoutSchema = z.enum(["stack", "columns"])
 const drawerOrderSchema = z.array(z.enum(["chat", "notes"]))
 const widthSchema = z.number().min(320).max(560)
+const floatPosSchema = z.nullable(z.object({ x: z.number(), y: z.number() }))
 
 function normalizeOrder(order: V2DrawerId[]) {
   return [...order.filter((id, index) => DRAWER_IDS.includes(id) && order.indexOf(id) === index), ...DRAWER_IDS.filter(id => !order.includes(id))]
@@ -56,10 +59,21 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
   const [dockLayout, setDockLayoutValue] = usePersistedState<V2DockLayout>("v2.drawer.dockLayout", "stack", dockLayoutSchema)
   const [dockOrder, setDockOrder] = usePersistedState<V2DrawerId[]>("v2.drawer.dockOrder", DRAWER_IDS, drawerOrderSchema)
   const [activeFloatId, setActiveFloat] = useState<V2DrawerId | null>(null)
+  const [chatFloatPos, setChatFloatPos] = usePersistedState<{ x: number; y: number } | null>("v2.chat.floatPos", null, floatPosSchema)
+  const [notesFloatPos, setNotesFloatPos] = usePersistedState<{ x: number; y: number } | null>("v2.notes.floatPos", null, floatPosSchema)
 
   const open = useMemo(() => ({ chat: chatOpen, notes: notesOpen }), [chatOpen, notesOpen])
   const mode = useMemo(() => ({ chat: chatMode, notes: notesMode }), [chatMode, notesMode])
   const width = useMemo(() => ({ chat: chatWidth, notes: notesWidth }), [chatWidth, notesWidth])
+  const floatPos = useMemo(() => ({ chat: chatFloatPos, notes: notesFloatPos }), [chatFloatPos, notesFloatPos])
+
+  const setFloatPos = useCallback(
+    (id: V2DrawerId, pos: { x: number; y: number } | null) => {
+      if (id === "chat") setChatFloatPos(pos)
+      else setNotesFloatPos(pos)
+    },
+    [setChatFloatPos, setNotesFloatPos]
+  )
   const orderedIds = useMemo(() => normalizeOrder(dockOrder), [dockOrder])
   const dockedIds = useMemo(() => orderedIds.filter(id => open[id] && mode[id] === "dock"), [mode, open, orderedIds])
   const dockedWidth = dockedIds.length === 0 ? 0 : dockLayout === "columns" ? dockedIds.reduce((total, id) => total + width[id], 0) : Math.max(...dockedIds.map(id => width[id]))
@@ -148,8 +162,10 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
       moveDock,
       activeFloatId,
       setActiveFloat,
+      floatPos,
+      setFloatPos,
     }),
-    [activeFloatId, dockedIds, dockLayout, dockedWidth, getDockPlacement, mode, moveDock, open, setActiveFloat, setDockLayoutValue, setMode, setOpenById, setWidth, width]
+    [activeFloatId, dockedIds, dockLayout, dockedWidth, floatPos, getDockPlacement, mode, moveDock, open, setActiveFloat, setDockLayoutValue, setFloatPos, setMode, setOpenById, setWidth, width]
   )
 
   return <DrawerRegistryContext.Provider value={value}>{children}</DrawerRegistryContext.Provider>
