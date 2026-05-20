@@ -1,9 +1,11 @@
 "use client"
 
-import { Copy, Download, FileText, Keyboard, BarChart3 } from "lucide-react"
+import { useState } from "react"
+import { Copy, Download, FileText, Keyboard, BarChart3, FilterX, Link2 } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
+  ContextMenuGroup,
   ContextMenuItem,
   ContextMenuLabel,
   ContextMenuSeparator,
@@ -19,6 +21,7 @@ import type { Applicant } from "@/lib/types"
 interface WorkspaceContextMenuProps {
   children: React.ReactNode
   onCreateReport?: () => void
+  onResetFilters?: () => void
 }
 
 function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
@@ -50,20 +53,39 @@ const SHORTCUTS = [
   { label: "Create Report", keys: "⌘R" },
 ]
 
-export function WorkspaceContextMenu({ children, onCreateReport }: WorkspaceContextMenuProps) {
+export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters }: WorkspaceContextMenuProps) {
+  const [copied, setCopied] = useState(false)
+
+  const [selectionText, setSelectionText] = useState("")
+
+  function handleContextOpen() {
+    // Capture selection before the menu opens (right-click can clear it)
+    setSelectionText(window.getSelection()?.toString() ?? "")
+  }
+
   function handleCopy() {
-    const selected = window.getSelection()?.toString()
-    if (selected) navigator.clipboard.writeText(selected)
+    if (selectionText) navigator.clipboard.writeText(selectionText)
+  }
+
+  function handleCopyURL() {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className="contents">{children}</ContextMenuTrigger>
+    <ContextMenu onOpenChange={(open) => { if (open) handleContextOpen() }}>
+      <ContextMenuTrigger className="contents select-text">{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
-        <ContextMenuItem onClick={handleCopy}>
+        <ContextMenuItem onClick={handleCopy} disabled={!selectionText}>
           <Copy />
-          Copy selected text
+          {selectionText ? `Copy "${selectionText.slice(0, 20)}${selectionText.length > 20 ? "…" : ""}"` : "Copy selected text"}
           <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+        </ContextMenuItem>
+
+        <ContextMenuItem onClick={handleCopyURL}>
+          <Link2 />
+          {copied ? "Copied!" : "Copy page link"}
         </ContextMenuItem>
 
         <ContextMenuSeparator />
@@ -74,20 +96,22 @@ export function WorkspaceContextMenu({ children, onCreateReport }: WorkspaceCont
             Export data
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuLabel>Download as</ContextMenuLabel>
-            <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>
-              CSV — all applicants
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() =>
-                exportCSV(
-                  mockApplicants.filter((a) => a.round1Result === "Passed"),
-                  "passed-applicants.csv"
-                )
-              }
-            >
-              CSV — passed only
-            </ContextMenuItem>
+            <ContextMenuGroup>
+              <ContextMenuLabel>Download as</ContextMenuLabel>
+              <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>
+                CSV — all applicants
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={() =>
+                  exportCSV(
+                    mockApplicants.filter((a) => a.round1Result === "Passed"),
+                    "passed-applicants.csv"
+                  )
+                }
+              >
+                CSV — passed only
+              </ContextMenuItem>
+            </ContextMenuGroup>
           </ContextMenuSubContent>
         </ContextMenuSub>
 
@@ -99,6 +123,13 @@ export function WorkspaceContextMenu({ children, onCreateReport }: WorkspaceCont
           </ContextMenuItem>
         )}
 
+        {onResetFilters && (
+          <ContextMenuItem onClick={onResetFilters}>
+            <FilterX />
+            Reset filters
+          </ContextMenuItem>
+        )}
+
         <ContextMenuSeparator />
 
         <ContextMenuSub>
@@ -107,14 +138,16 @@ export function WorkspaceContextMenu({ children, onCreateReport }: WorkspaceCont
             Keyboard shortcuts
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-52">
-            <ContextMenuLabel>Shortcuts</ContextMenuLabel>
-            {SHORTCUTS.map((s) => (
-              <ContextMenuItem key={s.label} disabled>
-                <BarChart3 className="opacity-0" />
-                {s.label}
-                <ContextMenuShortcut>{s.keys}</ContextMenuShortcut>
-              </ContextMenuItem>
-            ))}
+            <ContextMenuGroup>
+              <ContextMenuLabel>Shortcuts</ContextMenuLabel>
+              {SHORTCUTS.map((s) => (
+                <ContextMenuItem key={s.label} disabled>
+                  <BarChart3 className="opacity-0" />
+                  {s.label}
+                  <ContextMenuShortcut>{s.keys}</ContextMenuShortcut>
+                </ContextMenuItem>
+              ))}
+            </ContextMenuGroup>
           </ContextMenuSubContent>
         </ContextMenuSub>
       </ContextMenuContent>
