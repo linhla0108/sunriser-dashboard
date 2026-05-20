@@ -22,7 +22,6 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/candidates", label: "Candidates", icon: Users },
   { href: "/hr", label: "HR Team", icon: UsersRound },
-  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 function LogoMark() {
@@ -46,18 +45,17 @@ export function Sidebar() {
       <SidebarContent>
         <SidebarGroup className="group-data-[collapsible=icon]:px-1">
           <SidebarGroupContent>
-            <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+            <SidebarMenu className="gap-1 group-data-[collapsible=icon]:items-center">
               {NAV_ITEMS.map(item => {
                 const active = pathname === item.href
                 const Icon = item.icon
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      size="lg"
                       isActive={active}
                       tooltip={item.label}
                       render={<Link href={item.href} />}
-                      className="gap-3 [&_svg]:size-5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+                      className="gap-3 [&_svg]:size-[18px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
                     >
                       <Icon />
                       <span className="text-sm group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -70,15 +68,28 @@ export function Sidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="bg-sidebar-accent flex items-center gap-3 rounded-xl px-2 py-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-              <span className="bg-primary size-2.5 shrink-0 rounded-full" />
-              <span className="text-sidebar-foreground/70 text-sm font-medium group-data-[collapsible=icon]:hidden">Mock workspace</span>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="pb-3">
+        <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:px-0">
+          <Link
+            href="/profile"
+            className="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            title="Profile"
+          >
+            <span className="bg-primary flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white">
+              D
+            </span>
+          </Link>
+          <Link
+            href="/settings"
+            className={cn(
+              "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+              pathname === "/settings" && "text-sidebar-foreground bg-sidebar-accent"
+            )}
+            title="Settings"
+          >
+            <Settings className="size-[18px]" />
+          </Link>
+        </div>
       </SidebarFooter>
       <SidebarRailWithBubble />
     </SidebarRoot>
