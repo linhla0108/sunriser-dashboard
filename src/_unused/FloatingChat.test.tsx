@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
-import { formatLine } from '../FloatingChat'
+import { formatLine } from './FloatingChat'
 
 describe('formatLine', () => {
   it('returns plain text as a string node', () => {
