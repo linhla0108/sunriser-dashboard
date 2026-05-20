@@ -12,6 +12,7 @@ import { ApplicantDetailDrawer } from "@/components/views/ApplicantDetailDrawer"
 import { ViewPillNav } from "@/components/layout/ViewPillNav"
 import { CandidateFiltersBar } from "@/components/candidates/CandidateFiltersBar"
 import { useCandidateFilters } from "@/lib/candidates/useCandidateFilters"
+import { usePagination } from "@/lib/candidates/usePagination"
 import { mockApplicants } from "@/lib/mockData"
 import { useViewState } from "@/lib/views/useViewState"
 import type { Applicant } from "@/lib/types"
@@ -46,6 +47,11 @@ export default function CandidatesPage() {
     filtered,
   } = useCandidateFilters(applicants)
 
+  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } =
+    usePagination(filtered.length)
+
+  const pagedData = filtered.slice(startIndex, endIndex)
+
   function handleReorder(reordered: Applicant[]) {
     setApplicants(prev => mergeReordered(prev, reordered))
   }
@@ -67,7 +73,15 @@ export default function CandidatesPage() {
           onResultChange={setResultFilter}
           onClearAll={clearFilters}
         />
-        {view === "table" ? <TableView data={filtered} onDataChange={handleReorder} onViewDetail={setDetailApplicant} /> : null}
+        {view === "table" ? (
+          <TableView
+            data={pagedData}
+            onDataChange={handleReorder}
+            onViewDetail={setDetailApplicant}
+            indexOffset={startIndex}
+            paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
+          />
+        ) : null}
         {view === "pipeline" ? (
           <ThemedView
             shadcnComponent={PipelineView}
@@ -84,7 +98,7 @@ export default function CandidatesPage() {
           />
         ) : null}
       </div>
-      <ViewPillNav />
+      <ViewPillNav pagination={{ canGoPrev, canGoNext, goPrev, goNext }} />
       <ApplicantDetailDrawer
         applicant={detailApplicant}
         open={!!detailApplicant}

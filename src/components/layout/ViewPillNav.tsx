@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { BarChart3, Kanban, LayoutGrid, Table2 } from "lucide-react"
+import { BarChart3, ChevronLeft, ChevronRight, Kanban, LayoutGrid, Table2 } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
 import { V2_VIEW_KEYS, type V2View, useViewState } from "@/lib/views/useViewState"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,18 @@ function getScrollY(event: Event) {
   return window.scrollY || document.scrollingElement?.scrollTop || 0
 }
 
-export function ViewPillNav() {
+interface PaginationControls {
+  canGoPrev: boolean
+  canGoNext: boolean
+  goPrev: () => void
+  goNext: () => void
+}
+
+interface ViewPillNavProps {
+  pagination?: PaginationControls
+}
+
+export function ViewPillNav({ pagination }: ViewPillNavProps = {}) {
   const { view, setView } = useViewState()
   const [visible, setVisible] = useState(true)
   const lastY = useRef(0)
@@ -91,6 +102,37 @@ export function ViewPillNav() {
           </ActionTooltip>
         )
       })}
+      {pagination && view === "table" ? (
+        <>
+          <div className="bg-border mx-1 h-5 w-px" aria-hidden="true" />
+          <ActionTooltip label="Previous page">
+            <Button
+              variant="plain"
+              size="plain"
+              type="button"
+              onClick={pagination.goPrev}
+              disabled={!pagination.canGoPrev}
+              aria-label="Previous page"
+              className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline-primary flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-40"
+            >
+              <ChevronLeft className="size-4" aria-hidden="true" />
+            </Button>
+          </ActionTooltip>
+          <ActionTooltip label="Next page">
+            <Button
+              variant="plain"
+              size="plain"
+              type="button"
+              onClick={pagination.goNext}
+              disabled={!pagination.canGoNext}
+              aria-label="Next page"
+              className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline-primary flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-40"
+            >
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Button>
+          </ActionTooltip>
+        </>
+      ) : null}
     </nav>
   )
 }

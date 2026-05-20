@@ -8,11 +8,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Applicant } from "@/lib/types"
 import DraggableRow from "./DraggableRow"
 
+export interface PaginationInfo {
+  start: number
+  end: number
+  total: number
+  currentPage: number
+  totalPages: number
+}
+
 interface ApplicantTableProps {
   data: Applicant[]
   onViewDetail?: (applicant: Applicant) => void
   onDataChange?: (applicants: Applicant[]) => void
   renderPinAction?: (applicant: Applicant) => ReactNode
+  indexOffset?: number
+  paginationInfo?: PaginationInfo
 }
 
 type SortKey = "name" | "gpa" | "batch" | "university"
@@ -34,10 +44,11 @@ function sortApplicants(data: Applicant[], sortKey: SortKey, sortDir: SortDir) {
   })
 }
 
-export default function ApplicantTable({ data, onViewDetail, onDataChange, renderPinAction }: ApplicantTableProps) {
+export default function ApplicantTable({ data, onViewDetail, onDataChange, renderPinAction, indexOffset = 0, paginationInfo }: ApplicantTableProps) {
   const [items, setItems] = useState<Applicant[]>(() => sortApplicants(data, "name", "asc"))
   const [sortKey, setSortKey] = useState<SortKey>("name")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
   const sortStateRef = useRef({ sortKey, sortDir })
 
   useEffect(() => {
@@ -66,6 +77,26 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
     const next = items.map(a => (a.id === id ? { ...a, ...patch } : a))
     setItems(next)
     onDataChange?.(next)
+  }
+
+  function togglePin(id: string) {
+    setPinnedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        // Restore to current sort order
+        setItems(cur => sortApplicants(cur, sortKey, sortDir))
+      } else {
+        next.add(id)
+        // Move pinned item to front
+        setItems(cur => {
+          const item = cur.find(a => a.id === id)
+          if (!item) return cur
+          return [item, ...cur.filter(a => a.id !== id)]
+        })
+      }
+      return next
+    })
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -165,10 +196,12 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
                     <DraggableRow
                       key={applicant.id}
                       applicant={applicant}
-                      index={i}
+                      index={indexOffset + i}
                       onViewDetail={onViewDetail}
                       pinAction={renderPinAction?.(applicant)}
                       onUpdateApplicant={handleUpdateApplicant}
+                      isPinned={pinnedIds.has(applicant.id)}
+                      onTogglePin={togglePin}
                     />
                   ))
                 ) : (
@@ -188,6 +221,21 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
           </Table>
         </div>
       </DndContext>
+      {paginationInfo ? (
+        <div className="text-muted-foreground mt-3 flex items-center justify-between px-1 text-xs">
+          <span>
+            <span className="text-foreground font-medium">{paginationInfo.start + 1}–{paginationInfo.end}</span>
+            {" of "}
+            <span className="text-foreground font-medium">{paginationInfo.total}</span>
+          </span>
+          <span>
+            {"Page "}
+            <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>
+            {" / "}
+            <span className="text-foreground font-medium">{paginationInfo.totalPages}</span>
+          </span>
+        </div>
+      ) : null}
     </div>
   )
 }
