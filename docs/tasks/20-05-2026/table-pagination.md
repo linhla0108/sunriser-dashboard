@@ -22,4 +22,6 @@ Add pagination to the candidates table: a bottom bar showing row range and page 
 ---
 
 ## Report
-Status: Pending
+Status: Done | Commit: 974bc09
+
+`usePagination` hook added to `src/lib/candidates/usePagination.ts`. `ViewPillNav` extended with optional `pagination` prop — renders a separator + prev/next buttons on the right side, only when `view === "table"`. `ApplicantTable` receives `indexOffset` so the `#` column stays globally numbered across pages. Bottom bar inside the table card shows "1–15 of 646" range and "Page 1/43". Filter changes reset page to 1 via the `totalItems` change guard in `usePagination`.

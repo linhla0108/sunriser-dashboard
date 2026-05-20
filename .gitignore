@@ -54,3 +54,7 @@ C*Usersleanh.sshknown_hosts
 
 # Playwright test artifacts
 .playwright-mcp
+# Playwright
+/tests/e2e/.auth/
+/playwright-report/
+/test-results/

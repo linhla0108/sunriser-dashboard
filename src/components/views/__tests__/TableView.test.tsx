@@ -85,6 +85,13 @@ describe("TableView", () => {
     expect(screen.getAllByRole("button", { name: /pin to compare/i })).toHaveLength(2)
   })
 
+  it("highlights the active search query in visible table fields", () => {
+    render(<TableView data={applicants} searchQuery="An" />, { wrapper: TestProviders })
+
+    const highlighted = screen.getAllByText("An")
+    expect(highlighted.some(node => node.tagName === "MARK")).toBe(true)
+  })
+
   it("toggles a row pin state without breaking table actions", async () => {
     render(<TableView data={applicants} />, { wrapper: TestProviders })
 

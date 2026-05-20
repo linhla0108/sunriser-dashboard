@@ -60,10 +60,22 @@ describe("V2 candidate views", () => {
     expect(screen.getByText("An Nguyen")).toBeInTheDocument()
   })
 
+  it("highlights the search query in pipeline cards", () => {
+    render(<PipelineView data={applicants} searchQuery="Nguyen" />, { wrapper: TestProviders })
+
+    expect(screen.getByText("Nguyen").tagName).toBe("MARK")
+  })
+
   it("renders gallery cards with pin actions", () => {
     render(<GalleryView data={applicants} />, { wrapper: TestProviders })
 
     expect(screen.getByText("An Nguyen")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /pin to compare/i })).toBeInTheDocument()
+  })
+
+  it("highlights the search query in gallery cards", () => {
+    render(<GalleryView data={applicants} searchQuery="University" />, { wrapper: TestProviders })
+
+    expect(screen.getByText("University").tagName).toBe("MARK")
   })
 })
