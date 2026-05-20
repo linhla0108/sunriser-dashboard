@@ -2,10 +2,11 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock } from "lucide-react"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff } from "lucide-react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
 
@@ -15,6 +16,9 @@ interface DraggableRowProps {
   onViewDetail?: (applicant: Applicant) => void
   pinAction?: ReactNode
   onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
+  isPinned?: boolean
+  onTogglePin?: (id: string) => void
+  searchQuery?: string
 }
 
 const ROUND_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
@@ -168,8 +172,18 @@ function PicChip({ value, onChange }: { value?: string; onChange?: (v: string | 
 
 function exportRowCSV(applicant: Applicant) {
   const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
-  const row = [applicant.name, applicant.email, applicant.position1, applicant.university, applicant.gpa, applicant.batch, applicant.pic ?? "", applicant.round1Result ?? "", applicant.round2Result ?? ""]
-  const csv = [headers, row].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n")
+  const row = [
+    applicant.name,
+    applicant.email,
+    applicant.position1,
+    applicant.university,
+    applicant.gpa,
+    applicant.batch,
+    applicant.pic ?? "",
+    applicant.round1Result ?? "",
+    applicant.round2Result ?? "",
+  ]
+  const csv = [headers, row].map(r => r.map(v => `"${v}"`).join(",")).join("\n")
   const blob = new Blob([csv], { type: "text/csv" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -179,20 +193,44 @@ function exportRowCSV(applicant: Applicant) {
   URL.revokeObjectURL(url)
 }
 
-export default function DraggableRow({ applicant, index, onViewDetail, pinAction, onUpdateApplicant }: DraggableRowProps) {
+type SubMenu = "copy" | "pic" | null
+
+export default function DraggableRow({
+  applicant,
+  index,
+  onViewDetail,
+  pinAction,
+  onUpdateApplicant,
+  isPinned,
+  onTogglePin,
+  searchQuery,
+}: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
   })
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null)
+  const [subMenu, setSubMenu] = useState<SubMenu>(null)
+  const [subPos, setSubPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const ctxMenuRef = useRef<HTMLDivElement>(null)
+  const subMenuRef = useRef<HTMLDivElement>(null)
+  const copyBtnRef = useRef<HTMLButtonElement>(null)
+  const picBtnRef = useRef<HTMLButtonElement>(null)
+
+  const closeAll = useCallback(() => {
+    setCtxPos(null)
+    setSubMenu(null)
+  }, [])
 
   useEffect(() => {
     if (!ctxPos) return
     function onDown(e: MouseEvent) {
-      if (!ctxMenuRef.current?.contains(e.target as Node)) setCtxPos(null)
+      const target = e.target as Node
+      const inMenu = ctxMenuRef.current?.contains(target)
+      const inSub = subMenuRef.current?.contains(target)
+      if (!inMenu && !inSub) closeAll()
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setCtxPos(null)
+      if (e.key === "Escape") closeAll()
     }
     document.addEventListener("mousedown", onDown)
     document.addEventListener("keydown", onKey)
@@ -200,7 +238,20 @@ export default function DraggableRow({ applicant, index, onViewDetail, pinAction
       document.removeEventListener("mousedown", onDown)
       document.removeEventListener("keydown", onKey)
     }
-  }, [ctxPos])
+  }, [ctxPos, closeAll])
+
+  function openSubMenu(which: SubMenu, btnRef: React.RefObject<HTMLButtonElement | null>) {
+    if (subMenu === which) {
+      setSubMenu(null)
+      return
+    }
+    const rect = btnRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const SUB_W = 176
+    const x = rect.right + SUB_W > window.innerWidth ? rect.left - SUB_W : rect.right
+    setSubPos({ x, y: rect.top })
+    setSubMenu(which)
+  }
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -213,106 +264,120 @@ export default function DraggableRow({ applicant, index, onViewDetail, pinAction
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    setCtxPos({ x: e.clientX, y: e.clientY })
+    // Overflow guard: flip left if within 220px of right edge,
+    // flip up if within 500px of bottom edge (menu can be ~470px tall with all sections).
+    const MENU_W = 220
+    const MENU_H = 500
+    const x = e.clientX + MENU_W > window.innerWidth ? e.clientX - MENU_W : e.clientX
+    const y = e.clientY + MENU_H > window.innerHeight ? e.clientY - MENU_H : e.clientY
+    setCtxPos({ x: Math.max(0, x), y: Math.max(0, y) })
   }
 
   return (
     <>
-        <tr
-          ref={setNodeRef}
-          style={style}
-          onContextMenu={handleContextMenu}
-          className={`border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg}`}
-        >
-      <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">{index + 1}</td>
+      <tr
+        ref={setNodeRef}
+        style={style}
+        onContextMenu={handleContextMenu}
+        className={`border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg}`}
+      >
+        <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">{index + 1}</td>
 
-      {/* Name — always visible */}
-      <td className="px-3 py-3">
-        <div>
-          <p className="text-foreground max-w-[140px] truncate font-medium sm:max-w-none">{applicant.name}</p>
-          <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block">{applicant.email}</p>
-        </div>
-      </td>
+        {/* Name — always visible */}
+        <td className="px-3 py-3">
+          <div>
+            <p className="text-foreground max-w-[140px] truncate font-medium sm:max-w-none">
+              <SearchHighlight text={applicant.name} query={searchQuery} />
+            </p>
+            <p className="text-muted-foreground mt-0.5 hidden text-xs sm:block">
+              <SearchHighlight text={applicant.email} query={searchQuery} />
+            </p>
+          </div>
+        </td>
 
-      {/* Position — always visible */}
-      <td className="px-3 py-3">
-        <span className="text-foreground text-xs whitespace-nowrap">{applicant.position1.replace(" Intern", "")}</span>
-      </td>
+        {/* Position — always visible */}
+        <td className="px-3 py-3">
+          <span className="text-foreground text-xs whitespace-nowrap">
+            <SearchHighlight text={applicant.position1.replace(" Intern", "")} query={searchQuery} />
+          </span>
+        </td>
 
-      {/* University — desktop only */}
-      <td className="hidden px-3 py-3 lg:table-cell">
-        <span className="text-foreground text-xs">{applicant.university}</span>
-      </td>
+        {/* University — desktop only */}
+        <td className="hidden px-3 py-3 lg:table-cell">
+          <span className="text-foreground text-xs">
+            <SearchHighlight text={applicant.university} query={searchQuery} />
+          </span>
+        </td>
 
-      {/* GPA — tablet+ */}
-      <td className="hidden px-3 py-3 text-center sm:table-cell">
-        <span
-          className={`text-sm font-semibold ${applicant.gpa >= 8.5 ? "text-foreground" : applicant.gpa >= 7.0 ? "text-muted-foreground" : "text-amber-600"}`}
-        >
-          {applicant.gpa.toFixed(1)}
-        </span>
-      </td>
-
-      {/* Year — desktop only */}
-      <td className="hidden px-3 py-3 text-center lg:table-cell">
-        <span className="text-muted-foreground text-xs">{applicant.yearOfStudy.replace("Năm ", "")}</span>
-      </td>
-
-      {/* Batch — tablet+ */}
-      <td className="hidden px-3 py-3 text-center sm:table-cell">
-        <BatchChip value={applicant.batch} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { batch: v }) : undefined} />
-      </td>
-
-      {/* PIC — desktop only */}
-      <td className="hidden px-3 py-3 lg:table-cell">
-        <PicChip value={applicant.pic} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { pic: v }) : undefined} />
-      </td>
-
-      {/* Round 1 — always visible */}
-      <td className="px-3 py-3">
-        <RoundChip
-          value={applicant.round1Result}
-          onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round1Result: v }) : undefined}
-        />
-      </td>
-
-      {/* Round 2 — tablet+ */}
-      <td className="hidden px-3 py-3 sm:table-cell">
-        <RoundChip
-          value={applicant.round2Result}
-          onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round2Result: v }) : undefined}
-        />
-      </td>
-
-      <td className="px-3 py-3 pr-4">
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            {...attributes}
-            {...listeners}
-            className="text-muted-foreground hover:text-muted-foreground cursor-grab touch-none rounded-full active:cursor-grabbing"
-            aria-label="Grab row to reorder"
-            title="Grab row to reorder"
+        {/* GPA — tablet+ */}
+        <td className="hidden px-3 py-3 text-center sm:table-cell">
+          <span
+            className={`text-sm font-semibold ${applicant.gpa >= 8.5 ? "text-foreground" : applicant.gpa >= 7.0 ? "text-muted-foreground" : "text-amber-600"}`}
           >
-            <GripVertical />
-          </Button>
-          {pinAction}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onViewDetail?.(applicant)}
-            disabled={!onViewDetail}
-            className="text-muted-foreground hover:text-primary rounded-full"
-            aria-label="View applicant"
-          >
-            <Eye />
-          </Button>
-        </div>
-      </td>
-        </tr>
+            {applicant.gpa.toFixed(1)}
+          </span>
+        </td>
+
+        {/* Year — desktop only */}
+        <td className="hidden px-3 py-3 text-center lg:table-cell">
+          <span className="text-muted-foreground text-xs">{applicant.yearOfStudy.replace("Năm ", "")}</span>
+        </td>
+
+        {/* Batch — tablet+ */}
+        <td className="hidden px-3 py-3 text-center sm:table-cell">
+          <BatchChip value={applicant.batch} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { batch: v }) : undefined} />
+        </td>
+
+        {/* PIC — desktop only */}
+        <td className="hidden px-3 py-3 lg:table-cell">
+          <PicChip value={applicant.pic} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { pic: v }) : undefined} />
+        </td>
+
+        {/* Round 1 — always visible */}
+        <td className="px-3 py-3">
+          <RoundChip
+            value={applicant.round1Result}
+            onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round1Result: v }) : undefined}
+          />
+        </td>
+
+        {/* Round 2 — tablet+ */}
+        <td className="hidden px-3 py-3 sm:table-cell">
+          <RoundChip
+            value={applicant.round2Result}
+            onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round2Result: v }) : undefined}
+          />
+        </td>
+
+        <td className="px-3 py-3 pr-4">
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              {...attributes}
+              {...listeners}
+              className="text-muted-foreground hover:text-muted-foreground cursor-grab touch-none rounded-full active:cursor-grabbing"
+              aria-label="Grab row to reorder"
+              title="Grab row to reorder"
+            >
+              <GripVertical />
+            </Button>
+            {pinAction}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => onViewDetail?.(applicant)}
+              disabled={!onViewDetail}
+              className="text-muted-foreground hover:text-primary rounded-full"
+              aria-label="View applicant"
+            >
+              <Eye />
+            </Button>
+          </div>
+        </td>
+      </tr>
 
       {ctxPos &&
         createPortal(
@@ -322,67 +387,209 @@ export default function DraggableRow({ applicant, index, onViewDetail, pinAction
             className="border-border fixed z-[9999] min-w-52 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
           >
             <div className="text-muted-foreground truncate px-3 py-1 text-xs font-semibold">{applicant.name}</div>
-            <div className="-mx-0 my-1 h-px bg-border" />
+            <div className="bg-border -mx-0 my-1 h-px" />
 
             {onViewDetail && (
               <button
                 type="button"
-                onClick={() => { onViewDetail(applicant); setCtxPos(null) }}
+                onClick={() => {
+                  onViewDetail(applicant)
+                  closeAll()
+                }}
                 className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
               >
                 <Eye className="size-4 shrink-0" /> View detail
               </button>
             )}
 
-            <div className="group relative">
-              <button type="button" className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm">
-                <Copy className="size-4 shrink-0" /> Copy
-                <ChevronDown className="ml-auto size-3.5 -rotate-90" />
-              </button>
-              <div className="border-border absolute left-full top-0 z-10 hidden min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl group-hover:block">
-                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.name); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy name</button>
-                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.email); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy email</button>
-                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.phone); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy phone</button>
-              </div>
-            </div>
+            {/* Copy submenu */}
+            <button
+              ref={copyBtnRef}
+              type="button"
+              onClick={() => openSubMenu("copy", copyBtnRef)}
+              className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "copy" ? "bg-muted" : ""}`}
+            >
+              <Copy className="size-4 shrink-0" /> Copy
+              <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+            </button>
 
-            <div className="-mx-0 my-1 h-px bg-border" />
+            {/* Assign PIC submenu */}
+            <button
+              ref={picBtnRef}
+              type="button"
+              onClick={() => openSubMenu("pic", picBtnRef)}
+              className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "pic" ? "bg-muted" : ""}`}
+            >
+              <UserCheck className="size-4 shrink-0" /> Assign PIC
+              <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+            </button>
+
+            {/* Round 1 status */}
+            <div className="bg-border -mx-0 my-1 h-px" />
             <div className="text-muted-foreground px-3 py-1 text-xs font-semibold">Round 1 status</div>
-
             <button
               type="button"
               disabled={applicant.round1Result === "Passed"}
-              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Passed" }); setCtxPos(null) }}
-              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round1Result: "Passed" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
             >
               <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Mark as Passed
             </button>
             <button
               type="button"
               disabled={applicant.round1Result === "Failed"}
-              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Failed" }); setCtxPos(null) }}
-              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round1Result: "Failed" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
             >
               <XCircle className="size-4 shrink-0 text-red-500" /> Mark as Failed
             </button>
             <button
               type="button"
               disabled={applicant.round1Result === "Waiting list"}
-              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Waiting list" }); setCtxPos(null) }}
-              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round1Result: "Waiting list" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
             >
               <Clock className="size-4 shrink-0 text-amber-500" /> Waiting list
             </button>
 
-            <div className="-mx-0 my-1 h-px bg-border" />
-
+            {/* Round 2 status */}
+            <div className="bg-border -mx-0 my-1 h-px" />
+            <div className="text-muted-foreground px-3 py-1 text-xs font-semibold">Round 2 status</div>
             <button
               type="button"
-              onClick={() => { exportRowCSV(applicant); setCtxPos(null) }}
+              disabled={applicant.round2Result === "Passed"}
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round2Result: "Passed" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
+            >
+              <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Mark as Passed
+            </button>
+            <button
+              type="button"
+              disabled={applicant.round2Result === "Failed"}
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round2Result: "Failed" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
+            >
+              <XCircle className="size-4 shrink-0 text-red-500" /> Mark as Failed
+            </button>
+            <button
+              type="button"
+              disabled={applicant.round2Result === "Waiting list"}
+              onClick={() => {
+                onUpdateApplicant?.(applicant.id, { round2Result: "Waiting list" })
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
+            >
+              <Clock className="size-4 shrink-0 text-amber-500" /> Waiting list
+            </button>
+
+            {/* Pin + Export */}
+            <div className="bg-border -mx-0 my-1 h-px" />
+            <button
+              type="button"
+              onClick={() => {
+                onTogglePin?.(applicant.id)
+                closeAll()
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+            >
+              {isPinned ? <PinOff className="text-muted-foreground size-4 shrink-0" /> : <Pin className="text-primary size-4 shrink-0" />}
+              {isPinned ? "Unpin row" : "Pin to top"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                exportRowCSV(applicant)
+                closeAll()
+              }}
               className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
             >
               <Download className="size-4 shrink-0" /> Export row as CSV
             </button>
+          </div>,
+          document.body
+        )}
+
+      {/* Copy flyout */}
+      {subMenu === "copy" &&
+        createPortal(
+          <div
+            ref={subMenuRef}
+            style={{ top: subPos.y, left: subPos.x }}
+            className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(applicant.name)
+                closeAll()
+              }}
+              className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm"
+            >
+              Copy name
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(applicant.email)
+                closeAll()
+              }}
+              className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm"
+            >
+              Copy email
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(applicant.phone)
+                closeAll()
+              }}
+              className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm"
+            >
+              Copy phone
+            </button>
+          </div>,
+          document.body
+        )}
+
+      {/* Assign PIC flyout */}
+      {subMenu === "pic" &&
+        createPortal(
+          <div
+            ref={subMenuRef}
+            style={{ top: subPos.y, left: subPos.x }}
+            className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
+          >
+            {PIC_OPTIONS.map(pic => (
+              <button
+                key={pic}
+                type="button"
+                disabled={applicant.pic === pic}
+                onClick={() => {
+                  onUpdateApplicant?.(applicant.id, { pic })
+                  closeAll()
+                }}
+                className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50"
+              >
+                {applicant.pic === pic ? <CheckCircle2 className="size-3.5 shrink-0 text-green-600" /> : <span className="size-3.5 shrink-0" />}
+                {pic}
+              </button>
+            ))}
           </div>,
           document.body
         )}

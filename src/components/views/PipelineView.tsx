@@ -19,17 +19,22 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities"
 import { ArrowRight, Eye, GripVertical } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
+import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { PinStarButton } from "@/components/pin/PinStarButton"
+import type { CandidatePipelineGroup } from "@/lib/candidates/candidateUrlState"
 import type { Applicant } from "@/lib/types"
 import { groupApplicants, initials, round1Tone, shortPosition } from "./viewUtils"
 import { Button } from "@/components/ui/button"
 
-type PipelineGroupBy = "round1" | "position" | "batch"
+type PipelineGroupBy = CandidatePipelineGroup
 
 interface PipelineViewProps {
   data: Applicant[]
   onReorder?: (items: Applicant[]) => void
   onViewDetail?: (applicant: Applicant) => void
+  searchQuery?: string
+  groupBy?: PipelineGroupBy
+  onGroupByChange?: (groupBy: PipelineGroupBy) => void
 }
 
 const COL_PREFIX = "col::"
@@ -58,8 +63,8 @@ function updateItemColumn(item: Applicant, groupBy: PipelineGroupBy, columnKey: 
   return item
 }
 
-export function PipelineView({ data, onReorder, onViewDetail }: PipelineViewProps) {
-  const [groupBy, setGroupBy] = useState<PipelineGroupBy>("round1")
+export function PipelineView({ data, onReorder, onViewDetail, searchQuery, groupBy: controlledGroupBy, onGroupByChange }: PipelineViewProps) {
+  const [internalGroupBy, setInternalGroupBy] = useState<PipelineGroupBy>("round1")
   const [activeId, setActiveId] = useState<string | null>(null)
   const [overColumnKey, setOverColumnKey] = useState<string | null>(null)
   // Two-layer tracking: state drives re-renders (safe for JSX reads), ref drives
@@ -67,6 +72,12 @@ export function PipelineView({ data, onReorder, onViewDetail }: PipelineViewProp
   // before React can flush the state update.
   const [sourceColumnKey, setSourceColumnKey] = useState<string | null>(null)
   const sourceColumnKeyRef = useRef<string | null>(null)
+  const groupBy = controlledGroupBy ?? internalGroupBy
+
+  function setGroupBy(next: PipelineGroupBy) {
+    if (onGroupByChange) onGroupByChange(next)
+    else setInternalGroupBy(next)
+  }
 
   const columns = useMemo(() => groupApplicants(data, groupBy), [groupBy, data])
 
@@ -196,6 +207,7 @@ export function PipelineView({ data, onReorder, onViewDetail }: PipelineViewProp
                 key={column.key}
                 column={column}
                 onViewDetail={onViewDetail}
+                searchQuery={searchQuery}
                 isExternalDragOver={isExternalDragOver}
                 targetLabel={targetLabel}
               />
@@ -211,11 +223,13 @@ export function PipelineView({ data, onReorder, onViewDetail }: PipelineViewProp
 function PipelineColumn({
   column,
   onViewDetail,
+  searchQuery,
   isExternalDragOver,
   targetLabel,
 }: {
   column: ReturnType<typeof groupApplicants>[number]
   onViewDetail?: (applicant: Applicant) => void
+  searchQuery?: string
   isExternalDragOver: boolean
   targetLabel: string
 }) {
@@ -242,7 +256,7 @@ function PipelineColumn({
 
           <div className={`flex flex-col gap-2 ${isExternalDragOver ? "pointer-events-none opacity-30" : ""}`}>
             {column.items.slice(0, 120).map(item => (
-              <PipelineCard key={item.id} applicant={item} onViewDetail={onViewDetail} />
+              <PipelineCard key={item.id} applicant={item} onViewDetail={onViewDetail} searchQuery={searchQuery} />
             ))}
             {column.items.length > 120 && (
               <p className="text-muted-foreground px-3 py-2 text-center text-xs">
@@ -261,7 +275,15 @@ function PipelineColumn({
   )
 }
 
-function PipelineCard({ applicant, onViewDetail }: { applicant: Applicant; onViewDetail?: (applicant: Applicant) => void }) {
+function PipelineCard({
+  applicant,
+  onViewDetail,
+  searchQuery,
+}: {
+  applicant: Applicant
+  onViewDetail?: (applicant: Applicant) => void
+  searchQuery?: string
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
 
   return (
@@ -287,8 +309,12 @@ function PipelineCard({ applicant, onViewDetail }: { applicant: Applicant; onVie
           {initials(applicant.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-foreground truncate text-sm font-semibold">{applicant.name}</p>
-          <p className="text-muted-foreground truncate text-xs">{shortPosition(applicant.position1)}</p>
+          <p className="text-foreground truncate text-sm font-semibold">
+            <SearchHighlight text={applicant.name} query={searchQuery} />
+          </p>
+          <p className="text-muted-foreground truncate text-xs">
+            <SearchHighlight text={shortPosition(applicant.position1)} query={searchQuery} />
+          </p>
         </div>
         <PinStarButton id={applicant.id} />
       </div>

@@ -16,6 +16,7 @@ import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordi
 import { CSS } from "@dnd-kit/utilities"
 import { Eye, GripVertical } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
+import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { PinStarButton } from "@/components/pin/PinStarButton"
 import type { Applicant } from "@/lib/types"
 import { initials, round1Tone, shortPosition } from "./viewUtils"
@@ -25,9 +26,10 @@ interface GalleryViewProps {
   data: Applicant[]
   onReorder?: (items: Applicant[]) => void
   onViewDetail?: (applicant: Applicant) => void
+  searchQuery?: string
 }
 
-export function GalleryView({ data, onReorder, onViewDetail }: GalleryViewProps) {
+export function GalleryView({ data, onReorder, onViewDetail, searchQuery }: GalleryViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -66,7 +68,7 @@ export function GalleryView({ data, onReorder, onViewDetail }: GalleryViewProps)
       <SortableContext items={data.map(item => item.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.slice(0, 120).map(item => (
-            <GalleryCard key={item.id} applicant={item} onViewDetail={onViewDetail} />
+            <GalleryCard key={item.id} applicant={item} onViewDetail={onViewDetail} searchQuery={searchQuery} />
           ))}
         </div>
         {data.length > 120 && (
@@ -78,7 +80,15 @@ export function GalleryView({ data, onReorder, onViewDetail }: GalleryViewProps)
   )
 }
 
-function GalleryCard({ applicant, onViewDetail }: { applicant: Applicant; onViewDetail?: (applicant: Applicant) => void }) {
+function GalleryCard({
+  applicant,
+  onViewDetail,
+  searchQuery,
+}: {
+  applicant: Applicant
+  onViewDetail?: (applicant: Applicant) => void
+  searchQuery?: string
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
 
   return (
@@ -93,14 +103,20 @@ function GalleryCard({ applicant, onViewDetail }: { applicant: Applicant; onView
           {initials(applicant.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-foreground truncate font-semibold">{applicant.name}</p>
-          <p className="text-muted-foreground truncate text-sm">{shortPosition(applicant.position1)}</p>
+          <p className="text-foreground truncate font-semibold">
+            <SearchHighlight text={applicant.name} query={searchQuery} />
+          </p>
+          <p className="text-muted-foreground truncate text-sm">
+            <SearchHighlight text={shortPosition(applicant.position1)} query={searchQuery} />
+          </p>
         </div>
         <PinStarButton id={applicant.id} />
       </div>
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground truncate">{applicant.university}</span>
+          <span className="text-muted-foreground truncate">
+            <SearchHighlight text={applicant.university} query={searchQuery} />
+          </span>
           <span className="text-foreground font-semibold">{applicant.gpa.toFixed(1)}</span>
         </div>
         <div className="flex flex-wrap gap-2">
