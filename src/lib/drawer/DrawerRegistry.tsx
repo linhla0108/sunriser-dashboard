@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useContext, useMemo } from "react"
+import { createContext, useCallback, useContext, useMemo, useState } from "react"
 import { z } from "zod"
 import { usePersistedState } from "@/lib/persistence/usePersistedState"
 
@@ -31,6 +31,8 @@ interface DrawerRegistryValue {
   setDockLayout: (layout: V2DockLayout) => void
   getDockPlacement: (id: V2DrawerId) => DockPlacement | null
   moveDock: (id: V2DrawerId, overId: V2DrawerId) => void
+  activeFloatId: V2DrawerId | null
+  setActiveFloat: (id: V2DrawerId) => void
 }
 
 const DRAWER_IDS: V2DrawerId[] = ["chat", "notes"]
@@ -53,6 +55,7 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
   const [notesWidth, setNotesWidth] = usePersistedState("v2.notes.dockWidth", 360, widthSchema)
   const [dockLayout, setDockLayoutValue] = usePersistedState<V2DockLayout>("v2.drawer.dockLayout", "stack", dockLayoutSchema)
   const [dockOrder, setDockOrder] = usePersistedState<V2DrawerId[]>("v2.drawer.dockOrder", DRAWER_IDS, drawerOrderSchema)
+  const [activeFloatId, setActiveFloat] = useState<V2DrawerId | null>(null)
 
   const open = useMemo(() => ({ chat: chatOpen, notes: notesOpen }), [chatOpen, notesOpen])
   const mode = useMemo(() => ({ chat: chatMode, notes: notesMode }), [chatMode, notesMode])
@@ -143,8 +146,10 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
       setDockLayout: setDockLayoutValue,
       getDockPlacement,
       moveDock,
+      activeFloatId,
+      setActiveFloat,
     }),
-    [dockedIds, dockLayout, dockedWidth, getDockPlacement, mode, moveDock, open, setDockLayoutValue, setMode, setOpenById, setWidth, width]
+    [activeFloatId, dockedIds, dockLayout, dockedWidth, getDockPlacement, mode, moveDock, open, setActiveFloat, setDockLayoutValue, setMode, setOpenById, setWidth, width]
   )
 
   return <DrawerRegistryContext.Provider value={value}>{children}</DrawerRegistryContext.Provider>

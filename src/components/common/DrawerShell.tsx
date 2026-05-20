@@ -62,11 +62,15 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
       data-testid={`v2-${id}-drawer`}
       data-v2-glass-panel="strong"
       data-dock-id={docked ? id : undefined}
+      onPointerDown={() => { if (!docked) registry.setActiveFloat(id) }}
       className={cn(
         "border-foreground/10 bg-card/80 flex flex-col backdrop-blur-xl",
         docked
           ? "fixed z-40 hidden border-l shadow-[-20px_0_44px_rgba(15,23,42,0.10)] lg:flex"
-          : "fixed inset-x-3 bottom-24 z-50 max-h-[calc(100vh-7rem)] rounded-3xl border shadow-[0_24px_64px_rgba(15,23,42,0.18)] sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]"
+          : cn(
+              "fixed inset-x-3 bottom-24 max-h-[calc(100vh-7rem)] rounded-3xl border shadow-[0_24px_64px_rgba(15,23,42,0.18)] sm:inset-x-auto sm:right-4 sm:bottom-24 sm:w-[400px]",
+              registry.activeFloatId === id ? "z-50" : "z-40"
+            )
       )}
       style={docked ? dockStyle : { width }}
     >
