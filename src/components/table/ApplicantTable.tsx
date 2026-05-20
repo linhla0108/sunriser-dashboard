@@ -25,31 +25,59 @@ interface ApplicantTableProps {
   paginationInfo?: PaginationInfo
 }
 
-type SortKey = "name" | "gpa" | "batch" | "university"
+type SortKey = "name" | "position" | "university" | "gpa" | "year" | "batch" | "pic" | "round1" | "round2"
 type SortDir = "asc" | "desc"
 
-function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey | null; sortDir: SortDir }) {
   if (col !== sortKey) return <ChevronsUpDown className="text-muted-foreground size-3" />
   return sortDir === "asc" ? <ChevronUp className="text-primary size-3" /> : <ChevronDown className="text-primary size-3" />
+}
+
+// undefined optional fields always sort to the bottom regardless of direction
+function optionalStr(val: string | undefined): string {
+  return val == null ? "￿" : val
 }
 
 function sortApplicants(data: Applicant[], sortKey: SortKey, sortDir: SortDir) {
   return [...data].sort((a, b) => {
     let cmp = 0
     if (sortKey === "name") cmp = a.name.localeCompare(b.name)
+    else if (sortKey === "position") cmp = a.position1.localeCompare(b.position1)
     else if (sortKey === "gpa") cmp = a.gpa - b.gpa
+    else if (sortKey === "year") cmp = a.yearOfStudy.localeCompare(b.yearOfStudy)
     else if (sortKey === "batch") cmp = a.batch - b.batch
     else if (sortKey === "university") cmp = a.university.localeCompare(b.university)
+    else if (sortKey === "pic") {
+      const av = optionalStr(a.pic), bv = optionalStr(b.pic)
+      // Keep undefined always at the bottom: if sentinel involved, don't flip
+      if (a.pic == null && b.pic == null) return 0
+      if (a.pic == null) return 1
+      if (b.pic == null) return -1
+      cmp = av.localeCompare(bv)
+    }
+    else if (sortKey === "round1") {
+      if (a.round1Result == null && b.round1Result == null) return 0
+      if (a.round1Result == null) return 1
+      if (b.round1Result == null) return -1
+      cmp = a.round1Result.localeCompare(b.round1Result)
+    }
+    else if (sortKey === "round2") {
+      if (a.round2Result == null && b.round2Result == null) return 0
+      if (a.round2Result == null) return 1
+      if (b.round2Result == null) return -1
+      cmp = a.round2Result.localeCompare(b.round2Result)
+    }
     return sortDir === "asc" ? cmp : -cmp
   })
 }
 
 export default function ApplicantTable({ data, onViewDetail, onDataChange, renderPinAction, indexOffset = 0, paginationInfo }: ApplicantTableProps) {
   const [items, setItems] = useState<Applicant[]>(() => sortApplicants(data, "name", "asc"))
-  const [sortKey, setSortKey] = useState<SortKey>("name")
+  const [sortKey, setSortKey] = useState<SortKey | null>("name")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
-  const sortStateRef = useRef({ sortKey, sortDir })
+  const sortStateRef = useRef<{ sortKey: SortKey | null; sortDir: SortDir }>({ sortKey: "name", sortDir: "asc" })
+  const originalOrderRef = useRef<Applicant[]>(data)
 
   useEffect(() => {
     sortStateRef.current = { sortKey, sortDir }
@@ -57,8 +85,13 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
 
   // Re-sync when incoming pre-filtered data changes, preserving current sort
   useEffect(() => {
+    originalOrderRef.current = data
     const { sortKey: currentSortKey, sortDir: currentSortDir } = sortStateRef.current
-    setItems(sortApplicants(data, currentSortKey, currentSortDir))
+    if (currentSortKey) {
+      setItems(sortApplicants(data, currentSortKey, currentSortDir))
+    } else {
+      setItems([...data])
+    }
   }, [data])
 
   const sensors = useSensors(
@@ -67,10 +100,20 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
   )
 
   function handleSort(key: SortKey) {
-    const newDir = sortKey === key ? (sortDir === "asc" ? "desc" : "asc") : "asc"
-    setSortKey(key)
-    setSortDir(newDir)
-    setItems(prev => sortApplicants(prev, key, newDir))
+    if (sortKey !== key) {
+      // New column: start with asc
+      setSortKey(key)
+      setSortDir("asc")
+      setItems(prev => sortApplicants(prev, key, "asc"))
+    } else if (sortDir === "asc") {
+      // Same column, asc → desc
+      setSortDir("desc")
+      setItems(prev => sortApplicants(prev, key, "desc"))
+    } else {
+      // Same column, desc → clear (restore original order)
+      setSortKey(null)
+      setItems([...originalOrderRef.current])
+    }
   }
 
   function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
@@ -85,7 +128,7 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
       if (next.has(id)) {
         next.delete(id)
         // Restore to current sort order
-        setItems(cur => sortApplicants(cur, sortKey, sortDir))
+        setItems(cur => sortKey ? sortApplicants(cur, sortKey, sortDir) : [...originalOrderRef.current])
       } else {
         next.add(id)
         // Move pinned item to front
@@ -137,7 +180,12 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
                     <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
                   </Button>
                 </TableHead>
-                <TableHead className="text-muted-foreground px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase">Position</TableHead>
+                <TableHead className="px-3 py-3 text-left">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleSort("position")} className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase">
+                    Position
+                    <SortIcon col="position" sortKey={sortKey} sortDir={sortDir} />
+                  </Button>
+                </TableHead>
                 <TableHead className="hidden px-3 py-3 text-left lg:table-cell">
                   <Button
                     type="button"
@@ -162,8 +210,11 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
                     <SortIcon col="gpa" sortKey={sortKey} sortDir={sortDir} />
                   </Button>
                 </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
-                  Year
+                <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleSort("year")} className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase">
+                    Year
+                    <SortIcon col="year" sortKey={sortKey} sortDir={sortDir} />
+                  </Button>
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
                   <Button
@@ -177,12 +228,23 @@ export default function ApplicantTable({ data, onViewDetail, onDataChange, rende
                     <SortIcon col="batch" sortKey={sortKey} sortDir={sortDir} />
                   </Button>
                 </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
-                  PIC
+                <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleSort("pic")} className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase">
+                    PIC
+                    <SortIcon col="pic" sortKey={sortKey} sortDir={sortDir} />
+                  </Button>
                 </TableHead>
-                <TableHead className="text-muted-foreground px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase">Round 1</TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase sm:table-cell">
-                  Round 2
+                <TableHead className="px-3 py-3 text-center">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleSort("round1")} className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase">
+                    Round 1
+                    <SortIcon col="round1" sortKey={sortKey} sortDir={sortDir} />
+                  </Button>
+                </TableHead>
+                <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleSort("round2")} className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase">
+                    Round 2
+                    <SortIcon col="round2" sortKey={sortKey} sortDir={sortDir} />
+                  </Button>
                 </TableHead>
                 <TableHead className="text-muted-foreground w-[116px] px-3 py-3 pr-4 text-xs font-semibold tracking-wider uppercase">
                   Actions
