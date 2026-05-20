@@ -31,11 +31,15 @@ interface PaginationControls {
 }
 
 interface ViewPillNavProps {
+  view?: V2View
+  onViewChange?: (view: V2View) => void
   pagination?: PaginationControls
 }
 
-export function ViewPillNav({ pagination }: ViewPillNavProps = {}) {
-  const { view, setView } = useViewState()
+export function ViewPillNav({ view: controlledView, onViewChange, pagination }: ViewPillNavProps = {}) {
+  const { view: storedView, setView: setStoredView } = useViewState()
+  const view = controlledView ?? storedView
+  const setView = onViewChange ?? setStoredView
   const [visible, setVisible] = useState(true)
   const lastY = useRef(0)
 

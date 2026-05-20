@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { AiDrawer } from "@/components/chat/AiDrawer"
 import { RequireAuth } from "@/components/auth/RequireAuth"
 import { NotesDrawer } from "@/components/notes/NotesDrawer"
@@ -27,6 +27,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
 function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
   const registry = useDrawerRegistry()
+  const pathname = usePathname()
   const router = useRouter()
   const [reportOpen, setReportOpen] = useState(false)
   const toggleChat = useCallback(() => registry.toggle("chat"), [registry])
@@ -49,7 +50,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
               style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
             >
               <TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
-              <PinnedToolbar />
+              {pathname === "/candidates" ? <PinnedToolbar /> : null}
               {children}
             </SidebarInset>
             <AiDrawer />

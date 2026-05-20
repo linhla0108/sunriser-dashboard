@@ -6,13 +6,22 @@ import { AuthProvider } from "@/lib/auth/AuthProvider"
 import { ThemeProvider } from "@/lib/theme/ThemeProvider"
 import { WorkspaceShell } from "../WorkspaceShell"
 
+const navigation = vi.hoisted(() => ({
+  pathname: "/dashboard",
+  push: vi.fn(),
+}))
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
-  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => navigation.pathname,
+  useRouter: () => ({ push: navigation.push }),
 }))
 
 vi.mock("@/components/auth/RequireAuth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock("@/components/pin/PinnedToolbar", () => ({
+  PinnedToolbar: () => <div data-testid="pinned-toolbar">Pinned Toolbar</div>,
 }))
 
 Object.defineProperty(window, "matchMedia", {
@@ -53,6 +62,8 @@ function Providers({ children }: { children: React.ReactNode }) {
 describe("WorkspaceShell keyboard shortcuts", () => {
   beforeEach(() => {
     localStorage.clear()
+    navigation.pathname = "/dashboard"
+    navigation.push.mockClear()
     setupSession()
   })
 
@@ -70,5 +81,26 @@ describe("WorkspaceShell keyboard shortcuts", () => {
     await userEvent.keyboard("{Control>}r{/Control}")
 
     await waitFor(() => expect(screen.getByText("Generated report")).toBeInTheDocument())
+  })
+
+  it("shows the pinned toolbar only on the candidates route", async () => {
+    const { rerender } = render(
+      <WorkspaceShell>
+        <div>page</div>
+      </WorkspaceShell>,
+      { wrapper: Providers }
+    )
+
+    await screen.findByText("page")
+    expect(screen.queryByTestId("pinned-toolbar")).not.toBeInTheDocument()
+
+    navigation.pathname = "/candidates"
+    rerender(
+      <WorkspaceShell>
+        <div>page</div>
+      </WorkspaceShell>
+    )
+
+    expect(screen.getByTestId("pinned-toolbar")).toBeInTheDocument()
   })
 })
