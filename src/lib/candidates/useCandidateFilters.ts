@@ -8,11 +8,24 @@ export interface CandidateFilters {
   resultFilter: string
 }
 
-export function useCandidateFilters(data: Applicant[]) {
-  const [search, setSearch] = useState("")
-  const [positionFilter, setPositionFilter] = useState("")
-  const [batchFilter, setBatchFilter] = useState("")
-  const [resultFilter, setResultFilter] = useState("")
+interface CandidateFilterOptions extends Partial<CandidateFilters> {
+  onSearchChange?: (value: string) => void
+  onPositionChange?: (value: string) => void
+  onBatchChange?: (value: string) => void
+  onResultChange?: (value: string) => void
+  onClearFilters?: () => void
+}
+
+export function useCandidateFilters(data: Applicant[], options: CandidateFilterOptions = {}) {
+  const [internalSearch, setInternalSearch] = useState("")
+  const [internalPositionFilter, setInternalPositionFilter] = useState("")
+  const [internalBatchFilter, setInternalBatchFilter] = useState("")
+  const [internalResultFilter, setInternalResultFilter] = useState("")
+
+  const search = options.search ?? internalSearch
+  const positionFilter = options.positionFilter ?? internalPositionFilter
+  const batchFilter = options.batchFilter ?? internalBatchFilter
+  const resultFilter = options.resultFilter ?? internalResultFilter
 
   const filtered = useMemo(() => {
     let result = data
@@ -37,11 +50,20 @@ export function useCandidateFilters(data: Applicant[]) {
 
   const hasFilters = !!(search || positionFilter || batchFilter || resultFilter)
 
+  const setSearch = options.onSearchChange ?? setInternalSearch
+  const setPositionFilter = options.onPositionChange ?? setInternalPositionFilter
+  const setBatchFilter = options.onBatchChange ?? setInternalBatchFilter
+  const setResultFilter = options.onResultChange ?? setInternalResultFilter
+
   function clearFilters() {
-    setSearch("")
-    setPositionFilter("")
-    setBatchFilter("")
-    setResultFilter("")
+    if (options.onClearFilters) {
+      options.onClearFilters()
+    } else {
+      setInternalSearch("")
+      setInternalPositionFilter("")
+      setInternalBatchFilter("")
+      setInternalResultFilter("")
+    }
   }
 
   return {

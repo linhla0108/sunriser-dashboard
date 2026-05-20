@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChartView } from "@/components/views/ChartView"
 import { GalleryView } from "@/components/views/GalleryView"
 import { GalleryViewSkeleton } from "@/components/views/GalleryView.skeleton"
@@ -11,10 +12,16 @@ import { ThemedView } from "@/components/views/ThemedView"
 import { ApplicantDetailDrawer } from "@/components/views/ApplicantDetailDrawer"
 import { ViewPillNav } from "@/components/layout/ViewPillNav"
 import { CandidateFiltersBar } from "@/components/candidates/CandidateFiltersBar"
+import {
+  formatCandidateSort,
+  parseCandidateUrlState,
+  writeCandidateUrlState,
+  type CandidatePipelineGroup,
+  type CandidateUrlState,
+} from "@/lib/candidates/candidateUrlState"
 import { useCandidateFilters } from "@/lib/candidates/useCandidateFilters"
 import { usePagination } from "@/lib/candidates/usePagination"
 import { mockApplicants } from "@/lib/mockData"
-import { useViewState } from "@/lib/views/useViewState"
 import type { Applicant } from "@/lib/types"
 
 function mergeReordered(full: Applicant[], reordered: Applicant[]): Applicant[] {
@@ -33,22 +40,50 @@ function mergeReordered(full: Applicant[], reordered: Applicant[]): Applicant[] 
 }
 
 export default function CandidatesPage() {
-  const { view } = useViewState()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const urlState = parseCandidateUrlState(searchParams)
   const [applicants, setApplicants] = useState<Applicant[]>(mockApplicants)
   const [detailApplicant, setDetailApplicant] = useState<Applicant | null>(null)
 
+  function updateUrlState(patch: Partial<CandidateUrlState>, options: { resetPage?: boolean } = {}) {
+    const params = writeCandidateUrlState(new URLSearchParams(searchParams.toString()), {
+      ...patch,
+      ...(options.resetPage ? { page: 1 } : null),
+    })
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
   const {
-    search, setSearch,
-    positionFilter, setPositionFilter,
-    batchFilter, setBatchFilter,
-    resultFilter, setResultFilter,
+    search,
+    setSearch,
+    positionFilter,
+    setPositionFilter,
+    batchFilter,
+    setBatchFilter,
+    resultFilter,
+    setResultFilter,
     hasFilters,
     clearFilters,
     filtered,
-  } = useCandidateFilters(applicants)
+  } = useCandidateFilters(applicants, {
+    search: urlState.search,
+    positionFilter: urlState.position,
+    batchFilter: urlState.batch,
+    resultFilter: urlState.result,
+    onSearchChange: value => updateUrlState({ search: value }, { resetPage: true }),
+    onPositionChange: value => updateUrlState({ position: value }, { resetPage: true }),
+    onBatchChange: value => updateUrlState({ batch: value }, { resetPage: true }),
+    onResultChange: value => updateUrlState({ result: value }, { resetPage: true }),
+    onClearFilters: () => updateUrlState({ search: "", position: "", batch: "", result: "", page: 1 }),
+  })
 
-  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } =
-    usePagination(filtered.length)
+  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(filtered.length, 15, {
+    page: urlState.page,
+    onPageChange: page => updateUrlState({ page }),
+  })
 
   const pagedData = filtered.slice(startIndex, endIndex)
 
@@ -73,32 +108,43 @@ export default function CandidatesPage() {
           onResultChange={setResultFilter}
           onClearAll={clearFilters}
         />
-        {view === "table" ? (
+        {urlState.view === "table" ? (
           <TableView
+            key={formatCandidateSort(urlState.sort)}
             data={pagedData}
             onDataChange={handleReorder}
             onViewDetail={setDetailApplicant}
             indexOffset={startIndex}
             paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
+            searchQuery={search}
+            sortState={urlState.sort}
+            onSortChange={sort => updateUrlState({ sort, page: 1 })}
           />
         ) : null}
-        {view === "pipeline" ? (
+        {urlState.view === "pipeline" ? (
           <ThemedView
             shadcnComponent={PipelineView}
             skeletonComponent={PipelineViewSkeleton}
-            props={{ data: filtered, onReorder: handleReorder, onViewDetail: setDetailApplicant }}
+            props={{
+              data: filtered,
+              onReorder: handleReorder,
+              onViewDetail: setDetailApplicant,
+              searchQuery: search,
+              groupBy: urlState.group,
+              onGroupByChange: (group: CandidatePipelineGroup) => updateUrlState({ group }),
+            }}
           />
         ) : null}
-        {view === "chart" ? <ChartView data={filtered} /> : null}
-        {view === "gallery" ? (
+        {urlState.view === "chart" ? <ChartView data={filtered} /> : null}
+        {urlState.view === "gallery" ? (
           <ThemedView
             shadcnComponent={GalleryView}
             skeletonComponent={GalleryViewSkeleton}
-            props={{ data: filtered, onReorder: handleReorder, onViewDetail: setDetailApplicant }}
+            props={{ data: filtered, onReorder: handleReorder, onViewDetail: setDetailApplicant, searchQuery: search }}
           />
         ) : null}
       </div>
-      <ViewPillNav pagination={{ canGoPrev, canGoNext, goPrev, goNext }} />
+      <ViewPillNav view={urlState.view} onViewChange={view => updateUrlState({ view })} pagination={{ canGoPrev, canGoNext, goPrev, goNext }} />
       <ApplicantDetailDrawer
         applicant={detailApplicant}
         open={!!detailApplicant}
