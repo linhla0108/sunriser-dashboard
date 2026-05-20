@@ -1,70 +1,83 @@
-# Plans Documentation Rule
+# Task Documentation Rule
 
-## Rule: Every plan must be documented in `docs/plans/`
+## Rule: Every task must be documented in `docs/tasks/`
 
-After completing a plan, create a dated folder inside `docs/plans/` using the format `DD-MM-YYYY` (e.g. `18-05-2026`). If a folder for today's date already exists, use it — do not create duplicates.
+Create a dated folder inside `docs/tasks/` using the format `DD-MM-YYYY`. If a folder for today's date already exists, use it.
 
 ```
-docs/plans/
-└── 18-05-2026/
-    ├── plan.md      ← written before implementation
-    └── report.md   ← updated after implementation is complete
+docs/tasks/
+└── 19-05-2026/
+    ├── summary.md              ← agent reads this FIRST and ONLY by default
+    ├── dnd-pipeline-kanban.md  ← one file per task (plan + report)
+    ├── editable-chips.md
+    └── ...
 ```
 
-This rule applies to **all agents** (Claude Code, Codex, OpenCode, GitHub Copilot). Never create standalone plan or report files scattered across the source tree.
+This rule applies to **all agents** (Claude Code, Codex, Copilot). Never create standalone plan or report files scattered across the source tree.
 
-**Language:** All plans and reports must be written in **English**. Use clear, simple, and direct language that is easy for LLMs to parse — short sentences, concrete nouns, no ambiguous pronouns, no filler phrases.
+**Language:** English. Clear, simple, direct. Short sentences, concrete nouns, no filler.
 
 ---
 
-## `plan.md` — written before implementation
+## `summary.md` — the only file agents read by default
 
 ```markdown
-# Plan: <feature or fix title>
+# Tasks — 19 May 2026
+
+| # | Task | Tag | Status | Note |
+|---|------|-----|--------|------|
+| 1 | DnD Fix + Pipeline Kanban | candidates/fix | Done | |
+| 2 | Editable Chips | candidates/feature | In Progress | chips render, data flow WIP |
+```
+
+**Tag format:** `area/type` — e.g. `candidates/fix`, `ui/refactor`, `auth/feature`, `repo/chore`.
+
+Agents should only drill into a task file when they need goal, scope, or acceptance criteria details.
+
+---
+
+## Task file — plan + report in one file
+
+```markdown
+# Task Title
+Tag: area/type
 
 ## Goal
-One sentence describing what this plan achieves.
+One sentence describing what this task achieves.
 
 ## Scope
-- What is included
-- What is explicitly out of scope
+- Included: what is in scope
+- Excluded: what is explicitly out of scope
 
-## Steps
-1. Step one
-2. Step two
-3. ...
+## Acceptance criteria
+- Criterion one
+- Criterion two
 
-## Files to touch
-List the files expected to be created or modified.
+---
+
+## Report
+Status: Done | Commit: abc1234
+
+Brief description of what changed (behavior, not file list).
+Use git log --stat <commit> for file-level details.
+
+Remaining: any deviations or follow-up items.
 ```
 
 ---
 
-## `report.md` — updated after implementation is complete
+## What NOT to put in task files
 
-```markdown
-# Report: <feature or fix title>
-
-## Status
-Completed / Partial / Abandoned
-
-## Changes
-
-| File | Description |
-| ---- | ----------- |
-| `src/components/Foo.tsx` | Added X to handle Y |
-| `src/lib/utils.ts` | Extracted helper Z |
-
-## Notes
-Any deviations from the plan, edge cases found, or follow-up tasks.
-```
-
-The report must use **relative file paths from the repo root** and keep descriptions brief (one sentence per file).
+- **Steps** (1. do X, 2. do Y) — execution detail, agent decides its own path
+- **Files to touch** — goes stale after refactors, agent finds files via grep/read
+- **File-by-file change tables** — duplicate of git log
+- **Risks and mitigations** — relevant only during planning, not after
+- **Open questions** — if still open, create a new task
 
 ---
 
 ## When to apply
 
-- Any task that requires a plan step before implementation.
 - Multi-file changes, new features, refactors, bug fixes with non-trivial scope.
 - Skip for trivial single-line edits or typo fixes.
+- Write the plan section **before** implementation. Add the report section **after**.
