@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, Eye, GripVertical } from "lucide-react"
+import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
@@ -166,10 +166,41 @@ function PicChip({ value, onChange }: { value?: string; onChange?: (v: string | 
   return <SelectChip value={value} options={PIC_OPTIONS.map(value => ({ value, label: value }))} onChange={onChange} />
 }
 
+function exportRowCSV(applicant: Applicant) {
+  const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
+  const row = [applicant.name, applicant.email, applicant.position1, applicant.university, applicant.gpa, applicant.batch, applicant.pic ?? "", applicant.round1Result ?? "", applicant.round2Result ?? ""]
+  const csv = [headers, row].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n")
+  const blob = new Blob([csv], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `${applicant.name.replace(/\s+/g, "-")}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function DraggableRow({ applicant, index, onViewDetail, pinAction, onUpdateApplicant }: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
   })
+  const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null)
+  const ctxMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!ctxPos) return
+    function onDown(e: MouseEvent) {
+      if (!ctxMenuRef.current?.contains(e.target as Node)) setCtxPos(null)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCtxPos(null)
+    }
+    document.addEventListener("mousedown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [ctxPos])
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -179,12 +210,20 @@ export default function DraggableRow({ applicant, index, onViewDetail, pinAction
 
   const rowBg = applicant.round1Result === "Passed" ? "bg-green-50/60" : applicant.round1Result === "Waiting list" ? "bg-amber-50/60" : ""
 
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setCtxPos({ x: e.clientX, y: e.clientY })
+  }
+
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className={`border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg}`}
-    >
+    <>
+        <tr
+          ref={setNodeRef}
+          style={style}
+          onContextMenu={handleContextMenu}
+          className={`border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg}`}
+        >
       <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">{index + 1}</td>
 
       {/* Name — always visible */}
@@ -273,6 +312,80 @@ export default function DraggableRow({ applicant, index, onViewDetail, pinAction
           </Button>
         </div>
       </td>
-    </tr>
+        </tr>
+
+      {ctxPos &&
+        createPortal(
+          <div
+            ref={ctxMenuRef}
+            style={{ top: ctxPos.y, left: ctxPos.x }}
+            className="border-border fixed z-[9999] min-w-52 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
+          >
+            <div className="text-muted-foreground truncate px-3 py-1 text-xs font-semibold">{applicant.name}</div>
+            <div className="-mx-0 my-1 h-px bg-border" />
+
+            {onViewDetail && (
+              <button
+                type="button"
+                onClick={() => { onViewDetail(applicant); setCtxPos(null) }}
+                className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+              >
+                <Eye className="size-4 shrink-0" /> View detail
+              </button>
+            )}
+
+            <div className="group relative">
+              <button type="button" className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm">
+                <Copy className="size-4 shrink-0" /> Copy
+                <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+              </button>
+              <div className="border-border absolute left-full top-0 z-10 hidden min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl group-hover:block">
+                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.name); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy name</button>
+                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.email); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy email</button>
+                <button type="button" onClick={() => { navigator.clipboard.writeText(applicant.phone); setCtxPos(null) }} className="hover:bg-muted w-full px-3 py-1.5 text-left text-sm">Copy phone</button>
+              </div>
+            </div>
+
+            <div className="-mx-0 my-1 h-px bg-border" />
+            <div className="text-muted-foreground px-3 py-1 text-xs font-semibold">Round 1 status</div>
+
+            <button
+              type="button"
+              disabled={applicant.round1Result === "Passed"}
+              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Passed" }); setCtxPos(null) }}
+              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+            >
+              <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Mark as Passed
+            </button>
+            <button
+              type="button"
+              disabled={applicant.round1Result === "Failed"}
+              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Failed" }); setCtxPos(null) }}
+              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+            >
+              <XCircle className="size-4 shrink-0 text-red-500" /> Mark as Failed
+            </button>
+            <button
+              type="button"
+              disabled={applicant.round1Result === "Waiting list"}
+              onClick={() => { onUpdateApplicant?.(applicant.id, { round1Result: "Waiting list" }); setCtxPos(null) }}
+              className="hover:bg-muted disabled:opacity-40 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none"
+            >
+              <Clock className="size-4 shrink-0 text-amber-500" /> Waiting list
+            </button>
+
+            <div className="-mx-0 my-1 h-px bg-border" />
+
+            <button
+              type="button"
+              onClick={() => { exportRowCSV(applicant); setCtxPos(null) }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+            >
+              <Download className="size-4 shrink-0" /> Export row as CSV
+            </button>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
