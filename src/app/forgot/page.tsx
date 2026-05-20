@@ -1,5 +1,5 @@
-import { AuthCard } from "@/components/v2/auth/AuthCard"
-import { ForgotForm } from "@/components/v2/auth/ForgotForm"
+import { AuthCard } from "@/components/auth/AuthCard"
+import { ForgotForm } from "@/components/auth/ForgotForm"
 
 export default function ForgotPage() {
   return (

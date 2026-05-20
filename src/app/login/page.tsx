@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { AuthCard } from "@/components/v2/auth/AuthCard"
-import { LoginForm } from "@/components/v2/auth/LoginForm"
+import { AuthCard } from "@/components/auth/AuthCard"
+import { LoginForm } from "@/components/auth/LoginForm"
 
 export default function LoginPage() {
   const router = useRouter()

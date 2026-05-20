@@ -1,4 +1,4 @@
-import { PublicReport } from "@/components/v2/public/PublicReport"
+import { PublicReport } from "@/components/public/PublicReport"
 
 export default async function PublicReportPage({ params }: { params: Promise<{ shareId: string }> }) {
   const { shareId } = await params

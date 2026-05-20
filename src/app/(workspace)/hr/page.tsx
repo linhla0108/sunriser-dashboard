@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { useHrStaff } from "@/lib/v2/hr/useHrStaff"
-import { HrStaffStats } from "@/components/v2/hr/HrStaffStats"
-import { HrStaffToolbar } from "@/components/v2/hr/HrStaffToolbar"
-import { HrStaffTable } from "@/components/v2/hr/HrStaffTable"
-import { HrStaffFormDialog } from "@/components/v2/hr/HrStaffFormDialog"
-import { HrStaffDeleteDialog } from "@/components/v2/hr/HrStaffDeleteDialog"
-import type { HrStaff, HrRole, HrStatus } from "@/lib/v2/hr/types"
+import { useHrStaff } from "@/lib/hr/useHrStaff"
+import { HrStaffStats } from "@/components/hr/HrStaffStats"
+import { HrStaffToolbar } from "@/components/hr/HrStaffToolbar"
+import { HrStaffTable } from "@/components/hr/HrStaffTable"
+import { HrStaffFormDialog } from "@/components/hr/HrStaffFormDialog"
+import { HrStaffDeleteDialog } from "@/components/hr/HrStaffDeleteDialog"
+import type { HrStaff, HrRole, HrStatus } from "@/lib/hr/types"
 
 export default function HrPage() {
   const [search, setSearch] = useState("")

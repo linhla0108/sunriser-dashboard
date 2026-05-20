@@ -1,9 +1,9 @@
 "use client"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AccountTab } from "@/components/v2/settings/AccountTab"
-import { AppearanceTab } from "@/components/v2/settings/AppearanceTab"
-import { WorkspaceTab } from "@/components/v2/settings/WorkspaceTab"
+import { AccountTab } from "@/components/settings/AccountTab"
+import { AppearanceTab } from "@/components/settings/AppearanceTab"
+import { WorkspaceTab } from "@/components/settings/WorkspaceTab"
 
 export default function SettingsPage() {
   return (

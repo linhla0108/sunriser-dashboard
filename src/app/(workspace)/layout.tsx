@@ -1,5 +1,5 @@
-import { V2WorkspaceShell } from "@/components/v2/layout/V2WorkspaceShell"
+import { WorkspaceShell } from "@/components/layout/WorkspaceShell"
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
-  return <V2WorkspaceShell>{children}</V2WorkspaceShell>
+  return <WorkspaceShell>{children}</WorkspaceShell>
 }

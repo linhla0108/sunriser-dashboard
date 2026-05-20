@@ -1,4 +1,4 @@
-import { AdmittedGrid } from "@/components/v2/public/AdmittedGrid"
+import { AdmittedGrid } from "@/components/public/AdmittedGrid"
 
 export default function PublicResultsPage() {
   return <AdmittedGrid />
