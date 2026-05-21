@@ -99,6 +99,7 @@ export default function CandidatesPage() {
           positionFilter={positionFilter}
           batchFilter={batchFilter}
           resultFilter={resultFilter}
+          applicants={applicants}
           hasFilters={hasFilters}
           total={applicants.length}
           filteredCount={filtered.length}

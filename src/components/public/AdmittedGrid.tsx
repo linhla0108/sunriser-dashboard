@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/select"
 import { mockApplicants } from "@/lib/mockData"
 
 function getInitials(name: string) {
@@ -17,6 +17,7 @@ function getInitials(name: string) {
 export function AdmittedGrid() {
   const admitted = useMemo(() => mockApplicants.filter(item => item.round1Result === "Passed"), [])
   const positions = useMemo(() => Array.from(new Set(admitted.map(item => item.position1))).sort(), [admitted])
+  const positionOptions = useMemo(() => [{ value: "all", label: "All positions" }, ...positions.map(p => ({ value: p, label: p }))], [positions])
   const [position, setPosition] = useState<string>("all")
 
   const visible = position === "all" ? admitted : admitted.filter(item => item.position1 === position)
@@ -30,19 +31,14 @@ export function AdmittedGrid() {
             {visible.length} of {admitted.length} candidates cleared Round 1.
           </p>
         </div>
-        <Select value={position} onValueChange={value => setPosition(value ?? "all")}>
-          <SelectTrigger className="w-full sm:w-64">
-            <SelectValue placeholder="Filter by position" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All positions</SelectItem>
-            {positions.map(p => (
-              <SelectItem key={p} value={p}>
-                {p}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          aria-label="Admitted position"
+          value={position}
+          options={positionOptions}
+          onValueChange={value => setPosition(value)}
+          placeholder="Filter by position"
+          className="w-full sm:w-64"
+        />
       </header>
 
       <ul className="public-grid grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

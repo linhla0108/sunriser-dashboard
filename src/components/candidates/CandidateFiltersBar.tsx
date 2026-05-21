@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ChevronDown, Search, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/select"
+import type { Applicant } from "@/lib/types"
 
 const POSITIONS = [
   "AI Engineering Intern",
@@ -23,6 +24,7 @@ interface CandidateFiltersBarProps {
   positionFilter: string
   batchFilter: string
   resultFilter: string
+  applicants?: Applicant[]
   hasFilters: boolean
   total: number
   filteredCount: number
@@ -38,6 +40,7 @@ export function CandidateFiltersBar({
   positionFilter,
   batchFilter,
   resultFilter,
+  applicants = [],
   hasFilters,
   total,
   filteredCount,
@@ -52,6 +55,75 @@ export function CandidateFiltersBar({
   const positionLabel = positionFilter ? positionFilter.replace(" Intern", "") : "All Positions"
   const batchLabel = batchFilter ? `Batch ${batchFilter}` : "All Batches"
   const resultLabel = resultFilter || "All Results"
+
+  const matchesSearch = useCallback((applicant: Applicant) => {
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    return (
+      applicant.name.toLowerCase().includes(q) ||
+      applicant.email.toLowerCase().includes(q) ||
+      applicant.position1.toLowerCase().includes(q) ||
+      applicant.university.toLowerCase().includes(q)
+    )
+  }, [search])
+
+  const positionOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Positions", searchText: "all positions" },
+      ...POSITIONS.map(position => ({
+        value: position,
+        label: position.replace(" Intern", ""),
+        searchText: position,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.position1 === position &&
+              (!batchFilter || applicant.batch === Number(batchFilter)) &&
+              (!resultFilter || applicant.round1Result === resultFilter)
+          ),
+      })),
+    ]
+  }, [applicants, batchFilter, matchesSearch, resultFilter])
+
+  const batchOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Batches", searchText: "all batches" },
+      ...[1, 2, 3].map(batch => ({
+        value: String(batch),
+        label: `Batch ${batch}`,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.batch === batch &&
+              (!positionFilter || applicant.position1 === positionFilter) &&
+              (!resultFilter || applicant.round1Result === resultFilter)
+          ),
+      })),
+    ]
+  }, [applicants, matchesSearch, positionFilter, resultFilter])
+
+  const resultOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Results", searchText: "all results" },
+      ...RESULTS.map(result => ({
+        value: result,
+        label: result,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.round1Result === result &&
+              (!positionFilter || applicant.position1 === positionFilter) &&
+              (!batchFilter || applicant.batch === Number(batchFilter))
+          ),
+      })),
+    ]
+  }, [applicants, batchFilter, matchesSearch, positionFilter])
 
   return (
     <>
@@ -70,58 +142,36 @@ export function CandidateFiltersBar({
         </div>
 
         <div className="relative hidden sm:block">
-          <Select value={positionFilter || "all"} onValueChange={v => onPositionChange(v === "all" ? "" : (v ?? ""))}>
-            <SelectTrigger
-              data-v2-field=""
-              className="text-muted-foreground focus-visible:border-primary h-9 w-[180px] rounded-2xl bg-white/80 backdrop-blur"
-            >
-              <SelectValue>{positionLabel}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Positions</SelectItem>
-              {POSITIONS.map(p => (
-                <SelectItem key={p} value={p}>
-                  {p.replace(" Intern", "")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            aria-label="Position"
+            value={positionFilter || "all"}
+            options={positionOptions}
+            onValueChange={v => onPositionChange(v === "all" ? "" : v)}
+            placeholder={positionLabel}
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[180px] rounded-2xl bg-white/80 backdrop-blur"
+          />
         </div>
 
         <div className="relative hidden sm:block">
-          <Select value={batchFilter || "all"} onValueChange={v => onBatchChange(v === "all" ? "" : (v ?? ""))}>
-            <SelectTrigger
-              data-v2-field=""
-              className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
-            >
-              <SelectValue>{batchLabel}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Batches</SelectItem>
-              <SelectItem value="1">Batch 1</SelectItem>
-              <SelectItem value="2">Batch 2</SelectItem>
-              <SelectItem value="3">Batch 3</SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            aria-label="Batch"
+            value={batchFilter || "all"}
+            options={batchOptions}
+            onValueChange={v => onBatchChange(v === "all" ? "" : v)}
+            placeholder={batchLabel}
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
+          />
         </div>
 
         <div className="relative hidden sm:block">
-          <Select value={resultFilter || "all"} onValueChange={v => onResultChange(v === "all" ? "" : (v ?? ""))}>
-            <SelectTrigger
-              data-v2-field=""
-              className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
-            >
-              <SelectValue>{resultLabel}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Results</SelectItem>
-              {RESULTS.map(r => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            aria-label="Result"
+            value={resultFilter || "all"}
+            options={resultOptions}
+            onValueChange={v => onResultChange(v === "all" ? "" : v)}
+            placeholder={resultLabel}
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
+          />
         </div>
 
         <Button
@@ -187,58 +237,36 @@ export function CandidateFiltersBar({
             <div className="flex flex-col gap-3">
               <div>
                 <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-widest uppercase">Position</p>
-                <Select value={positionFilter || "all"} onValueChange={v => onPositionChange(v === "all" ? "" : (v ?? ""))}>
-                  <SelectTrigger
-                    data-v2-field=""
-                    className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
-                  >
-                    <SelectValue>{positionLabel}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Positions</SelectItem>
-                    {POSITIONS.map(p => (
-                      <SelectItem key={p} value={p}>
-                        {p.replace(" Intern", "")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  aria-label="Position"
+                  value={positionFilter || "all"}
+                  options={positionOptions}
+                  onValueChange={v => onPositionChange(v === "all" ? "" : v)}
+                  placeholder={positionLabel}
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                />
               </div>
               <div>
                 <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-widest uppercase">Batch</p>
-                <Select value={batchFilter || "all"} onValueChange={v => onBatchChange(v === "all" ? "" : (v ?? ""))}>
-                  <SelectTrigger
-                    data-v2-field=""
-                    className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
-                  >
-                    <SelectValue>{batchLabel}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Batches</SelectItem>
-                    <SelectItem value="1">Batch 1</SelectItem>
-                    <SelectItem value="2">Batch 2</SelectItem>
-                    <SelectItem value="3">Batch 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  aria-label="Batch"
+                  value={batchFilter || "all"}
+                  options={batchOptions}
+                  onValueChange={v => onBatchChange(v === "all" ? "" : v)}
+                  placeholder={batchLabel}
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                />
               </div>
               <div>
                 <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-widest uppercase">Round 1 Result</p>
-                <Select value={resultFilter || "all"} onValueChange={v => onResultChange(v === "all" ? "" : (v ?? ""))}>
-                  <SelectTrigger
-                    data-v2-field=""
-                    className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
-                  >
-                    <SelectValue>{resultLabel}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Results</SelectItem>
-                    {RESULTS.map(r => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  aria-label="Result"
+                  value={resultFilter || "all"}
+                  options={resultOptions}
+                  onValueChange={v => onResultChange(v === "all" ? "" : v)}
+                  placeholder={resultLabel}
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                />
               </div>
             </div>
             <div className="mt-4 flex gap-3">

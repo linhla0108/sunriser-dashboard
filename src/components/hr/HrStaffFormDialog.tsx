@@ -5,10 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/select"
 import type { HrStaff, HrRole } from "@/lib/hr/types"
 
 const ROLES: HrRole[] = ["HR Manager", "Recruiter", "Coordinator", "Analyst", "Intern"]
+const ROLE_OPTIONS = ROLES.map(role => ({ value: role, label: role }))
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+]
 
 interface Props {
   open: boolean
@@ -59,22 +64,23 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Role</Label>
-            <Select value={form.role} onValueChange={v => set("role", v as HrRole)}>
-              <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              aria-label="Role"
+              value={form.role}
+              options={ROLE_OPTIONS}
+              onValueChange={v => set("role", v as HrRole)}
+              className="w-full rounded-2xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
-            <Select value={form.status} onValueChange={v => set("status", v as "active" | "inactive")}>
-              <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              aria-label="Status"
+              value={form.status}
+              options={STATUS_OPTIONS}
+              onValueChange={v => set("status", v as "active" | "inactive")}
+              className="w-full rounded-2xl"
+            />
           </div>
         </div>
         <div className="space-y-1.5">

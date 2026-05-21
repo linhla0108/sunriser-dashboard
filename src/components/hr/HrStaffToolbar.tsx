@@ -3,10 +3,16 @@
 import { Search, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/select"
 import type { HrRole, HrStatus } from "@/lib/hr/types"
 
 const ROLES: HrRole[] = ["HR Manager", "Recruiter", "Coordinator", "Analyst", "Intern"]
+const ROLE_OPTIONS = [{ value: "all", label: "All roles" }, ...ROLES.map(role => ({ value: role, label: role }))]
+const STATUS_OPTIONS = [
+  { value: "all", label: "All status" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+]
 
 interface Props {
   search: string
@@ -31,26 +37,23 @@ export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onR
         />
       </div>
 
-      <Select value={roleFilter} onValueChange={v => onRoleChange(v as HrRole | "all")}>
-        <SelectTrigger className="h-9 w-[140px] rounded-full text-sm">
-          <SelectValue placeholder="Role" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All roles</SelectItem>
-          {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <SearchableSelect
+        aria-label="Role"
+        value={roleFilter}
+        options={ROLE_OPTIONS}
+        onValueChange={v => onRoleChange(v as HrRole | "all")}
+        placeholder="Role"
+        className="h-9 w-[140px] rounded-full text-sm"
+      />
 
-      <Select value={statusFilter} onValueChange={v => onStatusChange(v as HrStatus | "all")}>
-        <SelectTrigger className="h-9 w-[120px] rounded-full text-sm">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All status</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="inactive">Inactive</SelectItem>
-        </SelectContent>
-      </Select>
+      <SearchableSelect
+        aria-label="Status"
+        value={statusFilter}
+        options={STATUS_OPTIONS}
+        onValueChange={v => onStatusChange(v as HrStatus | "all")}
+        placeholder="Status"
+        className="h-9 w-[120px] rounded-full text-sm"
+      />
 
       <Button onClick={onAdd} className="h-9 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 ml-auto">
         <Plus className="mr-1.5 h-3.5 w-3.5" />

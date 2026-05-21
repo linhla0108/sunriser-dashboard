@@ -11,3 +11,4 @@
 | 7 | Candidate Search Highlight | candidates/feature | Done | Highlight active search text in table, pipeline, and gallery |
 | 8 | Compare Table Colors | candidates/polish | Done | Stronger compare dialog contrast and row scanning |
 | 9 | Sidebar Profile & Settings Cleanup | ui/fix | Done | Remove Mock workspace; Settings → footer gear icon; Profile + Settings in one row |
+| 10 | Searchable Select Dropdown | ui/feature | Done | Scope: shared searchable select + candidate/HR/public filters; files: `src/components/ui/select.tsx`, `src/components/candidates/CandidateFiltersBar.tsx`, `src/components/hr/*`, `src/components/public/AdmittedGrid.tsx`; commit: uncommitted |
