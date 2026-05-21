@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import { AppLoadingScreen } from "@/components/common/AppLoadingScreen"
 import { useAuth } from "@/lib/auth/useAuth"
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     if (ready && !loading && !user) router.push(`/login?from=${encodeURIComponent(pathname)}`)
   }, [loading, pathname, ready, router, user])
 
-  if (!ready || loading || !user) return null
+  if (!ready || loading) return <AppLoadingScreen variant="boot" />
+  if (!user) return <AppLoadingScreen variant="auth" sublabel="Checking access" />
   return <>{children}</>
 }

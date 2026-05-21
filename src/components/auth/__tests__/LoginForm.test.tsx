@@ -32,7 +32,8 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }))
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
-    expect(Number(localStorage.getItem("v2.auth.rememberUntil"))).toBeGreaterThan(Date.now())
+    expect(screen.getByRole("status")).toHaveTextContent("Opening your workspace")
+    expect(Number(localStorage.getItem("sunriser.auth.rememberUntil"))).toBeGreaterThan(Date.now())
   })
 
   it("can sign in without remembering this browser", async () => {
@@ -46,8 +47,8 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }))
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
-    expect(localStorage.getItem("v2.auth.rememberUntil")).toBeNull()
-    expect(sessionStorage.getItem("v2.auth.sessionOnly")).toBe("true")
+    expect(localStorage.getItem("sunriser.auth.rememberUntil")).toBeNull()
+    expect(sessionStorage.getItem("sunriser.auth.sessionOnly")).toBe("true")
   })
 
   it("shows an error for invalid credentials", async () => {
@@ -60,6 +61,7 @@ describe("LoginForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }))
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials")
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
     expect(onSuccess).not.toHaveBeenCalled()
   })
 })

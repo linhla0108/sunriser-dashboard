@@ -40,7 +40,7 @@ Object.defineProperty(window, "matchMedia", {
 
 function setupSession() {
   localStorage.setItem(
-    "v2.auth.session",
+    "sunriser.auth.session",
     JSON.stringify({
       userId: "u_admin",
       role: "admin",
@@ -102,5 +102,19 @@ describe("WorkspaceShell keyboard shortcuts", () => {
     )
 
     expect(screen.getByTestId("pinned-toolbar")).toBeInTheDocument()
+  })
+
+  it("animates workspace regions without a fake loading overlay", async () => {
+    const { container } = render(
+      <WorkspaceShell>
+        <div>page</div>
+      </WorkspaceShell>,
+      { wrapper: Providers }
+    )
+
+    expect(container.querySelector('[data-cid="app-loading-screen"]')).not.toBeInTheDocument()
+    expect(container.querySelector('[class*="workspaceSidebarIn"]')).toBeInTheDocument()
+    expect(container.querySelector('[class*="workspaceTopbarIn"]')).toBeInTheDocument()
+    expect(container.querySelector('[class*="workspaceContentIn"]')).toBeInTheDocument()
   })
 })

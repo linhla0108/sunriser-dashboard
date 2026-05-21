@@ -7,7 +7,7 @@ import { TopBar } from "../TopBar"
 
 function TestProviders({ children }: { children: React.ReactNode }) {
   localStorage.setItem(
-    "v2.auth.session",
+    "sunriser.auth.session",
     JSON.stringify({
       userId: "u_admin",
       role: "admin",

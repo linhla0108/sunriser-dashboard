@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react"
 import { LogIn } from "lucide-react"
+import { AppLoadingScreen } from "@/components/common/AppLoadingScreen"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -43,12 +44,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setReadyToNavigate(true)
   }
 
+  if (readyToNavigate) {
+    return <AppLoadingScreen variant="auth" className="fixed inset-0 z-50 min-h-dvh" />
+  }
+
   return (
     <form className="space-y-5" onSubmit={submit}>
       <div className="space-y-2">
-        <Label htmlFor="v2-email">Email</Label>
+        <Label htmlFor="login-email">Email</Label>
         <Input
-          id="v2-email"
+          id="login-email"
           type="email"
           autoComplete="email"
           value={email}
@@ -59,9 +64,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="v2-password">Password</Label>
+        <Label htmlFor="login-password">Password</Label>
         <Input
-          id="v2-password"
+          id="login-password"
           type="password"
           autoComplete="current-password"
           value={password}
@@ -71,17 +76,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         />
       </div>
 
-      <label htmlFor="v2-remember" className="flex items-start gap-3 rounded-lg border border-foreground/10 px-3 py-2">
+      <label htmlFor="login-remember" className="flex items-start gap-3">
         <Checkbox
-          id="v2-remember"
+          id="login-remember"
           checked={remember}
           onCheckedChange={checked => setRemember(checked === true)}
           aria-label="Remember me for 6 days"
           className="mt-0.5"
         />
-        <span className="grid gap-0.5">
-          <span className="text-sm font-medium text-foreground">Remember me</span>
-          <span className="text-xs leading-5 text-muted-foreground">Keep this browser signed in for 6 days.</span>
+        <span className="text-foreground text-sm font-medium">
+          Remember me
         </span>
       </label>
 

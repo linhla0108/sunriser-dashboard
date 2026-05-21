@@ -43,15 +43,21 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
     <SidebarProvider style={{ "--sidebar-width": "15rem", "--sidebar-width-icon": "4rem", "--sidebar-icon-button-size": "calc(var(--sidebar-width-icon) - 1rem)" } as React.CSSProperties}>
       <GlobalDropZone onAnalyze={analyzeUpload}>
         <WorkspaceContextMenu onCreateReport={openReport}>
-          <div data-v2-workspace="" className="bg-background flex h-screen w-full">
-            <Sidebar />
+          <div data-workspace="" className="bg-background relative flex h-screen w-full overflow-hidden">
+            <div className="motion-safe:animate-[workspaceSidebarIn_680ms_cubic-bezier(0.16,1,0.3,1)_both]">
+              <Sidebar />
+            </div>
             <SidebarInset
               className="min-w-0 overflow-y-auto transition-[width] duration-200 lg:w-[calc(100vw-var(--sidebar-width)-var(--v2-docked-width))]"
               style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
             >
-              <TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
-              {pathname === "/candidates" ? <PinnedToolbar /> : null}
-              {children}
+              <div className="motion-safe:animate-[workspaceTopbarIn_720ms_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
+                <TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
+              </div>
+              <div className="motion-safe:animate-[workspaceContentIn_760ms_cubic-bezier(0.16,1,0.3,1)_140ms_both]">
+                {pathname === "/candidates" ? <PinnedToolbar /> : null}
+                {children}
+              </div>
             </SidebarInset>
             <AiDrawer />
             <NotesDrawer />

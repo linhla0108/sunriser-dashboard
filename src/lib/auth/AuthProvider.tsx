@@ -3,15 +3,15 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
-import type { AuthContextValue, V2Role, V2User } from "./types"
+import type { AppRole, AppUser, AuthContextValue } from "./types"
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
-const REMEMBER_UNTIL_KEY = "v2.auth.rememberUntil"
-const SESSION_ONLY_KEY = "v2.auth.sessionOnly"
+const REMEMBER_UNTIL_KEY = "sunriser.auth.rememberUntil"
+const SESSION_ONLY_KEY = "sunriser.auth.sessionOnly"
 const REMEMBER_DURATION_MS = 6 * 24 * 60 * 60 * 1000
 
-function roleFromAppMetadata(user: User): Exclude<V2Role, "public"> {
+function roleFromAppMetadata(user: User): Exclude<AppRole, "public"> {
   const role = user.app_metadata?.role
   return role === "admin" || role === "member" ? role : "member"
 }
@@ -23,7 +23,7 @@ function displayNameFromUser(user: User) {
   return user.email?.split("@")[0] ?? "SUN.RISER user"
 }
 
-function toV2User(user: User): V2User {
+function toAppUser(user: User): AppUser {
   return {
     id: user.id,
     email: user.email ?? "",
@@ -66,7 +66,7 @@ function clearRememberPreference() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
-  const [user, setUser] = useState<V2User | null>(null)
+  const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      setUser(data.user ? toV2User(data.user) : null)
+      setUser(data.user ? toAppUser(data.user) : null)
       setLoading(false)
     })
 
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      setUser(session?.user ? toV2User(session.user) : null)
+      setUser(session?.user ? toAppUser(session.user) : null)
       setLoading(false)
     })
 
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearRememberPreference()
         return { ok: false, error: error.message }
       }
-      if (data.user) setUser(toV2User(data.user))
+      if (data.user) setUser(toAppUser(data.user))
 
       return { ok: true }
     },

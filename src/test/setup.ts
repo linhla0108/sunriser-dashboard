@@ -22,7 +22,7 @@ function makeUser(email: string, role: "admin" | "member", name: string): MockSu
 
 function legacySessionUser() {
   try {
-    const raw = window.localStorage.getItem("v2.auth.session")
+    const raw = window.localStorage.getItem("sunriser.auth.session")
     if (!raw) return null
     const session = JSON.parse(raw) as { role?: string; userId?: string }
     if (session.role === "admin" || session.userId === "u_admin") return makeUser("admin@sunriser.com", "admin", "Linh Admin")
@@ -79,7 +79,7 @@ vi.mock("@/lib/supabase/client", () => ({
       resetPasswordForEmail: async () => ({ data: {}, error: null }),
       signOut: async () => {
         currentUser = null
-        window.localStorage.removeItem("v2.auth.session")
+        window.localStorage.removeItem("sunriser.auth.session")
         notifyAuthChange("SIGNED_OUT")
         return { error: null }
       },

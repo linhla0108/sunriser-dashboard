@@ -30,19 +30,20 @@ describe("RequireAuth", () => {
     )
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/login?from=%2Fdashboard"))
+    expect(screen.getByRole("status")).toHaveTextContent("Checking access")
     expect(screen.queryByText("app")).not.toBeInTheDocument()
   })
 
   it("renders children when a valid session exists", async () => {
     localStorage.setItem(
-      "v2.auth.session",
+      "sunriser.auth.session",
       JSON.stringify({
         userId: "u_admin",
         role: "admin",
         expiresAt: new Date(Date.now() + 1000).toISOString(),
       })
     )
-    localStorage.setItem("v2.auth.rememberUntil", String(Date.now() + 1000))
+    localStorage.setItem("sunriser.auth.rememberUntil", String(Date.now() + 1000))
 
     render(
       <RequireAuth>
@@ -52,5 +53,17 @@ describe("RequireAuth", () => {
     )
 
     expect(await screen.findByText("app")).toBeInTheDocument()
+  })
+
+  it("shows a loading screen while auth is resolving", () => {
+    render(
+      <RequireAuth>
+        <div>app</div>
+      </RequireAuth>,
+      { wrapper: TestProviders }
+    )
+
+    expect(screen.getByRole("status")).toHaveTextContent("Preparing workspace")
+    expect(screen.queryByText("app")).not.toBeInTheDocument()
   })
 })

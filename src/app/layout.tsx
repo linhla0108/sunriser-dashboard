@@ -21,12 +21,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn("h-full font-sans", geist.variable)}>
+    <html lang="en" data-theme="main" data-mode="light" suppressHydrationWarning className={cn("h-full font-sans", geist.variable)}>
       <body className="bg-background text-foreground h-full antialiased">
         <TooltipProvider delay={300}>
           <ThemeProvider>
             <AuthProvider>
-              <div data-v2-workspace="" className="min-h-screen bg-background font-sans text-foreground">
+              <div data-workspace="" className="min-h-screen bg-background font-sans text-foreground">
                 {children}
               </div>
               <Toaster />
