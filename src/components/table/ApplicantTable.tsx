@@ -186,9 +186,12 @@ export default function ApplicantTable({
             boxShadow: "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px",
           }}
         >
-          <Table className="min-w-[600px]">
-            <TableHeader>
-              <TableRow className="border-border">
+          <Table
+            containerClassName="max-h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:max-h-[calc(100dvh-15.5rem)]"
+            className="min-w-[600px]"
+          >
+            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
+              <TableRow className="border-border bg-white hover:bg-white">
                 <TableHead className="text-muted-foreground w-8 px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase">#</TableHead>
                 <TableHead className="px-3 py-3 text-left">
                   <Button

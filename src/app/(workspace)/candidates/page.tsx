@@ -93,7 +93,7 @@ export default function CandidatesPage() {
 
   return (
     <>
-      <div className="p-3 sm:p-4 lg:p-6">
+      <div className="p-3 pb-36 sm:p-4 sm:pb-28 lg:p-6 lg:pb-28">
         <CandidateFiltersBar
           search={search}
           positionFilter={positionFilter}
