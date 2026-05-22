@@ -284,7 +284,7 @@ function PipelineCard({
   onViewDetail?: (applicant: Applicant) => void
   searchQuery?: string
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
 
   return (
     <article
@@ -295,6 +295,7 @@ function PipelineCard({
     >
       <div className="flex items-start gap-2">
         <Button
+          ref={setActivatorNodeRef}
           variant="plain"
           size="plain"
           {...attributes}
