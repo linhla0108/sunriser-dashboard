@@ -6,19 +6,10 @@ import { AuthProvider } from "@/lib/auth/AuthProvider"
 import { TopBar } from "../TopBar"
 
 function TestProviders({ children }: { children: React.ReactNode }) {
-  localStorage.setItem(
-    "sunriser.auth.session",
-    JSON.stringify({
-      userId: "u_admin",
-      role: "admin",
-      expiresAt: "2099-01-01T00:00:00.000Z",
-    })
-  )
-
   return (
-    <TooltipProvider delay={0}>
-      <AuthProvider>{children}</AuthProvider>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider delay={0}>{children}</TooltipProvider>
+    </AuthProvider>
   )
 }
 
@@ -27,18 +18,13 @@ describe("TopBar", () => {
     localStorage.clear()
   })
 
-  it("renders title, primary actions, and account details", async () => {
+  it("renders title and primary actions without the account menu", () => {
     render(<TopBar />, { wrapper: TestProviders })
 
     expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /create report/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /export data/i })).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole("button", { name: /open account menu/i }))
-
-    expect(await screen.findByText("Linh Admin")).toBeInTheDocument()
-    expect(screen.getByText("admin@sunriser.com")).toBeInTheDocument()
-    expect(screen.getByText("admin")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /open account menu/i })).not.toBeInTheDocument()
   })
 
   it("calls action handlers from the toolbar buttons", async () => {

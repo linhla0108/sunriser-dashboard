@@ -1,12 +1,9 @@
 "use client"
 
 import { Download, FilePlus2, NotebookPen, Sparkles } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
-import { useAuth } from "@/lib/auth/useAuth"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth/useAuth"
 
 interface TopBarProps {
   title?: string
@@ -19,16 +16,6 @@ interface TopBarProps {
   onExportData?: () => void
 }
 
-function getInitials(name?: string) {
-  if (!name) return "SR"
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join("")
-}
-
 export function TopBar({
   title = "Overview",
   subtitle = "SUN.RISER 2026 · Internship Recruitment",
@@ -39,8 +26,9 @@ export function TopBar({
   onCreateReport,
   onExportData,
 }: TopBarProps) {
-  const { role, signOut, user } = useAuth()
-
+  const { can } = useAuth()
+  const canEdit = can("edit")
+  const canDelete = can("delete")
   return (
     <header
       data-v2-glass-panel="strong"
@@ -76,53 +64,35 @@ export function TopBar({
               <NotebookPen className="size-4" />
             </Button>
           </ActionTooltip>
-          <ActionTooltip label="Create report" shortcut="Ctrl+R">
+          <ActionTooltip label={canEdit ? "Create report" : "You don't have permission to create reports"} shortcut={canEdit ? "Ctrl+R" : undefined}>
             <Button
               variant="plain"
               size="plain"
               type="button"
               onClick={onCreateReport}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hidden h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition sm:flex"
+              disabled={!canEdit}
+              aria-disabled={!canEdit}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 hidden h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition sm:flex"
             >
               <FilePlus2 className="size-4" />
               Create Report
             </Button>
           </ActionTooltip>
-          <ActionTooltip label="Export data">
+          <ActionTooltip label={canDelete ? "Export data" : "You don't have permission to export"}>
             <Button
               variant="plain"
               size="plain"
               type="button"
               onClick={onExportData}
-              className="border-foreground/10 text-foreground hover:bg-foreground/5 hidden h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition sm:flex"
+              disabled={!canDelete}
+              aria-disabled={!canDelete}
+              className="border-foreground/10 text-foreground hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50 hidden h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition sm:flex"
             >
               <Download className="size-4" />
               Export Data
             </Button>
           </ActionTooltip>
           {actions}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="focus-visible:ring-primary/25 rounded-full outline-none focus-visible:ring-3"
-              aria-label="Open account menu"
-            >
-              <Avatar>
-                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <div className="px-1.5 py-1">
-                <span className="text-foreground block text-sm font-medium">{user?.name ?? "Guest"}</span>
-                <span className="text-muted-foreground mt-1 block truncate text-xs">{user?.email ?? "No active session"}</span>
-                <Badge className="mt-2 capitalize" variant="secondary">
-                  {role}
-                </Badge>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </header>
