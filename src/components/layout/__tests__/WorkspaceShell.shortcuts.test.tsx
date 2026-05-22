@@ -52,9 +52,9 @@ function setupSession() {
 function Providers({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider delay={0}>
-      <ThemeProvider>
-        <AuthProvider>{children}</AuthProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+      </AuthProvider>
     </TooltipProvider>
   )
 }

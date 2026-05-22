@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, type SetStateAction } from "react"
 import { z } from "zod"
 import { usePersistedState } from "@/lib/persistence/usePersistedState"
 
-export const V2_VIEW_KEYS = ["table", "pipeline", "chart", "gallery"] as const
+export const V2_VIEW_KEYS = ["table", "pipeline", "chart"] as const
 
 export type V2View = (typeof V2_VIEW_KEYS)[number]
 
