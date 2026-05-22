@@ -24,14 +24,14 @@ export default function RootLayout({
     <html lang="en" data-theme="main" data-mode="light" suppressHydrationWarning className={cn("h-full font-sans", geist.variable)}>
       <body className="bg-background text-foreground h-full antialiased">
         <TooltipProvider delay={300}>
-          <ThemeProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <ThemeProvider>
               <div data-workspace="" className="min-h-screen bg-background font-sans text-foreground">
                 {children}
               </div>
               <Toaster />
-            </AuthProvider>
-          </ThemeProvider>
+            </ThemeProvider>
+          </AuthProvider>
         </TooltipProvider>
       </body>
     </html>
