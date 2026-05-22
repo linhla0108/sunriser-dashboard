@@ -1,7 +1,6 @@
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { PinnedToolbar } from "../PinnedToolbar"
+import { CompareDialog } from "../ComparePage"
 
 const dndKit = vi.hoisted(() => ({
   latestContext: null as null | {
@@ -24,7 +23,7 @@ vi.mock("@dnd-kit/core", () => ({
     onDragCancel?: () => void
   }) => {
     dndKit.latestContext = { onDragCancel, onDragEnd, onDragStart }
-    return <div data-testid="pinned-dnd-context">{children}</div>
+    return <div data-testid="compare-dnd-context">{children}</div>
   },
   DragOverlay: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   PointerSensor: vi.fn(),
@@ -46,7 +45,6 @@ vi.mock("@dnd-kit/sortable", () => ({
     attributes: {},
     isDragging: false,
     listeners: {},
-    setActivatorNodeRef: vi.fn(),
     setNodeRef: vi.fn(),
     transform: null,
     transition: undefined,
@@ -61,12 +59,20 @@ vi.mock("@dnd-kit/utilities", () => ({
   },
 }))
 
-vi.mock("@/components/pin/ComparePage", () => ({
-  CompareDialog: () => null,
+vi.mock("@/components/common/ActionTooltip", () => ({
+  ActionTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
 }))
 
 function Providers({ children }: { children: React.ReactNode }) {
-  return <TooltipProvider delay={0}>{children}</TooltipProvider>
+  return <>{children}</>
 }
 
 function seedPinned(ids: string[]) {
@@ -77,44 +83,41 @@ function readPinned() {
   return JSON.parse(localStorage.getItem("v2.pinned") ?? "[]") as string[]
 }
 
-describe("PinnedToolbar", () => {
+describe("CompareDialog", () => {
   beforeEach(() => {
     localStorage.clear()
     dndKit.latestContext = null
   })
 
-  it("renders pinned candidates without the sticky tab toggle", () => {
-    seedPinned(["001", "002"])
-
-    render(<PinnedToolbar />, { wrapper: Providers })
-
-    expect(screen.getByText("Nguyễn Minh Khoa")).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: /use sticky tab/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: /use sticky bar/i })).not.toBeInTheDocument()
-  })
-
-  it("reorders pinned candidates from the drag end target", async () => {
+  it("reorders compare columns through the shared pinned order", async () => {
     seedPinned(["001", "002", "003"])
 
-    render(<PinnedToolbar />, { wrapper: Providers })
+    render(<CompareDialog open onOpenChange={vi.fn()} />, { wrapper: Providers })
 
     act(() => dndKit.latestContext?.onDragEnd?.({ active: { id: "003" }, over: { id: "001" } }))
 
     await waitFor(() => expect(readPinned()).toEqual(["003", "001", "002"]))
   })
 
-  it("does not delete a chip when drag ends away from another pinned chip", async () => {
+  it("sorts compare candidates by GPA high first", async () => {
+    seedPinned(["003", "001", "004"])
+
+    render(<CompareDialog open onOpenChange={vi.fn()} />, { wrapper: Providers })
+
+    fireEvent.change(screen.getByLabelText(/sort compare/i), { target: { value: "gpa" } })
+
+    await waitFor(() => expect(readPinned()).toEqual(["004", "001", "003"]))
+  })
+
+  it("filters compare rows and highlights search matches", () => {
     seedPinned(["001", "002"])
 
-    render(<PinnedToolbar />, { wrapper: Providers })
+    render(<CompareDialog open onOpenChange={vi.fn()} />, { wrapper: Providers })
 
-    act(() => dndKit.latestContext?.onDragStart?.({ active: { id: "001" } }))
+    fireEvent.change(screen.getByLabelText(/search compare/i), { target: { value: "Full" } })
 
-    expect(screen.queryByText("Drop here to delete")).not.toBeInTheDocument()
-
-    act(() => dndKit.latestContext?.onDragEnd?.({ active: { id: "001" }, over: { id: "outside-toolbar" } }))
-
-    await waitFor(() => expect(readPinned()).toEqual(["001", "002"]))
-    expect(screen.getByText("Nguyễn Minh Khoa")).toBeInTheDocument()
+    expect(screen.getByText("Full")).toBeInTheDocument()
+    expect(screen.getByText("time")).toBeInTheDocument()
+    expect(screen.queryByText("Major")).not.toBeInTheDocument()
   })
 })

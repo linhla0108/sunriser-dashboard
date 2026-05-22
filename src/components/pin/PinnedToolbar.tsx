@@ -1,22 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  pointerWithin,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type CollisionDetection,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core"
+import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GitCompare, GripHorizontal, Trash2, X } from "lucide-react"
+import { GitCompare, GripHorizontal, X } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
 import { CompareDialog } from "@/components/pin/ComparePage"
 import { Button } from "@/components/ui/button"
@@ -25,17 +13,7 @@ import { cn } from "@/lib/utils"
 import { usePinned } from "@/lib/pin/usePinned"
 import type { Applicant } from "@/lib/types"
 
-const DELETE_ZONE_ID = "pinned-delete-zone"
-
 type PinnedItem = Applicant
-
-const pinnedCollisionDetection: CollisionDetection = args => {
-  const pointerHits = pointerWithin(args)
-  const deleteHit = pointerHits.find(hit => hit.id === DELETE_ZONE_ID)
-
-  if (deleteHit) return [deleteHit]
-  return closestCenter(args)
-}
 
 export function PinnedToolbar() {
   const [compareOpen, setCompareOpen] = useState(false)
@@ -90,10 +68,6 @@ export function PinnedToolbar() {
     setDraggingId(null)
 
     if (!overId) return
-    if (overId === DELETE_ZONE_ID) {
-      remove(activeId)
-      return
-    }
 
     const oldIndex = ids.indexOf(activeId)
     const newIndex = ids.indexOf(overId)
@@ -103,13 +77,10 @@ export function PinnedToolbar() {
   }
 
   return (
-    <div
-      data-v2-glass-panel="strong"
-      className="border-foreground/10 bg-background/85 sticky top-[75px] z-20 border-b px-3 py-2 backdrop-blur-xl"
-    >
+    <div data-v2-glass-panel="strong" className="border-foreground/10 bg-background/85 sticky top-[75px] z-20 border-b px-3 py-2 backdrop-blur-xl">
       <DndContext
         sensors={sensors}
-        collisionDetection={pinnedCollisionDetection}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={() => setDraggingId(null)}
@@ -163,7 +134,6 @@ export function PinnedToolbar() {
             </Button>
           </ActionTooltip>
         </div>
-        <PinnedDeleteZone active={!!draggingId} />
         <DragOverlay adjustScale={false} dropAnimation={null}>
           {draggingItem ? <PinnedChipOverlay item={draggingItem} /> : null}
         </DragOverlay>
@@ -174,14 +144,16 @@ export function PinnedToolbar() {
 }
 
 function PinnedChip({ item, onRemove }: { item: PinnedItem; onRemove: (id: string) => void }) {
-  const { setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
   return (
     <span
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       data-v2-field=""
       className={cn(
-        "bg-card/80 text-foreground border-foreground/20 inline-flex shrink-0 items-center gap-0.5 rounded-full border p-2 text-xs font-semibold transition-shadow",
+        "bg-card/80 text-foreground border-foreground/20 inline-flex shrink-0 cursor-grab items-center gap-0.5 rounded-full border p-2 text-xs font-semibold transition-shadow active:cursor-grabbing",
         isDragging ? "relative z-50 opacity-30 shadow-lg" : "shadow-none"
       )}
       style={{ transform: CSS.Transform.toString(transform), transition }}
@@ -210,34 +182,6 @@ function PinnedChipOverlay({ item }: { item: PinnedItem }) {
       <GripHorizontal className="text-muted-foreground size-3.5" />
       <span className="max-w-[180px] truncate">{item.name}</span>
       <X className="text-muted-foreground size-3" />
-    </div>
-  )
-}
-
-function PinnedDeleteZone({ active }: { active: boolean }) {
-  const { isOver, setNodeRef } = useDroppable({ id: DELETE_ZONE_ID })
-
-  return (
-    <div
-      ref={setNodeRef}
-      aria-hidden={!active}
-      className={cn(
-        "fixed top-[124px] right-0 bottom-0 left-0 z-40 p-3 transition-opacity duration-150 sm:left-16 sm:p-4 lg:left-[240px] lg:p-6",
-        active ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
-        active && isOver ? "bg-destructive/5" : "bg-transparent"
-      )}
-    >
-      <div className="flex h-full w-full items-end justify-center">
-        <div
-          className={cn(
-            "border-destructive/30 text-destructive bg-background/95 flex h-12 w-full max-w-xl items-center justify-center gap-2 rounded-2xl border border-dashed px-4 text-xs font-semibold shadow-lg backdrop-blur-xl transition-colors",
-            isOver ? "bg-destructive/15 ring-destructive/20 ring-4" : "bg-background/95"
-          )}
-        >
-          <Trash2 className="size-3.5" />
-          Drop here to delete
-        </div>
-      </div>
     </div>
   )
 }
