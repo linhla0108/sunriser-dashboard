@@ -3,7 +3,8 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
-import type { AppRole, AppUser, AuthContextValue } from "./types"
+import { loadProfileData, PROFILE_DEFAULTS } from "./loadProfile"
+import type { AppPermission, AppRole, AppUser, AuthContextValue } from "./types"
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
@@ -13,23 +14,16 @@ const REMEMBER_DURATION_MS = 6 * 24 * 60 * 60 * 1000
 
 function roleFromAppMetadata(user: User): Exclude<AppRole, "public"> {
   const role = user.app_metadata?.role
-  return role === "admin" || role === "member" ? role : "member"
+  if (role === "admin" || role === "manager" || role === "member" || role === "viewer") return role
+  return "member"
 }
 
-function displayNameFromUser(user: User) {
+function displayNameFromUser(user: User, fullName?: string) {
+  if (fullName && fullName.trim()) return fullName.trim()
   const metadata = user.user_metadata
   const name = metadata?.full_name ?? metadata?.name ?? metadata?.display_name
   if (typeof name === "string" && name.trim()) return name.trim()
   return user.email?.split("@")[0] ?? "SUN.RISER user"
-}
-
-function toAppUser(user: User): AppUser {
-  return {
-    id: user.id,
-    email: user.email ?? "",
-    name: displayNameFromUser(user),
-    role: roleFromAppMetadata(user),
-  }
 }
 
 function rememberUntil() {
@@ -53,7 +47,6 @@ function setRememberPreference(remember: boolean) {
     window.sessionStorage.removeItem(SESSION_ONLY_KEY)
     return
   }
-
   window.localStorage.removeItem(REMEMBER_UNTIL_KEY)
   window.sessionStorage.setItem(SESSION_ONLY_KEY, "true")
 }
@@ -69,6 +62,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const buildAppUser = useCallback(
+    async (authUser: User): Promise<AppUser> => {
+      try {
+        const { profile, access, settings } = await loadProfileData(supabase, authUser.id)
+        return {
+          id: authUser.id,
+          email: authUser.email ?? "",
+          name: displayNameFromUser(authUser, profile.fullName),
+          role: roleFromAppMetadata(authUser),
+          profile,
+          access,
+          settings,
+        }
+      } catch {
+        // Network/RLS error: fall back to defaults so the UI can still render.
+        return {
+          id: authUser.id,
+          email: authUser.email ?? "",
+          name: displayNameFromUser(authUser),
+          role: roleFromAppMetadata(authUser),
+          profile: PROFILE_DEFAULTS.profile,
+          access: PROFILE_DEFAULTS.access,
+          settings: PROFILE_DEFAULTS.settings,
+        }
+      }
+    },
+    [supabase]
+  )
+
   useEffect(() => {
     let mounted = true
 
@@ -81,13 +103,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      setUser(data.user ? toAppUser(data.user) : null)
+      if (data.user) {
+        const next = await buildAppUser(data.user)
+        if (!mounted) return
+        setUser(next)
+      } else {
+        setUser(null)
+      }
       setLoading(false)
     })
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
       if (session?.user && !shouldKeepSession()) {
         void supabase.auth.signOut()
@@ -96,7 +124,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      setUser(session?.user ? toAppUser(session.user) : null)
+      if (session?.user) {
+        const next = await buildAppUser(session.user)
+        if (!mounted) return
+        setUser(next)
+      } else {
+        setUser(null)
+      }
       setLoading(false)
     })
 
@@ -104,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, buildAppUser])
 
   const signIn = useCallback<AuthContextValue["signIn"]>(
     async (email, password, options) => {
@@ -115,11 +149,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearRememberPreference()
         return { ok: false, error: error.message }
       }
-      if (data.user) setUser(toAppUser(data.user))
-
+      if (data.user) {
+        const next = await buildAppUser(data.user)
+        setUser(next)
+      }
       return { ok: true }
     },
-    [supabase]
+    [supabase, buildAppUser]
   )
 
   const signOut = useCallback(async () => {
@@ -128,15 +164,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }, [supabase])
 
+  const can = useCallback(
+    (permission: AppPermission) => {
+      if (!user) return false
+      if (!user.access.active) return false
+      return user.access.permissions.includes(permission)
+    },
+    [user]
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       loading,
       user,
       role: user?.role ?? "public",
+      isAdmin: user?.role === "admin",
+      can,
       signIn,
       signOut,
     }),
-    [loading, signIn, signOut, user]
+    [loading, user, can, signIn, signOut]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

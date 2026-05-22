@@ -40,8 +40,45 @@ function notifyAuthChange(event: string) {
   listeners.forEach(listener => listener(event, user ? { user } : null))
 }
 
+function profileRowsFor(userId: string) {
+  const isAdmin = userId === "u_admin"
+  return {
+    user_profiles: {
+      full_name: isAdmin ? "Linh Admin" : "Recruiter Member",
+      birthday: null,
+      positions: [],
+      notes: null,
+    },
+    user_access: {
+      active: true,
+      role: isAdmin ? "admin" : "member",
+      permissions: isAdmin ? ["read", "edit", "delete"] : ["read"],
+    },
+    user_settings: { theme: "main", mode: "light", settings: {}, notes: null },
+  }
+}
+
+function makeFromMock() {
+  return (table: "user_profiles" | "user_access" | "user_settings") => {
+    let filterUserId = ""
+    const builder = {
+      select: () => builder,
+      eq: (_col: string, value: string) => {
+        filterUserId = value
+        return builder
+      },
+      maybeSingle: async () => {
+        const rows = profileRowsFor(filterUserId)
+        return { data: rows[table] ?? null, error: null }
+      },
+    }
+    return builder
+  }
+}
+
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
+    from: makeFromMock(),
     auth: {
       getUser: async () => ({ data: { user: activeUser() }, error: null }),
       getSession: async () => {
