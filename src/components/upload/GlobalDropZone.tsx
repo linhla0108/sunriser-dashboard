@@ -1,17 +1,18 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { X, FileSpreadsheet, FileText, File, AlertCircle, CheckCircle2, Plus, UploadCloud } from "lucide-react"
-import * as XLSX from "xlsx"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { AlertCircle, CheckCircle2, File, FileSpreadsheet, FileText, Plus, RefreshCw, UploadCloud, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-interface ParsedFile {
-  name: string
-  size: string
-  rows: number
-  columns: string[]
-  fileType: string
-}
+import type { UploadSession } from "@/lib/upload/UploadSessionContext"
+import {
+  addColumnsToParsedDataset,
+  analyzeUploadDataset,
+  mapUploadDatasetToApplicants,
+  parseUploadFile,
+  type ParsedUploadDataset,
+  type UploadAnalysis,
+  type UploadCellValue,
+} from "@/lib/upload/parseUploadFile"
 
 interface Toast {
   id: string
@@ -19,16 +20,22 @@ interface Toast {
   message: string
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024
+const ACCEPTED_EXTENSIONS = [".xlsx", ".xls", ".csv", ".tsv", ".json"]
+const INITIAL_SHOW = 10
 
 type DropState = "idle" | "dragging" | "processing" | "popup-open" | "error"
-
-const ACCEPTED_EXTENSIONS = [".xlsx", ".xls", ".csv", ".tsv", ".json"]
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatCell(value: UploadCellValue) {
+  if (value instanceof Date) return value.toLocaleDateString()
+  if (value === null) return "empty"
+  return String(value)
 }
 
 function getFileIcon(ext: string) {
@@ -69,16 +76,16 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
 
 interface GlobalDropZoneProps {
   children: React.ReactNode
-  onAnalyze: () => void
+  onAnalyze: (session: UploadSession) => void
 }
 
 export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZoneProps) {
   const [dropState, setDropState] = useState<DropState>("idle")
-  const [parsedFile, setParsedFile] = useState<ParsedFile | null>(null)
+  const [dataset, setDataset] = useState<ParsedUploadDataset | null>(null)
+  const [analysis, setAnalysis] = useState<UploadAnalysis | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [filterText, setFilterText] = useState("")
-  const [customColumns, setCustomColumns] = useState<string[]>([])
   const [pillsExpanded, setPillsExpanded] = useState(false)
   const dragCounterRef = useRef(0)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -96,16 +103,19 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const closePopup = useCallback(() => {
-    setDropState("idle")
-    setParsedFile(null)
+  const resetPopupState = useCallback(() => {
+    setDataset(null)
+    setAnalysis(null)
     setErrorMsg(null)
     setFilterText("")
-    setCustomColumns([])
     setPillsExpanded(false)
   }, [])
 
-  // Keep dropStateRef in sync so drag event handlers don't need dropState in their closure
+  const closePopup = useCallback(() => {
+    setDropState("idle")
+    resetPopupState()
+  }, [resetPopupState])
+
   useEffect(() => {
     dropStateRef.current = dropState
   }, [dropState])
@@ -117,92 +127,49 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
         return
       }
 
-      setDropState("processing")
-      setErrorMsg(null)
-      setParsedFile(null)
-
-      const ext = "." + file.name.split(".").pop()!.toLowerCase()
-
+      const ext = "." + file.name.split(".").pop()?.toLowerCase()
       if (!ACCEPTED_EXTENSIONS.includes(ext)) {
         setDropState("idle")
-        addToast("error", `Unsupported file type. Accepted: .xlsx .xls .csv .tsv .json`)
+        addToast("error", "Unsupported file type. Accepted: .xlsx .xls .csv .tsv .json")
         return
       }
 
+      setDropState("processing")
+      resetPopupState()
+
       try {
-        const buffer = await file.arrayBuffer()
-        let columns: string[] = []
-        let rows = 0
-
-        if (ext === ".xlsx" || ext === ".xls") {
-          const workbook = XLSX.read(buffer, { type: "array" })
-          const sheet = workbook.Sheets[workbook.SheetNames[0]]
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][]
-          if (json.length > 0) {
-            columns = (json[0] ?? []).map(c => String(c ?? "")).filter(Boolean)
-            rows = json.length - 1
-          }
-        } else if (ext === ".csv" || ext === ".tsv") {
-          const text = new TextDecoder().decode(buffer)
-          const delimiter = ext === ".tsv" ? "\t" : ","
-          const lines = text.trim().split("\n")
-          if (lines.length > 0) {
-            columns = lines[0].split(delimiter).map(c => c.trim().replace(/"/g, ""))
-            rows = lines.length - 1
-          }
-        } else if (ext === ".json") {
-          const text = new TextDecoder().decode(buffer)
-          const data = JSON.parse(text)
-          const arr = Array.isArray(data) ? data : [data]
-          if (arr.length > 0) {
-            columns = Object.keys(arr[0])
-            rows = arr.length
-          }
-        }
-
-        if (columns.length === 0) {
+        const parsed = await parseUploadFile(file)
+        if (parsed.columns.length === 0) {
           setDropState("error")
           setErrorMsg("No columns detected.")
           return
         }
 
-        if (rows === 0) {
-          addToast("warning", "File has no data rows. Columns detected but nothing to analyze.")
-        } else {
-          addToast("success", `File parsed: ${file.name}. ${rows.toLocaleString()} rows, ${columns.length} columns.`)
-        }
-
-        setParsedFile({
-          name: file.name,
-          size: formatSize(file.size),
-          rows,
-          columns,
-          fileType: ext,
-        })
+        setDataset(parsed)
+        setAnalysis(analyzeUploadDataset(parsed))
         setDropState("popup-open")
-        setFilterText("")
-        setCustomColumns([])
-        setPillsExpanded(false)
+
+        if (parsed.rowCount === 0) {
+          addToast("warning", "File has columns but no data rows.")
+        } else {
+          addToast("success", `File parsed: ${file.name}. ${parsed.rowCount.toLocaleString()} rows, ${parsed.columnCount} columns.`)
+        }
       } catch {
         setDropState("error")
         setErrorMsg("Could not read file. Please check it is a valid spreadsheet or data file.")
         addToast("error", "Could not read file. Please check it is a valid spreadsheet or data file.")
       }
     },
-    [addToast]
+    [addToast, resetPopupState]
   )
 
   useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault()
-    }
+    const handleDragOver = (e: DragEvent) => e.preventDefault()
 
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault()
       dragCounterRef.current++
-      if (dragCounterRef.current === 1 && dropStateRef.current === "idle") {
-        setDropState("dragging")
-      }
+      if (dragCounterRef.current === 1 && dropStateRef.current === "idle") setDropState("dragging")
     }
 
     const handleDragLeave = (e: DragEvent) => {
@@ -218,23 +185,12 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
       e.preventDefault()
       dragCounterRef.current = 0
 
-      // Ignore drops from inside popup
-      if (popupRef.current && e.target instanceof Node && popupRef.current.contains(e.target)) {
-        return
-      }
-
-      // Ignore non-file drags
+      if (popupRef.current && e.target instanceof Node && popupRef.current.contains(e.target)) return
       if (!e.dataTransfer?.files.length) {
         setDropState("idle")
         return
       }
-
-      if (e.dataTransfer.files.length > 1) {
-        addToast("info", "Only one file can be analyzed at a time.")
-        parseFile(e.dataTransfer.files[0])
-        return
-      }
-
+      if (e.dataTransfer.files.length > 1) addToast("info", "Only one file can be analyzed at a time.")
       parseFile(e.dataTransfer.files[0])
     }
 
@@ -253,39 +209,47 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && (dropState === "popup-open" || dropState === "error")) {
-        closePopup()
-      }
+      if (e.key === "Escape" && (dropState === "popup-open" || dropState === "error")) closePopup()
     }
     document.addEventListener("keydown", handleEsc)
     return () => document.removeEventListener("keydown", handleEsc)
   }, [dropState, closePopup])
 
-  const allColumns = parsedFile ? [...parsedFile.columns, ...customColumns] : []
-  const INITIAL_SHOW = 10
-
+  const allColumns = dataset?.columns ?? []
   const filteredColumns = filterText ? allColumns.filter(c => c.toLowerCase().includes(filterText.toLowerCase())) : allColumns
-
   const visibleColumns = pillsExpanded ? filteredColumns : filteredColumns.slice(0, INITIAL_SHOW)
-  const hiddenCount = filteredColumns.length - INITIAL_SHOW
+  const hiddenCount = Math.max(filteredColumns.length - INITIAL_SHOW, 0)
+  const previewColumns = allColumns.slice(0, 4)
+  const previewRows = dataset?.rows.slice(0, 3) ?? []
+  const matchedCount = analysis ? Object.keys(analysis.matchedFields).length : 0
 
-  function handleAddColumn() {
-    const trimmed = filterText.trim()
-    if (!trimmed) return
-    const exists = allColumns.some(c => c.toLowerCase() === trimmed.toLowerCase())
-    if (exists) return
-    setCustomColumns(prev => [...prev, trimmed])
+  function handleReanalyze() {
+    if (!dataset) return
+    const additions = filterText
+      .split(",")
+      .map(value => value.trim())
+      .filter(Boolean)
+    const nextDataset = additions.length > 0 ? addColumnsToParsedDataset(dataset, additions) : dataset
+    setDataset(nextDataset)
+    setAnalysis(analyzeUploadDataset(nextDataset))
     setFilterText("")
+    setPillsExpanded(true)
+    if (additions.length > 0) addToast("success", `Re-analyzed with ${additions.length} added column${additions.length > 1 ? "s" : ""}.`)
   }
 
-  function handleRemoveCustom(col: string) {
-    setCustomColumns(prev => prev.filter(c => c !== col))
-  }
-
-  function handleAnalyze() {
+  function handleConfirm() {
+    if (!dataset) return
+    const finalAnalysis = analyzeUploadDataset(dataset)
+    const session: UploadSession = {
+      id: dataset.id,
+      confirmedAt: new Date().toISOString(),
+      dataset,
+      analysis: finalAnalysis,
+      applicants: mapUploadDatasetToApplicants(dataset),
+    }
     closePopup()
-    onAnalyze()
-    addToast("success", "Switched to Table view.")
+    onAnalyze(session)
+    addToast("success", "Upload confirmed. Opening Candidates.")
   }
 
   const showBackdrop = dropState === "dragging" || dropState === "processing" || dropState === "popup-open" || dropState === "error"
@@ -294,39 +258,21 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
     <div className="relative">
       {children}
 
-      {/* Drag-over backdrop */}
       {showBackdrop && (
         <div
           data-cid="drop-zone-backdrop"
           className="fixed inset-0 z-40 flex items-end justify-center sm:items-center"
           style={{
-            backgroundColor: dropState === "dragging" ? "rgba(252,252,252,0.82)/20" : "rgba(0,0,0,0.35)",
+            backgroundColor: dropState === "dragging" ? "rgba(252,252,252,0.82)" : "rgba(0,0,0,0.35)",
             backdropFilter: dropState === "dragging" ? "blur(24px)" : undefined,
           }}
         >
-          {dropState === "popup-open" && (
-            <Button
-              type="button"
-              variant="plain"
-              size="plain"
-              aria-label="Close upload popup"
-              className="absolute inset-0 h-full w-full"
-              onClick={closePopup}
-            />
-          )}
+          {dropState === "popup-open" && <Button type="button" variant="plain" size="plain" aria-label="Close upload popup" className="absolute inset-0 h-full w-full" onClick={closePopup} />}
 
-          {/* Drag hint — full-screen professional overlay */}
           {dropState === "dragging" && (
-            <div
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
-              style={{ animation: "slideUpFade 200ms ease-out" }}
-            >
-              {/* Dashed border inset */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ animation: "slideUpFade 200ms ease-out" }}>
               <div className="absolute inset-5 rounded-3xl border-2 border-dashed border-[#FF5533]/60" />
-
-              {/* Centered content */}
               <div className="relative flex flex-col items-center gap-5 px-8 text-center">
-                {/* Animated floating icon */}
                 <div
                   className="flex h-24 w-24 items-center justify-center rounded-full"
                   style={{
@@ -335,38 +281,21 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                     boxShadow: "0 0 0 1px rgba(255,85,51,0.25), 0 0 48px rgba(255,85,51,0.18)",
                   }}
                 >
-                  <div
-                    className="flex h-16 w-16 items-center justify-center rounded-full"
-                    style={{
-                      background: "rgba(255,218,211,0.15)",
-                      animation: "dropzoneRing 2.2s ease-out infinite",
-                    }}
-                  >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(255,218,211,0.15)", animation: "dropzoneRing 2.2s ease-out infinite" }}>
                     <UploadCloud size={34} strokeWidth={1.6} className="text-[#FF5533]" />
                   </div>
                 </div>
-
-                {/* Labels */}
                 <div className="space-y-2">
                   <p className="text-2xl font-bold tracking-tight text-[#1b1b1b]">Drop your file here</p>
                   <p className="text-sm font-medium text-[#6B5549]">Release to parse and prepare for analysis</p>
                 </div>
-
-                {/* Format pills + size limit */}
                 <div className="flex flex-wrap justify-center gap-2">
-                  {[".xlsx", ".xls", ".csv", ".tsv", ".json"].map(ext => (
-                    <span
-                      key={ext}
-                      className="rounded-full border border-[#e2e2e2] px-3 py-1 text-xs font-medium text-[#555555]"
-                      style={{ background: "rgba(249,249,249,0.9)" }}
-                    >
+                  {ACCEPTED_EXTENSIONS.map(ext => (
+                    <span key={ext} className="rounded-full border border-[#e2e2e2] px-3 py-1 text-xs font-medium text-[#555555]" style={{ background: "rgba(249,249,249,0.9)" }}>
                       {ext}
                     </span>
                   ))}
-                  <span
-                    className="rounded-full border border-[#FF5533]/40 px-3 py-1 text-xs font-semibold text-[#FF5533]"
-                    style={{ background: "rgba(255,85,51,0.08)" }}
-                  >
+                  <span className="rounded-full border border-[#FF5533]/40 px-3 py-1 text-xs font-semibold text-[#FF5533]" style={{ background: "rgba(255,85,51,0.08)" }}>
                     Max 50 MB
                   </span>
                 </div>
@@ -374,15 +303,13 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
             </div>
           )}
 
-          {/* Processing spinner */}
           {dropState === "processing" && (
-            <div ref={popupRef} className="mx-4 flex items-center gap-3 rounded-3xl bg-white px-5 py-4 sm:mx-0">
+            <div ref={popupRef} data-cid="drop-zone-processing" className="mx-4 flex items-center gap-3 rounded-3xl bg-white px-5 py-4 sm:mx-0">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#FF5533] border-t-transparent" />
-              <p className="text-sm font-medium text-[#555555]">Parsing file…</p>
+              <p className="text-sm font-medium text-[#555555]">Parsing file...</p>
             </div>
           )}
 
-          {/* Error state */}
           {dropState === "error" && (
             <div ref={popupRef} className="mx-4 w-full max-w-[480px] rounded-3xl bg-white p-6 sm:mx-0" data-cid="drop-zone-popup">
               <div className="flex items-start gap-3">
@@ -395,156 +322,147 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                   <X size={16} />
                 </Button>
               </div>
-              <Button
-                variant="plain"
-                size="plain"
-                onClick={closePopup}
-                className="mt-4 h-10 w-full rounded-full border border-[#1b1b1b] text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
-              >
+              <Button variant="plain" size="plain" onClick={closePopup} className="mt-4 h-10 w-full rounded-full border border-[#1b1b1b] text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]">
                 Dismiss
               </Button>
             </div>
           )}
 
-          {/* Popup card — mobile: bottom sheet, desktop: centered modal */}
-          {dropState === "popup-open" && parsedFile && (
+          {dropState === "popup-open" && dataset && analysis && (
             <div
               ref={popupRef}
               data-cid="drop-zone-popup"
-              className="mx-0 max-h-[80vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[480px] sm:rounded-3xl"
+              className="mx-0 max-h-[86vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[680px] sm:rounded-3xl"
               style={{
                 animation: "slideUpFade 200ms ease-out",
                 boxShadow: "rgba(4, 23, 43, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 24px 48px -12px",
               }}
             >
-              {/* File info row */}
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">
-                  {getFileIcon(parsedFile.fileType)}
-                </div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">{getFileIcon(dataset.fileType)}</div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-[#1b1b1b]" title={parsedFile.name}>
-                    {parsedFile.name}
+                  <p className="truncate font-semibold text-[#1b1b1b]" title={dataset.fileName}>
+                    {dataset.fileName}
                   </p>
                   <p className="mt-0.5 text-xs text-[#767676]">
-                    {parsedFile.size} · {parsedFile.rows.toLocaleString()} rows · {parsedFile.columns.length} columns detected
+                    {formatSize(dataset.fileSize)} · {dataset.rowCount.toLocaleString()} rows · {dataset.columnCount} columns detected
+                    {dataset.activeSheetName ? ` · ${dataset.activeSheetName}` : ""}
                   </p>
                 </div>
-                <Button
-                  variant="plain"
-                  size="plain"
-                  onClick={closePopup}
-                  className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]"
-                  aria-label="Close"
-                >
+                <Button variant="plain" size="plain" onClick={closePopup} className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]" aria-label="Close">
                   <X size={16} />
                 </Button>
               </div>
 
-              <div className="h-px bg-[#f9f9f9]" />
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Matched fields</p>
+                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{matchedCount}</p>
+                </div>
+                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Missing required</p>
+                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{analysis.missingFields.length}</p>
+                </div>
+                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Preview rows</p>
+                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{previewRows.length}</p>
+                </div>
+              </div>
 
-              {/* Columns section */}
               <div>
                 <p className="mb-2.5 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Columns Detected</p>
-
-                {filteredColumns.length === 0 && filterText && (
-                  <p className="mb-2 text-xs text-[#767676]">
-                    No columns match. Press <span className="font-semibold">[+]</span> to add as custom.
-                  </p>
-                )}
-
+                {filteredColumns.length === 0 && filterText && <p className="mb-2 text-xs text-[#767676]">No columns match. Re-analyze to add it as a missing column.</p>}
                 <div className="flex flex-wrap gap-1.5">
                   {visibleColumns.map(col => {
-                    const isCustom = customColumns.includes(col)
+                    const isAdded = dataset.addedColumns.includes(col)
                     return (
                       <span
                         key={col}
                         className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-medium ${
-                          isCustom
-                            ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]"
-                            : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
+                          isAdded ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]" : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
                         }`}
                       >
                         {col}
-                        {isCustom && (
-                          <Button variant="plain" size="plain" onClick={() => handleRemoveCustom(col)} className="ml-0.5 hover:opacity-60">
-                            <X size={10} />
-                          </Button>
-                        )}
                       </span>
                     )
                   })}
-
                   {!pillsExpanded && hiddenCount > 0 && (
-                    <Button
-                      variant="plain"
-                      size="plain"
-                      onClick={() => setPillsExpanded(true)}
-                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
-                    >
-                      +{hiddenCount} more ▸
+                    <Button variant="plain" size="plain" onClick={() => setPillsExpanded(true)} className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]">
+                      +{hiddenCount} more
                     </Button>
                   )}
                   {pillsExpanded && hiddenCount > 0 && (
-                    <Button
-                      variant="plain"
-                      size="plain"
-                      onClick={() => setPillsExpanded(false)}
-                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
-                    >
-                      ▴ collapse
+                    <Button variant="plain" size="plain" onClick={() => setPillsExpanded(false)} className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]">
+                      Collapse
                     </Button>
                   )}
                 </div>
               </div>
 
-              {/* Filter / add input */}
-              <div>
-                <p className="mb-2 text-xs text-[#6B5549]">Don&apos;t see your column?</p>
-                <div className="flex items-center gap-2">
+              <div className="rounded-2xl border border-[#e2e2e2] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-[#1b1b1b]">Missing fields</p>
+                  <p className="text-xs text-[#767676]">
+                    {analysis.missingFields.length ? analysis.missingFields.map(field => field.label).join(", ") : "Required candidate fields are covered."}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
                   <input
                     data-cid="drop-zone-col-input"
                     type="text"
-                    placeholder="Filter or add column name..."
+                    placeholder="Add missing column names, comma separated"
                     value={filterText}
                     onChange={e => setFilterText(e.target.value)}
                     onKeyDown={e => {
-                      if (e.key === "Enter") handleAddColumn()
+                      if (e.key === "Enter") handleReanalyze()
                     }}
                     className="h-9 flex-1 rounded-2xl border border-[#e2e2e2] bg-white px-3 text-sm text-[#1b1b1b] transition-colors placeholder:text-[#767676] focus:border-[#FF5533] focus:outline-none"
                   />
                   <Button
                     variant="plain"
                     size="plain"
-                    onClick={handleAddColumn}
-                    disabled={!filterText.trim()}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555] transition-colors hover:border-[#FF5533] hover:text-[#FF5533] disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label="Add column"
+                    onClick={handleReanalyze}
+                    className="flex h-9 items-center gap-2 rounded-full border border-[#e2e2e2] bg-[#f9f9f9] px-3 text-sm font-semibold text-[#555555] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
                   >
-                    <Plus size={14} />
+                    {filterText.trim() ? <Plus size={14} /> : <RefreshCw size={14} />}
+                    Re-analyze
                   </Button>
                 </div>
               </div>
 
-              <div className="h-px bg-[#f9f9f9]" />
+              <div>
+                <p className="mb-2 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Value preview</p>
+                <div className="overflow-hidden rounded-2xl border border-[#e2e2e2]">
+                  <div className="grid bg-[#f9f9f9]" style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}>
+                    {previewColumns.map(column => (
+                      <div key={column} className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs font-semibold text-[#555555] last:border-r-0" title={column}>
+                        {column}
+                      </div>
+                    ))}
+                  </div>
+                  {previewRows.map(row => (
+                    <div key={row.rowNumber} className="grid border-t border-[#e2e2e2]" style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}>
+                      {previewColumns.map(column => (
+                        <div key={column} className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs text-[#1b1b1b] last:border-r-0" title={formatCell(row.values[column])}>
+                          {formatCell(row.values[column])}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-3">
                 <Button
                   variant="plain"
                   size="plain"
-                  onClick={handleAnalyze}
-                  disabled={parsedFile.rows === 0}
+                  onClick={handleConfirm}
+                  disabled={dataset.rowCount === 0}
                   className="h-10 flex-1 rounded-full bg-[#FF5533] text-sm font-semibold text-white transition-colors hover:bg-[#E63D1F] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Analyze in Table
+                  Confirm upload
                 </Button>
-                <Button
-                  variant="plain"
-                  size="plain"
-                  onClick={closePopup}
-                  className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
-                >
+                <Button variant="plain" size="plain" onClick={closePopup} className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]">
                   Clear
                 </Button>
               </div>
@@ -553,7 +471,6 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
         </div>
       )}
 
-      {/* Toast stack — bottom-right, above mobile nav */}
       <div className="pointer-events-none fixed right-4 bottom-20 z-50 flex flex-col items-end gap-2 sm:right-6 sm:bottom-6">
         {toasts.map(t => (
           <div key={t.id} className="pointer-events-auto">
