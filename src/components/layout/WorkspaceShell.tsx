@@ -51,7 +51,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
               className="min-w-0 overflow-y-auto transition-[width] duration-200 lg:w-[calc(100vw-var(--sidebar-width)-var(--v2-docked-width))]"
               style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
             >
-              <div className="motion-safe:animate-[workspaceTopbarIn_720ms_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
+              <div className="sticky top-0 z-30 motion-safe:animate-[workspaceTopbarIn_720ms_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
                 <TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />
               </div>
               <div className="motion-safe:animate-[workspaceContentIn_760ms_cubic-bezier(0.16,1,0.3,1)_140ms_both]">

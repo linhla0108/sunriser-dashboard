@@ -1,11 +1,28 @@
-import { render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { fireEvent, render, screen } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Sidebar } from "../Sidebar"
 
+const signOutMock = vi.hoisted(() => vi.fn())
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
+}))
+
+vi.mock("@/lib/auth/useAuth", () => ({
+  useAuth: () => ({
+    loading: false,
+    role: "admin",
+    signIn: vi.fn(),
+    signOut: signOutMock,
+    user: {
+      id: "u_admin",
+      email: "admin@sunriser.com",
+      name: "Linh Admin",
+      role: "admin",
+    },
+  }),
 }))
 
 // SidebarProvider uses useIsMobile which calls window.matchMedia
@@ -32,24 +49,42 @@ function TestProviders({ children }: { children: React.ReactNode }) {
 }
 
 describe("Sidebar", () => {
+  beforeEach(() => {
+    signOutMock.mockClear()
+  })
+
   it("renders all nav links", () => {
     render(<Sidebar />, { wrapper: TestProviders })
 
-    expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /candidates/i })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /settings/i })).toBeInTheDocument()
+    expect(screen.getByText("Dashboard").closest("a")).toHaveAttribute("href", "/dashboard")
+    expect(screen.getByText("Candidates").closest("a")).toHaveAttribute("href", "/candidates")
+    expect(screen.getByTitle("Settings")).toHaveAttribute("href", "/settings")
   })
 
   it("marks the active link with data-active", () => {
     render(<Sidebar />, { wrapper: TestProviders })
 
-    const dashboardLink = screen.getByRole("link", { name: /dashboard/i })
+    const dashboardLink = screen.getByText("Dashboard").closest("a")
     expect(dashboardLink).toHaveAttribute("data-active")
   })
 
   it("renders the sidebar trigger button", () => {
     render(<Sidebar />, { wrapper: TestProviders })
 
-    expect(screen.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
+    expect(screen.getByText(/toggle sidebar/i)).toBeInTheDocument()
+  })
+
+  it("opens the account menu from the existing profile icon", async () => {
+    render(<Sidebar />, { wrapper: TestProviders })
+
+    fireEvent.click(screen.getByLabelText(/open account menu/i))
+
+    expect(await screen.findByText("Linh Admin")).toBeInTheDocument()
+    expect(screen.getByText("admin@sunriser.com")).toBeInTheDocument()
+    expect(screen.getByText("admin")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Sign out"))
+
+    expect(signOutMock).toHaveBeenCalledTimes(1)
   })
 })

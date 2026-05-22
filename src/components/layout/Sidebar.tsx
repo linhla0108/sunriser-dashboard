@@ -3,6 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Settings, Users, UsersRound } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Sidebar as SidebarRoot,
   SidebarContent,
@@ -16,6 +19,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { SidebarRailWithBubble } from "./SidebarRailWithBubble"
+import { useAuth } from "@/lib/auth/useAuth"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
@@ -28,8 +32,19 @@ function LogoMark() {
   return <img src="/logo.svg" alt="SUN Studio" className="h-9 w-auto shrink-0 group-data-[collapsible=icon]:h-8" />
 }
 
+function getInitials(name?: string) {
+  if (!name) return "SR"
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join("")
+}
+
 export function Sidebar() {
   const pathname = usePathname()
+  const { role, signOut, user } = useAuth()
 
   return (
     <SidebarRoot collapsible="icon" data-testid="v2-sidebar" data-v2-glass-panel="">
@@ -55,7 +70,7 @@ export function Sidebar() {
                       isActive={active}
                       tooltip={item.label}
                       render={<Link href={item.href} />}
-                      className="gap-3 [&_svg]:size-[18px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+                      className="gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 [&_svg]:size-[18px]"
                     >
                       <Icon />
                       <span className="text-sm group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -70,15 +85,28 @@ export function Sidebar() {
 
       <SidebarFooter className="pb-3">
         <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:px-0">
-          <Link
-            href="/profile"
-            className="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-            title="Profile"
-          >
-            <span className="bg-primary flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white">
-              D
-            </span>
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="hover:bg-sidebar-accent focus-visible:ring-primary/25 flex h-8 w-8 items-center justify-center rounded-lg transition-colors outline-none focus-visible:ring-3"
+              aria-label="Open account menu"
+              title="Profile"
+            >
+              <Avatar className="size-7">
+                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="right" className="w-64">
+              <div className="px-1.5 py-1">
+                <span className="text-foreground block text-sm font-medium">{user?.name ?? "Guest"}</span>
+                <span className="text-muted-foreground mt-1 block truncate text-xs">{user?.email ?? "No active session"}</span>
+                <Badge className="mt-2 capitalize" variant="secondary">
+                  {role}
+                </Badge>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Link
             href="/settings"
             className={cn(
