@@ -1,8 +1,10 @@
 "use client"
 
-import { createContext, useCallback, useEffect, useMemo } from "react"
+import { createContext, useCallback, useEffect, useMemo, useRef } from "react"
 import { z } from "zod"
 import { usePersistedState } from "../persistence/usePersistedState"
+import { persistUserSettings } from "../auth/persistSettings"
+import { useAuth } from "../auth/useAuth"
 import type { ThemeContextValue, V2Mode, V2Theme } from "./types"
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -45,6 +47,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const effectiveMode = modeValue === "system" ? getSystemMode() : modeValue
 
+  // Hydrate from user.settings on login. Run once per user id to avoid clobbering
+  // local edits with a stale server snapshot on every re-render.
+  const { user } = useAuth()
+  const hydratedFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!user) {
+      hydratedFor.current = null
+      return
+    }
+    if (hydratedFor.current === user.id) return
+    hydratedFor.current = user.id
+
+    const dbTheme = user.settings.theme
+    const dbMode = user.settings.mode
+    if (themeSchema.safeParse(dbTheme).success && dbTheme !== themeValue) {
+      setThemeValue(dbTheme as V2Theme)
+    }
+    if (modeSchema.safeParse(dbMode).success && dbMode !== modeValue) {
+      setModeValue(dbMode as V2Mode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", themeValue)
     document.documentElement.setAttribute("data-mode", effectiveMode)
@@ -64,8 +89,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [customColor])
 
-  const setTheme = useCallback((nextTheme: V2Theme) => setThemeValue(nextTheme), [setThemeValue])
-  const setMode = useCallback((nextMode: V2Mode) => setModeValue(nextMode), [setModeValue])
+  const setTheme = useCallback(
+    (nextTheme: V2Theme) => {
+      setThemeValue(nextTheme)
+      if (user) void persistUserSettings({ theme: nextTheme })
+    },
+    [setThemeValue, user]
+  )
+  const setMode = useCallback(
+    (nextMode: V2Mode) => {
+      setModeValue(nextMode)
+      if (user) void persistUserSettings({ mode: nextMode })
+    },
+    [setModeValue, user]
+  )
   const setCustomColor = useCallback((color: string | null) => setCustomColorValue(color), [setCustomColorValue])
 
   const value = useMemo<ThemeContextValue>(
