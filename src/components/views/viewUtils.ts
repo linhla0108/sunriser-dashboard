@@ -7,6 +7,13 @@ export const ROUND_1_GROUPS = [
   { key: "fail", label: "Fail", test: (item: Applicant) => item.round1Result === "Failed" },
 ] as const
 
+export const ROUND_2_GROUPS = [
+  { key: "not-reviewed", label: "Not Reviewed", test: (item: Applicant) => !item.round2Result },
+  { key: "pass", label: "Pass", test: (item: Applicant) => item.round2Result === "Passed" },
+  { key: "waiting", label: "Waiting", test: (item: Applicant) => item.round2Result === "Waiting list" },
+  { key: "fail", label: "Fail", test: (item: Applicant) => item.round2Result === "Failed" },
+] as const
+
 export function initials(name: string) {
   return name
     .split(" ")
@@ -20,19 +27,37 @@ export function shortPosition(position: string) {
   return position.replace(" Intern", "").replace("Game User Acquisition", "UA")
 }
 
-export function round1Tone(result?: Applicant["round1Result"]) {
+export function round1Tone(result?: string) {
   if (result === "Passed") return "bg-emerald-50 text-emerald-700 ring-emerald-200"
   if (result === "Failed") return "bg-rose-50 text-rose-700 ring-rose-200"
   if (result === "Waiting list") return "bg-amber-50 text-amber-700 ring-amber-200"
   return "bg-foreground/5 text-muted-foreground ring-foreground/10"
 }
 
-export function groupApplicants(items: Applicant[], groupBy: "round1" | "position" | "batch") {
+export const round2Tone = round1Tone
+
+export function getColumnTheme(columnKey: string) {
+  if (columnKey === "pass") return { colBg: "bg-emerald-50/30", overlayBg: "bg-emerald-50/60", overlayBorder: "border-emerald-300/60", badgeBg: "bg-emerald-100/80 text-emerald-800", icon: "text-emerald-600" }
+  if (columnKey === "fail") return { colBg: "bg-rose-50/30", overlayBg: "bg-rose-50/60", overlayBorder: "border-rose-300/60", badgeBg: "bg-rose-100/80 text-rose-800", icon: "text-rose-600" }
+  if (columnKey === "waiting") return { colBg: "bg-amber-50/30", overlayBg: "bg-amber-50/60", overlayBorder: "border-amber-300/60", badgeBg: "bg-amber-100/80 text-amber-800", icon: "text-amber-600" }
+  if (columnKey === "not-reviewed") return { colBg: "bg-foreground/[0.02]", overlayBg: "bg-foreground/5", overlayBorder: "border-foreground/20", badgeBg: "bg-foreground/8 text-muted-foreground", icon: "text-muted-foreground" }
+  return { colBg: "", overlayBg: "bg-primary/8", overlayBorder: "border-primary/40", badgeBg: "bg-primary/10 text-primary", icon: "text-primary" }
+}
+
+export function groupApplicants(items: Applicant[], groupBy: "round1" | "round2" | "position" | "batch") {
   if (groupBy === "round1") {
     return ROUND_1_GROUPS.map(group => ({
       key: group.key,
       label: group.label,
-      /** rawKey is the full position1 value used for mutations; not needed for round1. */
+      rawKey: null as string | null,
+      items: items.filter(group.test),
+    }))
+  }
+
+  if (groupBy === "round2") {
+    return ROUND_2_GROUPS.map(group => ({
+      key: group.key,
+      label: group.label,
       rawKey: null as string | null,
       items: items.filter(group.test),
     }))

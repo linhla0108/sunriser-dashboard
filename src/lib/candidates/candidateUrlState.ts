@@ -3,7 +3,7 @@ import type { V2View } from "@/lib/views/useViewState"
 
 export const CANDIDATE_VIEW_KEYS = ["table", "pipeline", "chart"] as const
 export const CANDIDATE_RESULT_KEYS = ["Passed", "Failed", "Waiting list"] as const
-export const CANDIDATE_PIPELINE_GROUP_KEYS = ["round1", "position", "batch"] as const
+export const CANDIDATE_PIPELINE_GROUP_KEYS = ["round1", "round2", "position", "batch"] as const
 export const CANDIDATE_SORT_KEYS = ["name", "position", "university", "gpa", "year", "batch", "pic", "round1", "round2"] as const
 export const CANDIDATE_SORT_DIRS = ["asc", "desc"] as const
 
