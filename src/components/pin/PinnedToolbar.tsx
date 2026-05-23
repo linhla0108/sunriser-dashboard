@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -97,7 +98,6 @@ export function PinnedToolbar() {
               <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l to-transparent" />
             ) : null}
 
-            {/* TODO: hide scrollbar */}
             <div ref={scrollerRef} className="flex min-w-0 scrollbar-thin flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pr-1">
               <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
                 {items.map(item => (
@@ -106,7 +106,6 @@ export function PinnedToolbar() {
               </SortableContext>
             </div>
           </div>
-          {/* TODO: add vertical seperate here */}
           <div className="bg-foreground/20 h-8 w-px rounded-full" />
           <ActionTooltip label="Compare pinned candidates">
             <Button
@@ -134,9 +133,12 @@ export function PinnedToolbar() {
             </Button>
           </ActionTooltip>
         </div>
-        <DragOverlay adjustScale={false} dropAnimation={null}>
-          {draggingItem ? <PinnedChipOverlay item={draggingItem} /> : null}
-        </DragOverlay>
+        {createPortal(
+          <DragOverlay adjustScale={false} dropAnimation={null}>
+            {draggingItem ? <PinnedChipOverlay item={draggingItem} /> : null}
+          </DragOverlay>,
+          document.body
+        )}
       </DndContext>
       <CompareDialog open={compareOpen} onOpenChange={setCompareOpen} />
     </div>
@@ -179,7 +181,6 @@ function PinnedChipOverlay({ item }: { item: PinnedItem }) {
       data-testid="pinned-drag-overlay"
       className="bg-card text-foreground border-foreground/40 inline-flex h-8 items-center gap-1.5 rounded-full px-2 text-xs font-semibold shadow-xl ring-1"
     >
-      <GripHorizontal className="text-muted-foreground size-3.5" />
       <span className="max-w-[180px] truncate">{item.name}</span>
       <X className="text-muted-foreground size-3" />
     </div>

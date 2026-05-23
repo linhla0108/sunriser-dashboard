@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import {
   DndContext,
   DragOverlay,
@@ -214,7 +215,10 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
             )
           })}
         </div>
-        <DragOverlay>{activeApplicant ? <PipelineCardOverlay applicant={activeApplicant} /> : null}</DragOverlay>
+        {createPortal(
+          <DragOverlay>{activeApplicant ? <PipelineCardOverlay applicant={activeApplicant} /> : null}</DragOverlay>,
+          document.body
+        )}
       </DndContext>
     </section>
   )
