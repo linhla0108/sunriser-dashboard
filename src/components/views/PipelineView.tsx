@@ -47,9 +47,19 @@ const ROUND1_KEY_TO_VALUE: Record<string, Applicant["round1Result"]> = {
   "not-reviewed": undefined,
 }
 
+const ROUND2_KEY_TO_VALUE: Record<string, Applicant["round2Result"]> = {
+  pass: "Passed",
+  waiting: "Waiting list",
+  fail: "Failed",
+  "not-reviewed": undefined,
+}
+
 function updateItemColumn(item: Applicant, groupBy: PipelineGroupBy, columnKey: string, columns: ReturnType<typeof groupApplicants>): Applicant {
   if (groupBy === "round1") {
     return { ...item, round1Result: ROUND1_KEY_TO_VALUE[columnKey] }
+  }
+  if (groupBy === "round2") {
+    return { ...item, round2Result: ROUND2_KEY_TO_VALUE[columnKey] }
   }
   if (groupBy === "batch") {
     const num = parseInt(columnKey.replace("Batch ", ""), 10)
