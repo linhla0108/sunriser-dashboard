@@ -185,8 +185,10 @@ Estimated scope: Small
 
 ## Report
 
-Status: Planned | Commit: uncommitted
+Status: Done | Commit: uncommitted
 
-Plan only. No implementation changes yet.
+Five files changed: new `BulkActionBar` component, `DraggableRow` with hover/selected checkbox in the first column, `ApplicantTable` and `TableView` with selection props threaded through, `CandidatesPage` with `selectedIds: Set<string>` state and bulk handlers.
 
-Remaining: review the plan, then implement the selected-state contract, row checkbox UI, bulk action section, confirmed bulk mutations, and final verification.
+Behavior: hovering a row shows a checkbox in place of the row number; selecting any row makes all visible checkboxes permanent; selected rows stay selected across pagination; `BulkActionBar` appears above the table card when count > 0 and exposes Batch, PIC, and Delete each with a confirmation step before mutation.
+
+Remaining: authenticated browser QA.

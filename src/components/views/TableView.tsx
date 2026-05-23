@@ -12,9 +12,22 @@ interface TableViewProps {
   searchQuery?: string
   sortState?: CandidateSortState
   onSortChange?: (sortState: CandidateSortState) => void
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
 }
 
-export function TableView({ data, onViewDetail, onDataChange, indexOffset, paginationInfo, searchQuery, sortState, onSortChange }: TableViewProps) {
+export function TableView({
+  data,
+  onViewDetail,
+  onDataChange,
+  indexOffset,
+  paginationInfo,
+  searchQuery,
+  sortState,
+  onSortChange,
+  selectedIds,
+  onToggleSelect,
+}: TableViewProps) {
   return (
     <ApplicantTable
       data={data}
@@ -26,6 +39,8 @@ export function TableView({ data, onViewDetail, onDataChange, indexOffset, pagin
       searchQuery={searchQuery}
       sortState={sortState}
       onSortChange={onSortChange}
+      selectedIds={selectedIds}
+      onToggleSelect={onToggleSelect}
     />
   )
 }

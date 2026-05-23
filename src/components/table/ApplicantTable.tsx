@@ -27,6 +27,8 @@ interface ApplicantTableProps {
   searchQuery?: string
   sortState?: CandidateSortState
   onSortChange?: (sortState: CandidateSortState) => void
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
 }
 
 const DEFAULT_SORT_STATE: Exclude<CandidateSortState, null> = { key: "name", dir: "asc" }
@@ -83,6 +85,8 @@ export default function ApplicantTable({
   searchQuery,
   sortState,
   onSortChange,
+  selectedIds,
+  onToggleSelect,
 }: ApplicantTableProps) {
   // TODO: remove default sort and sort name will get the last word in name (e.g. "John Doe" will sort by "Doe"). Need to update sort icon to indicate this as well.
   const initialSort = sortState === undefined ? DEFAULT_SORT_STATE : sortState
@@ -320,6 +324,9 @@ export default function ApplicantTable({
                       isPinned={pinnedIds.has(applicant.id)}
                       onTogglePin={togglePin}
                       searchQuery={searchQuery}
+                      isSelected={selectedIds?.has(applicant.id)}
+                      selectionMode={(selectedIds?.size ?? 0) > 0}
+                      onSelect={onToggleSelect ? (id) => onToggleSelect(id) : undefined}
                     />
                   ))
                 ) : (

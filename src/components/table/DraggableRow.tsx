@@ -6,6 +6,7 @@ import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
@@ -19,6 +20,9 @@ interface DraggableRowProps {
   isPinned?: boolean
   onTogglePin?: (id: string) => void
   searchQuery?: string
+  isSelected?: boolean
+  selectionMode?: boolean
+  onSelect?: (id: string, checked: boolean) => void
 }
 
 const ROUND_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
@@ -204,6 +208,9 @@ export default function DraggableRow({
   isPinned,
   onTogglePin,
   searchQuery,
+  isSelected,
+  selectionMode,
+  onSelect,
 }: DraggableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
@@ -279,9 +286,32 @@ export default function DraggableRow({
         ref={setNodeRef}
         style={style}
         onContextMenu={handleContextMenu}
-        className={`border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg}`}
+        className={`group border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg} ${isSelected ? "bg-[#fff5f3]" : ""}`}
       >
-        <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">{index + 1}</td>
+        <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">
+          {selectionMode || isSelected ? (
+            <div className="flex justify-center">
+              <Checkbox
+                checked={!!isSelected}
+                onCheckedChange={checked => onSelect?.(applicant.id, !!checked)}
+                aria-label={`Select ${applicant.name}`}
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
+          ) : (
+            <>
+              <span className="group-hover:hidden">{index + 1}</span>
+              <span className="hidden group-hover:flex justify-center">
+                <Checkbox
+                  checked={false}
+                  onCheckedChange={checked => onSelect?.(applicant.id, !!checked)}
+                  aria-label={`Select ${applicant.name}`}
+                  onClick={e => e.stopPropagation()}
+                />
+              </span>
+            </>
+          )}
+        </td>
 
         {/* Name — always visible */}
         <td className="px-3 py-3">

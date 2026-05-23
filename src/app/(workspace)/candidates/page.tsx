@@ -10,6 +10,7 @@ import { ThemedView } from "@/components/views/ThemedView"
 import { ApplicantDetailDrawer } from "@/components/views/ApplicantDetailDrawer"
 import { ViewPillNav } from "@/components/layout/ViewPillNav"
 import { CandidateFiltersBar } from "@/components/candidates/CandidateFiltersBar"
+import { BulkActionBar } from "@/components/table/BulkActionBar"
 import {
   formatCandidateSort,
   parseCandidateUrlState,
@@ -51,6 +52,42 @@ export default function CandidatesPage() {
   })
   const applicants = editedApplicants.sourceId === sourceId ? editedApplicants.applicants : (uploadSession?.applicants ?? mockApplicants)
   const [detailApplicant, setDetailApplicant] = useState<Applicant | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function handleClearSelection() {
+    setSelectedIds(new Set())
+  }
+
+  function handleBulkBatch(batch: number) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, batch } : a)),
+    }))
+  }
+
+  function handleBulkPic(pic: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, pic } : a)),
+    }))
+  }
+
+  function handleBulkDelete() {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.filter(a => !selectedIds.has(a.id)),
+    }))
+    setSelectedIds(new Set())
+  }
 
   function updateUrlState(patch: Partial<CandidateUrlState>, options: { resetPage?: boolean } = {}) {
     const params = writeCandidateUrlState(new URLSearchParams(searchParams.toString()), {
@@ -146,17 +183,28 @@ export default function CandidatesPage() {
           onClearAll={clearFilters}
         />
         {urlState.view === "table" ? (
-          <TableView
-            key={formatCandidateSort(urlState.sort)}
-            data={pagedData}
-            onDataChange={handleReorder}
-            onViewDetail={setDetailApplicant}
-            indexOffset={startIndex}
-            paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
-            searchQuery={search}
-            sortState={urlState.sort}
-            onSortChange={sort => updateUrlState({ sort, page: 1 })}
-          />
+          <>
+            <BulkActionBar
+              selectedCount={selectedIds.size}
+              onClear={handleClearSelection}
+              onBulkBatch={handleBulkBatch}
+              onBulkPic={handleBulkPic}
+              onBulkDelete={handleBulkDelete}
+            />
+            <TableView
+              key={formatCandidateSort(urlState.sort)}
+              data={pagedData}
+              onDataChange={handleReorder}
+              onViewDetail={setDetailApplicant}
+              indexOffset={startIndex}
+              paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
+              searchQuery={search}
+              sortState={urlState.sort}
+              onSortChange={sort => updateUrlState({ sort, page: 1 })}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+            />
+          </>
         ) : null}
         {urlState.view === "pipeline" ? (
           <ThemedView
