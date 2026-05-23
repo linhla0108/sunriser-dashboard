@@ -18,14 +18,12 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ArrowRight, Eye, GripVertical } from "lucide-react"
-import { ActionTooltip } from "@/components/common/ActionTooltip"
+import { ArrowRight } from "lucide-react"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { PinStarButton } from "@/components/pin/PinStarButton"
 import type { CandidatePipelineGroup } from "@/lib/candidates/candidateUrlState"
 import type { Applicant } from "@/lib/types"
-import { groupApplicants, initials, round1Tone, shortPosition } from "./viewUtils"
-import { Button } from "@/components/ui/button"
+import { getColumnTheme, groupApplicants, initials, round1Tone, round2Tone, shortPosition } from "./viewUtils"
 
 type PipelineGroupBy = CandidatePipelineGroup
 
@@ -179,25 +177,33 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
     sourceColumnKeyRef.current = null
   }
 
+  const isRoundGroupBy = groupBy === "round1" || groupBy === "round2"
+
   return (
     <section className="space-y-3" aria-label="Candidate pipeline">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-foreground text-base font-semibold">Pipeline</h2>
-          <p className="text-muted-foreground text-sm">Drag cards to reorder or move between columns.</p>
+          <p className="text-muted-foreground text-sm">Click a card to view details. Drag to move between columns.</p>
         </div>
-        <label className="text-muted-foreground flex items-center gap-2 text-sm">
-          Group by
-          <select
-            value={groupBy}
-            onChange={event => setGroupBy(event.target.value as PipelineGroupBy)}
-            className="border-foreground/10 bg-card text-foreground focus:border-primary h-9 rounded-2xl border px-3 text-sm outline-none"
-          >
-            <option value="round1">Round 1</option>
-            <option value="position">Position</option>
-            <option value="batch">Batch</option>
-          </select>
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bg-foreground/5 flex items-center gap-0.5 rounded-full p-1">
+            <button onClick={() => setGroupBy("round1")} className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${groupBy === "round1" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Round 1</button>
+            <button onClick={() => setGroupBy("round2")} className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${groupBy === "round2" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Round 2</button>
+          </div>
+          <label className="text-muted-foreground flex items-center gap-2 text-sm">
+            Group by
+            <select
+              value={isRoundGroupBy ? "" : groupBy}
+              onChange={event => { if (event.target.value) setGroupBy(event.target.value as PipelineGroupBy) }}
+              className="border-foreground/10 bg-card text-foreground focus:border-primary h-9 rounded-2xl border px-3 text-sm outline-none"
+            >
+              <option value="" disabled>—</option>
+              <option value="position">Position</option>
+              <option value="batch">Batch</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <DndContext
@@ -211,22 +217,21 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
         <div className="flex min-h-[520px] gap-3 overflow-x-auto pb-4">
           {columns.map(column => {
             const isExternalDragOver = !!activeId && overColumnKey === column.key && sourceColumnKey !== column.key
-            const targetLabel = column.label
 
             return (
               <PipelineColumn
                 key={column.key}
                 column={column}
+                groupBy={groupBy}
                 onViewDetail={onViewDetail}
                 searchQuery={searchQuery}
                 isExternalDragOver={isExternalDragOver}
-                targetLabel={targetLabel}
               />
             )
           })}
         </div>
         {createPortal(
-          <DragOverlay>{activeApplicant ? <PipelineCardOverlay applicant={activeApplicant} /> : null}</DragOverlay>,
+          <DragOverlay>{activeApplicant ? <PipelineCardOverlay applicant={activeApplicant} groupBy={groupBy} /> : null}</DragOverlay>,
           document.body
         )}
       </DndContext>
@@ -236,51 +241,45 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
 
 function PipelineColumn({
   column,
+  groupBy,
   onViewDetail,
   searchQuery,
   isExternalDragOver,
-  targetLabel,
 }: {
   column: ReturnType<typeof groupApplicants>[number]
+  groupBy: PipelineGroupBy
   onViewDetail?: (applicant: Applicant) => void
   searchQuery?: string
   isExternalDragOver: boolean
-  targetLabel: string
 }) {
   const { setNodeRef } = useDroppable({ id: `${COL_PREFIX}${column.key}` })
+  const theme = getColumnTheme(column.key)
 
   return (
-    <div className="flex w-[280px] shrink-0 flex-col gap-2">
-      <div data-v2-card="" className="border-foreground/10 bg-card/80 flex items-center justify-between rounded-2xl border px-3 py-2.5">
+    <div className={`flex w-[280px] shrink-0 flex-col gap-2 rounded-2xl p-1.5 ${theme.colBg}`}>
+      <div className="flex items-center justify-between px-2 py-1.5">
         <span className="text-foreground text-sm font-semibold">{column.label}</span>
         <span className="bg-foreground/5 text-muted-foreground rounded-full px-2 py-0.5 text-xs font-semibold">{column.items.length}</span>
       </div>
       <SortableContext items={column.items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-        {/* min-h-[500px] when externally dragged-over so the absolute overlay covers the full column */}
         <div ref={setNodeRef} className={`relative flex flex-col gap-2 ${isExternalDragOver ? "min-h-[500px]" : ""}`}>
-          {/* Cross-column drop overlay — shown when a card from another column is hovering */}
           {isExternalDragOver && (
-            <div className="border-primary/40 bg-primary/8 absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed backdrop-blur-[2px]">
-              <div className="bg-primary/10 ring-primary/20 flex items-center gap-2 rounded-full px-4 py-2 ring-1">
-                <ArrowRight className="text-primary size-4" />
-                <span className="text-primary text-sm font-semibold">Change to {targetLabel}</span>
+            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed backdrop-blur-[2px] ${theme.overlayBg} ${theme.overlayBorder}`}>
+              <div className={`flex items-center gap-2 rounded-full px-4 py-2 ring-1 ${theme.badgeBg}`}>
+                <ArrowRight className={`size-4 ${theme.icon}`} />
+                <span className={`text-sm font-semibold ${theme.icon}`}>Change to {column.label}</span>
               </div>
             </div>
           )}
-
           <div className={`flex flex-col gap-2 ${isExternalDragOver ? "pointer-events-none opacity-30" : ""}`}>
             {column.items.slice(0, 120).map(item => (
-              <PipelineCard key={item.id} applicant={item} onViewDetail={onViewDetail} searchQuery={searchQuery} />
+              <PipelineCard key={item.id} applicant={item} groupBy={groupBy} onViewDetail={onViewDetail} searchQuery={searchQuery} />
             ))}
             {column.items.length > 120 && (
-              <p className="text-muted-foreground px-3 py-2 text-center text-xs">
-                Showing 120 of {column.items.length} — use filters to narrow results
-              </p>
+              <p className="text-muted-foreground px-3 py-2 text-center text-xs">Showing 120 of {column.items.length} — use filters to narrow results</p>
             )}
             {column.items.length === 0 ? (
-              <div className="border-foreground/15 text-muted-foreground rounded-2xl border border-dashed px-3 py-6 text-center text-sm">
-                No candidates
-              </div>
+              <div className="border-foreground/15 text-muted-foreground rounded-2xl border border-dashed px-3 py-6 text-center text-sm">No candidates</div>
             ) : null}
           </div>
         </div>
@@ -289,37 +288,37 @@ function PipelineColumn({
   )
 }
 
+function roundBadge(applicant: Applicant, groupBy: PipelineGroupBy) {
+  if (groupBy === "round1") return { label: applicant.round1Result ?? "Not reviewed", tone: round1Tone(applicant.round1Result) }
+  if (groupBy === "round2") return { label: applicant.round2Result ?? "Not reviewed", tone: round2Tone(applicant.round2Result) }
+  return null
+}
+
 function PipelineCard({
   applicant,
+  groupBy,
   onViewDetail,
   searchQuery,
 }: {
   applicant: Applicant
+  groupBy: PipelineGroupBy
   onViewDetail?: (applicant: Applicant) => void
   searchQuery?: string
 }) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
+  const badge = roundBadge(applicant, groupBy)
 
   return (
     <article
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={() => onViewDetail?.(applicant)}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       data-v2-card=""
-      className={`border-foreground/10 bg-card/80 rounded-2xl border p-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)] ${isDragging ? "ring-primary/30 opacity-40 ring-2" : ""}`}
+      className={`border-foreground/10 bg-card/80 cursor-pointer rounded-2xl border p-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)] ${isDragging ? "ring-primary/30 opacity-40 ring-2" : "hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)]"}`}
     >
       <div className="flex items-start gap-2">
-        <Button
-          ref={setActivatorNodeRef}
-          variant="plain"
-          size="plain"
-          {...attributes}
-          {...listeners}
-          type="button"
-          aria-label="Drag candidate"
-          className="text-muted-foreground hover:bg-foreground/5 mt-1 cursor-grab rounded-lg p-1"
-        >
-          <GripVertical className="size-3.5" />
-        </Button>
         <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold">
           {initials(applicant.name)}
         </div>
@@ -333,38 +332,26 @@ function PipelineCard({
         </div>
         <PinStarButton id={applicant.id} />
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${round1Tone(applicant.round1Result)}`}>
-          {applicant.round1Result ?? "Not reviewed"}
-        </span>
-        <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
-      </div>
-      <ActionTooltip label="View candidate">
-        <Button
-          variant="plain"
-          size="plain"
-          type="button"
-          onClick={() => onViewDetail?.(applicant)}
-          className="border-foreground/10 text-muted-foreground hover:bg-foreground/5 hover:text-foreground mt-3 flex h-8 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold"
-        >
-          <Eye className="size-3.5" />
-          View
-        </Button>
-      </ActionTooltip>
+      {badge && (
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${badge.tone}`}>{badge.label}</span>
+          <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
+        </div>
+      )}
+      {!badge && <div className="mt-2 text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</div>}
     </article>
   )
 }
 
-function PipelineCardOverlay({ applicant }: { applicant: Applicant }) {
+function PipelineCardOverlay({ applicant, groupBy }: { applicant: Applicant; groupBy: PipelineGroupBy }) {
+  const badge = roundBadge(applicant, groupBy)
+
   return (
     <article
       data-v2-glass-panel="strong"
       className="border-primary/30 bg-card/90 ring-primary/20 rounded-2xl border p-3 shadow-[0_20px_40px_rgba(15,23,42,0.20)] ring-2"
     >
       <div className="flex items-start gap-2">
-        <div className="text-primary mt-1 rounded-lg p-1">
-          <GripVertical className="size-3.5" />
-        </div>
         <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold">
           {initials(applicant.name)}
         </div>
@@ -373,12 +360,12 @@ function PipelineCardOverlay({ applicant }: { applicant: Applicant }) {
           <p className="text-muted-foreground truncate text-xs">{shortPosition(applicant.position1)}</p>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${round1Tone(applicant.round1Result)}`}>
-          {applicant.round1Result ?? "Not reviewed"}
-        </span>
-        <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
-      </div>
+      {badge && (
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${badge.tone}`}>{badge.label}</span>
+          <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
+        </div>
+      )}
     </article>
   )
 }

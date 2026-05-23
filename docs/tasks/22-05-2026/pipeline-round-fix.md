@@ -263,4 +263,6 @@ None — scope fully confirmed with user.
 
 ## Report
 
-Status: Planned
+Status: Done | Commits: `93b600b`, `4dab42d`, `d6a67d0`
+
+Data layer extended with round2 type, groups, tone, column theme util. Drag mutation writes to the correct round field. Header replaced with pill tab toggle (Round 1 / Round 2) + Group by select (Position / Batch). Each column has a per-status bg tint and drag-over overlay. Cards now open detail on click; grip handle and View button removed; whole card is draggable via 6px distance constraint separation.
