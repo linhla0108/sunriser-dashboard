@@ -24,7 +24,7 @@ Let users upload spreadsheet-like files, review parsed columns and values, add m
 ---
 
 ## Report
-Status: Done | Commit: 442ec34
+Status: Done | Commit: ecc6a83
 
 Implemented the upload review flow. The parser now preserves columns and row values for `.xlsx`, `.xls`, `.csv`, `.tsv`, and `.json`. The global drop popup shows detected columns, missing required candidate fields, a value preview, and a re-analysis control for adding missing column names. Confirming the upload stores the parsed session in workspace client state, maps rows into candidate records, starts a no-op background persistence action, and routes to `/candidates`. The Candidates page uses the confirmed upload session instead of mock data and shows an uploaded-data banner.
 
