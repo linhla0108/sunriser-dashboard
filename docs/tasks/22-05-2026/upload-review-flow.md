@@ -24,7 +24,7 @@ Let users upload spreadsheet-like files, review parsed columns and values, add m
 ---
 
 ## Report
-Status: Blocked QA | Commit: pending
+Status: Done | Commit: 442ec34
 
 Implemented the upload review flow. The parser now preserves columns and row values for `.xlsx`, `.xls`, `.csv`, `.tsv`, and `.json`. The global drop popup shows detected columns, missing required candidate fields, a value preview, and a re-analysis control for adding missing column names. Confirming the upload stores the parsed session in workspace client state, maps rows into candidate records, starts a no-op background persistence action, and routes to `/candidates`. The Candidates page uses the confirmed upload session instead of mock data and shows an uploaded-data banner.
 
@@ -36,7 +36,8 @@ Verification passed:
 
 Playwright status:
 - Added `tests/e2e/upload-review-flow.spec.ts`.
-- `npx playwright test tests/e2e/upload-review-flow.spec.ts --browser=chromium --reporter=line` runs and skips when `E2E_EMAIL` / `E2E_PASSWORD` are not set.
-- A direct Playwright attempt with the old mock `admin@sunriser.com` / `admin123` was blocked by Supabase with `Invalid login credentials`.
+- `E2E_EMAIL='admin@sunriser.com' E2E_PASSWORD='Sunriser2026!' npx playwright test tests/e2e/upload-review-flow.spec.ts --browser=chromium --reporter=line` passed.
+- The first authenticated run exposed a real layering bug: the backdrop close button intercepted pointer events over the popup. Fixed by placing the backdrop at `z-0` and the popup at `z-10`.
+- Evidence screenshot: `test-results/upload-review-flow.png`.
 
-Remaining: run the Playwright smoke with a valid dev account by setting `E2E_EMAIL` and `E2E_PASSWORD`.
+Remaining: none for this slice.

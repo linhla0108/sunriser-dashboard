@@ -18,26 +18,32 @@ test("upload review flow parses values, re-analyzes columns, and opens candidate
 
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
 
-  await page.evaluate(() => {
-    const csv = [
-      "Name,Email,Phone,Position 1,GPA",
-      '"Nguyen, An",an@example.com,0901,AI Engineering Intern,8.5',
-      "Tran B,b@example.com,0902,Data Analysis Intern,7.9",
-    ].join("\n")
-    const file = new File([csv], "playwright-candidates.csv", { type: "text/csv" })
+  await expect(page.getByText("Total Applicants")).toBeVisible()
+
+  const csv = [
+    "Name,Email,Phone,Position 1,GPA",
+    '"Nguyen, An",an@example.com,0901,AI Engineering Intern,8.5',
+    "Tran B,b@example.com,0902,Data Analysis Intern,7.9",
+  ].join("\n")
+  const dataTransfer = await page.evaluateHandle(csvText => {
+    const file = new File([csvText], "playwright-candidates.csv", { type: "text/csv" })
     const dataTransfer = new DataTransfer()
     dataTransfer.items.add(file)
-    document.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }))
-  })
+    return dataTransfer
+  }, csv)
 
-  await expect(page.locator('[data-cid="drop-zone-popup"]')).toBeVisible()
-  await expect(page.getByText("playwright-candidates.csv")).toBeVisible()
-  await expect(page.getByText("Nguyen, An")).toBeVisible()
-  await expect(page.getByText("0901")).toBeVisible()
+  await page.dispatchEvent("body", "dragenter", { dataTransfer })
+  await page.dispatchEvent("body", "drop", { dataTransfer })
+
+  const popup = page.locator('[data-cid="drop-zone-popup"]')
+  await expect(popup).toBeVisible()
+  await expect(popup.getByText("playwright-candidates.csv", { exact: true })).toBeVisible()
+  await expect(popup.getByText("Nguyen, An")).toBeVisible()
+  await expect(popup.getByText("0901")).toBeVisible()
 
   await page.locator('[data-cid="drop-zone-col-input"]').fill("Round 1 Notes")
   await page.getByRole("button", { name: /re-analyze/i }).click()
-  await expect(page.getByText("Round 1 Notes")).toBeVisible()
+  await expect(popup.getByText("Round 1 Notes")).toBeVisible()
 
   await page.getByRole("button", { name: /confirm upload/i }).click()
   await expect(page).toHaveURL(/\/candidates/, { timeout: 15000 })

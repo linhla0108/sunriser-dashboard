@@ -267,7 +267,7 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
             backdropFilter: dropState === "dragging" ? "blur(24px)" : undefined,
           }}
         >
-          {dropState === "popup-open" && <Button type="button" variant="plain" size="plain" aria-label="Close upload popup" className="absolute inset-0 h-full w-full" onClick={closePopup} />}
+          {dropState === "popup-open" && <Button type="button" variant="plain" size="plain" aria-label="Close upload popup" className="absolute inset-0 z-0 h-full w-full" onClick={closePopup} />}
 
           {dropState === "dragging" && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ animation: "slideUpFade 200ms ease-out" }}>
@@ -332,7 +332,7 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
             <div
               ref={popupRef}
               data-cid="drop-zone-popup"
-              className="mx-0 max-h-[86vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[680px] sm:rounded-3xl"
+              className="relative z-10 mx-0 max-h-[86vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[680px] sm:rounded-3xl"
               style={{
                 animation: "slideUpFade 200ms ease-out",
                 boxShadow: "rgba(4, 23, 43, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 24px 48px -12px",
