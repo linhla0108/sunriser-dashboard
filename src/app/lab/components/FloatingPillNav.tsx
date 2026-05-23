@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import * as NavigationMenu from "@radix-ui/react-navigation-menu"
 import { BarChart3, Briefcase, CheckSquare, Code, FileText, Layers, Mail, Menu, Search, Sparkles, Sun, TrendingUp, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface MenuItem {
   href: string
@@ -100,7 +101,7 @@ function MenuPanel({ label, items }: { label: string; items: MenuItem[] }) {
             <NavigationMenu.Link asChild>
               <Link
                 href={it.href}
-                className="group/navigation-menu-link flex flex-row items-center gap-3 rounded-[17px] p-2 text-sm outline-none transition-all hover:bg-black/10 focus-visible:outline-1"
+                className="group/navigation-menu-link flex flex-row items-center gap-3 rounded-[17px] p-2 text-sm transition-all outline-none hover:bg-black/10 focus-visible:outline-1"
               >
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-black/5 text-white transition-colors group-hover/navigation-menu-link:bg-white group-hover/navigation-menu-link:text-black">
                   {it.icon}
@@ -155,13 +156,15 @@ export default function FloatingPillNav() {
         <span className="text-sm leading-none font-bold text-white">Sunriser</span>
       </Link>
 
-      <button
+      <Button
+        variant="plain"
+        size="plain"
         type="button"
         aria-label="Open menu"
         className="flex size-9 items-center justify-center rounded-full bg-black/[0.03] text-white transition hover:bg-white/10 active:bg-black/10 sm:hidden"
       >
         <Menu className="size-5" />
-      </button>
+      </Button>
 
       <div className="hidden h-6 w-px bg-white/10 sm:block" />
 

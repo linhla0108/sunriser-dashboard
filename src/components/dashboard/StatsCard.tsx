@@ -10,6 +10,7 @@ export default function StatsCard({ title, value, subtitle, accent, dataCid }: S
   return (
     <div
       data-cid={dataCid}
+      data-v2-card=""
       className="flex flex-col gap-3 rounded-3xl bg-white p-3"
       style={{
         boxShadow:
@@ -17,19 +18,21 @@ export default function StatsCard({ title, value, subtitle, accent, dataCid }: S
       }}
     >
       <p
+        data-v2-muted=""
         className="font-semibold tracking-widest text-[#6B5549] uppercase"
         style={{ fontSize: 'var(--text-label, 11px)' }}
       >
         {title}
       </p>
       <span
+        data-v2-stat-value={accent ? 'accent' : 'default'}
         className={`leading-none font-bold tracking-tight ${accent ? 'text-[#FF5533]' : 'text-[#1b1b1b]'}`}
         style={{ fontSize: 'var(--text-display, 36px)', fontWeight: 'var(--weight-bold, 700)' }}
       >
         {value}
       </span>
       {subtitle && (
-        <p className="text-[#6B5549]" style={{ fontSize: 'var(--text-small, 12px)' }}>
+        <p data-v2-muted="" className="text-[#6B5549]" style={{ fontSize: 'var(--text-small, 12px)' }}>
           {subtitle}
         </p>
       )}

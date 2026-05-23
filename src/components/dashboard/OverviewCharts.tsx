@@ -27,7 +27,11 @@ const round1Data = [
   { name: 'Waiting list', value: 91 },
 ]
 
-const PIE_COLORS = ['#FF5533', '#ffdad3', '#6B5549']
+const CHART_PRIMARY = 'var(--v2-chart-1, #FF5533)'
+const CHART_SECONDARY = 'var(--v2-chart-2, #ffdad3)'
+const CHART_TERTIARY = 'var(--v2-chart-3, #6B5549)'
+const CHART_GRID = 'color-mix(in srgb, var(--muted-foreground, #6B5549) 14%, transparent)'
+const PIE_COLORS = [CHART_PRIMARY, CHART_SECONDARY, CHART_TERTIARY]
 
 const cardStyle = {
   boxShadow:
@@ -35,12 +39,12 @@ const cardStyle = {
 }
 
 const tooltipStyle = {
-  backgroundColor: '#ffffff',
-  border: '1px solid #eeeeee',
+  backgroundColor: 'var(--glass-surface-strong, #ffffff)',
+  border: '1px solid var(--glass-border, #eeeeee)',
   borderRadius: '12px',
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
   fontSize: '12px',
-  color: '#1b1b1b',
+  color: 'var(--foreground, #1b1b1b)',
 }
 
 function ChartCard({
@@ -53,8 +57,9 @@ function ChartCard({
   children: React.ReactNode
 }) {
   return (
-    <div data-cid={dataCid} className="rounded-3xl bg-white p-4" style={cardStyle}>
+    <div data-cid={dataCid} data-v2-card="" className="rounded-3xl bg-white p-4" style={cardStyle}>
       <h3
+        data-v2-heading=""
         className="mb-3 font-semibold tracking-widest text-[#1b1b1b] uppercase"
         style={{ fontSize: 'var(--text-label, 11px)' }}
       >
@@ -76,20 +81,20 @@ export default function OverviewCharts() {
           className="h-[160px] sm:h-[200px] lg:h-[220px]"
         >
           <BarChart data={positionBreakdown} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f9f9f9" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
             <XAxis
               dataKey="short"
-              tick={{ fontSize: 11, fill: '#6B5549' }}
+              tick={{ fontSize: 11, fill: 'var(--muted-foreground, #6B5549)' }}
               axisLine={false}
               tickLine={false}
             />
-            <YAxis tick={{ fontSize: 11, fill: '#6B5549' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground, #6B5549)' }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={tooltipStyle}
-              cursor={{ fill: '#f9f9f9' }}
+              cursor={{ fill: 'var(--muted, #f9f9f9)' }}
               formatter={(v) => [`${v ?? ''}`, 'Applicants']}
             />
-            <Bar dataKey="count" fill="#FF5533" radius={[6, 6, 0, 0]} maxBarSize={36} />
+            <Bar dataKey="count" fill={CHART_PRIMARY} radius={[6, 6, 0, 0]} maxBarSize={36} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -118,7 +123,7 @@ export default function OverviewCharts() {
             <Legend
               iconType="circle"
               iconSize={8}
-              formatter={(value) => <span style={{ fontSize: 12, color: '#555555' }}>{value}</span>}
+              formatter={(value) => <span style={{ fontSize: 12, color: 'var(--muted-foreground, #555555)' }}>{value}</span>}
             />
             <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v ?? ''}`, 'Applicants']} />
           </PieChart>
@@ -133,20 +138,20 @@ export default function OverviewCharts() {
           className="h-[160px] sm:h-[200px] lg:h-[220px]"
         >
           <BarChart data={batchData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f9f9f9" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 12, fill: '#6B5549' }}
+              tick={{ fontSize: 12, fill: 'var(--muted-foreground, #6B5549)' }}
               axisLine={false}
               tickLine={false}
             />
-            <YAxis tick={{ fontSize: 11, fill: '#6B5549' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground, #6B5549)' }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={tooltipStyle}
-              cursor={{ fill: '#f9f9f9' }}
+              cursor={{ fill: 'var(--muted, #f9f9f9)' }}
               formatter={(v) => [`${v ?? ''}`, 'Applicants']}
             />
-            <Bar dataKey="count" fill="#ffdad3" radius={[6, 6, 0, 0]} maxBarSize={56} />
+            <Bar dataKey="count" fill={CHART_SECONDARY} radius={[6, 6, 0, 0]} maxBarSize={56} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -163,27 +168,27 @@ export default function OverviewCharts() {
             layout="vertical"
             margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f9f9f9" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
             <XAxis
               type="number"
-              tick={{ fontSize: 11, fill: '#6B5549' }}
+              tick={{ fontSize: 11, fill: 'var(--muted-foreground, #6B5549)' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey="channel"
-              tick={{ fontSize: 11, fill: '#555555' }}
+              tick={{ fontSize: 11, fill: 'var(--muted-foreground, #555555)' }}
               axisLine={false}
               tickLine={false}
               width={64}
             />
             <Tooltip
               contentStyle={tooltipStyle}
-              cursor={{ fill: '#f9f9f9' }}
+              cursor={{ fill: 'var(--muted, #f9f9f9)' }}
               formatter={(v) => [`${v ?? ''}`, 'Applicants']}
             />
-            <Bar dataKey="count" fill="#555555" radius={[0, 6, 6, 0]} maxBarSize={20} />
+            <Bar dataKey="count" fill={CHART_TERTIARY} radius={[0, 6, 6, 0]} maxBarSize={20} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
