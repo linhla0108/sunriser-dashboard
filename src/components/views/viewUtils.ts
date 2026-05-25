@@ -37,11 +37,74 @@ export function round1Tone(result?: string) {
 export const round2Tone = round1Tone
 
 export function getColumnTheme(columnKey: string) {
-  if (columnKey === "pass") return { colBg: "bg-emerald-50/30", overlayBg: "bg-emerald-50/60", overlayBorder: "border-emerald-300/60", badgeBg: "bg-emerald-100/80 text-emerald-800", icon: "text-emerald-600" }
-  if (columnKey === "fail") return { colBg: "bg-rose-50/30", overlayBg: "bg-rose-50/60", overlayBorder: "border-rose-300/60", badgeBg: "bg-rose-100/80 text-rose-800", icon: "text-rose-600" }
-  if (columnKey === "waiting") return { colBg: "bg-amber-50/30", overlayBg: "bg-amber-50/60", overlayBorder: "border-amber-300/60", badgeBg: "bg-amber-100/80 text-amber-800", icon: "text-amber-600" }
-  if (columnKey === "not-reviewed") return { colBg: "bg-foreground/[0.02]", overlayBg: "bg-foreground/5", overlayBorder: "border-foreground/20", badgeBg: "bg-foreground/8 text-muted-foreground", icon: "text-muted-foreground" }
-  return { colBg: "", overlayBg: "bg-primary/8", overlayBorder: "border-primary/40", badgeBg: "bg-primary/10 text-primary", icon: "text-primary" }
+  if (columnKey === "pass")
+    return {
+      colBg: "bg-emerald-50",
+      colBorder: "border-emerald-200",
+      headerBg: "bg-emerald-100",
+      headerText: "text-emerald-900 font-bold",
+      countBadge: "bg-emerald-200 text-emerald-800",
+      overlayBg: "bg-emerald-50/60",
+      overlayBorder: "border-emerald-300/60",
+      badgeBg: "bg-emerald-100/80 text-emerald-800",
+      icon: "text-emerald-600",
+    }
+  if (columnKey === "fail")
+    return {
+      colBg: "bg-rose-50",
+      colBorder: "border-rose-200",
+      headerBg: "bg-rose-100",
+      headerText: "text-rose-900 font-bold",
+      countBadge: "bg-rose-200 text-rose-800",
+      overlayBg: "bg-rose-50/60",
+      overlayBorder: "border-rose-300/60",
+      badgeBg: "bg-rose-100/80 text-rose-800",
+      icon: "text-rose-600",
+    }
+  if (columnKey === "waiting")
+    return {
+      colBg: "bg-amber-50",
+      colBorder: "border-amber-200",
+      headerBg: "bg-amber-100",
+      headerText: "text-amber-900 font-bold",
+      countBadge: "bg-amber-200 text-amber-800",
+      overlayBg: "bg-amber-50/60",
+      overlayBorder: "border-amber-300/60",
+      badgeBg: "bg-amber-100/80 text-amber-800",
+      icon: "text-amber-600",
+    }
+  if (columnKey === "not-reviewed")
+    return {
+      colBg: "bg-foreground/[0.03]",
+      colBorder: "border-foreground/10",
+      headerBg: "bg-foreground/[0.06]",
+      headerText: "text-foreground font-bold",
+      countBadge: "bg-foreground/10 text-muted-foreground",
+      overlayBg: "bg-foreground/5",
+      overlayBorder: "border-foreground/20",
+      badgeBg: "bg-foreground/8 text-muted-foreground",
+      icon: "text-muted-foreground",
+    }
+  return {
+    colBg: "bg-primary/[0.04]",
+    colBorder: "border-primary/20",
+    headerBg: "bg-primary/[0.08]",
+    headerText: "text-primary font-bold",
+    countBadge: "bg-primary/10 text-primary",
+    overlayBg: "bg-primary/8",
+    overlayBorder: "border-primary/40",
+    badgeBg: "bg-primary/10 text-primary",
+    icon: "text-primary",
+  }
+}
+
+export const PIC_CHIP_STYLE: Record<string, string> = {
+  Quỳnh: "bg-rose-50 border-rose-200 text-rose-700",
+  Nhiên: "bg-teal-50 border-teal-200 text-teal-700",
+  Yến: "bg-indigo-50 border-indigo-200 text-indigo-700",
+  Minh: "bg-lime-50 border-lime-200 text-lime-700",
+  Huy: "bg-cyan-50 border-cyan-200 text-cyan-700",
+  Linh: "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700",
 }
 
 export function groupApplicants(items: Applicant[], groupBy: "round1" | "round2" | "position" | "batch") {
