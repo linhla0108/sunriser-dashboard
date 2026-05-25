@@ -15,7 +15,7 @@ interface Body {
  */
 export async function POST(request: NextRequest) {
   const guard = await requireAdmin()
-  if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: 403 })
+  if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status ?? 403 })
 
   const admin = createAdminClient()
   if (!admin) return NextResponse.json({ error: "service_role_not_configured" }, { status: 503 })

@@ -17,26 +17,30 @@ function isPublicPath(pathname: string) {
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
-        },
+  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        response = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+      },
+    },
+  })
 
   // Refresh JWT + read claims. Cheaper than getUser() — no extra network round-trip.
-  const { data } = await supabase.auth.getClaims()
-  const claims = data?.claims ?? null
+  // getClaims() fetches JWKS on first call; if Supabase is unreachable it throws.
+  // Treat as unauthenticated (fail closed): public paths pass through, protected
+  // paths redirect to /login instead of crashing with a 500 page.
+  let claims = null
+  try {
+    const { data } = await supabase.auth.getClaims()
+    claims = data?.claims ?? null
+  } catch {
+    // JWKS/Supabase unreachable — isAuthed stays false
+  }
 
   const pathname = request.nextUrl.pathname
   const isAuthed = Boolean(claims?.sub)

@@ -5,6 +5,8 @@ export interface AdminCheck {
   ok: boolean
   userId?: string
   reason?: string
+  /** HTTP status to return to the caller. 401 = unauthenticated, 403 = not admin. */
+  status?: 401 | 403
 }
 
 /**
@@ -19,10 +21,10 @@ export async function requireAdmin(): Promise<AdminCheck> {
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims ?? null
   const sub = claims?.sub
-  if (!sub) return { ok: false, reason: "unauthenticated" }
+  if (!sub) return { ok: false, reason: "unauthenticated", status: 401 }
 
   const appMeta = (claims.app_metadata ?? {}) as Record<string, unknown>
-  if (appMeta.role !== "admin") return { ok: false, reason: "not_admin" }
+  if (appMeta.role !== "admin") return { ok: false, reason: "not_admin", status: 403 }
 
   return { ok: true, userId: String(sub) }
 }

@@ -43,12 +43,14 @@ function shouldKeepSession() {
 function setRememberPreference(remember: boolean) {
   if (typeof window === "undefined") return
   if (remember) {
-    window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS))
+    // setItem can throw in Safari private mode (SecurityError) or when quota is
+    // exceeded (QuotaExceededError). Swallow — preference is best-effort.
+    try { window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS)) } catch {}
     window.sessionStorage.removeItem(SESSION_ONLY_KEY)
     return
   }
   window.localStorage.removeItem(REMEMBER_UNTIL_KEY)
-  window.sessionStorage.setItem(SESSION_ONLY_KEY, "true")
+  try { window.sessionStorage.setItem(SESSION_ONLY_KEY, "true") } catch {}
 }
 
 function clearRememberPreference() {
@@ -76,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           settings,
         }
       } catch {
-        // Network/RLS error: fall back to defaults so the UI can still render.
+        // Network/RLS error: fall back to locked defaults. profileError=true lets
+        // RequireAuth show a "connection problem" message instead of "account inactive".
         return {
           id: authUser.id,
           email: authUser.email ?? "",
@@ -85,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile: PROFILE_DEFAULTS.profile,
           access: PROFILE_DEFAULTS.access,
           settings: PROFILE_DEFAULTS.settings,
+          profileError: true,
         }
       }
     },
@@ -93,32 +97,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
+    // onAuthStateChange fires INITIAL_SESSION from local storage (no network).
+    // getUser() does a server round-trip to validate the JWT.
+    // We let onAuthStateChange be the primary resolver; getUser() only acts
+    // if onAuthStateChange hasn't already settled loading.
+    let resolvedByStateChange = false
 
-    supabase.auth.getUser().then(async ({ data }) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
-      if (data.user && !shouldKeepSession()) {
-        await supabase.auth.signOut()
-        clearRememberPreference()
+      resolvedByStateChange = true
+
+      // Token refresh / MFA / recovery: the SDK already updated the session cookie.
+      // No need to refetch profile data — skip buildAppUser entirely.
+      if (event === "TOKEN_REFRESHED" || event === "PASSWORD_RECOVERY" || event === "MFA_CHALLENGE_VERIFIED") {
+        setLoading(false)
+        return
+      }
+
+      // Explicit sign-out: clear state immediately.
+      if (event === "SIGNED_OUT") {
         setUser(null)
         setLoading(false)
         return
       }
-      if (data.user) {
-        const next = await buildAppUser(data.user)
-        if (!mounted) return
-        setUser(next)
-      } else {
-        setUser(null)
-      }
-      setLoading(false)
-    })
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return
+      // INITIAL_SESSION | SIGNED_IN | USER_UPDATED — rebuild the app user.
       if (session?.user && !shouldKeepSession()) {
-        void supabase.auth.signOut()
+        try {
+          await supabase.auth.signOut()
+        } catch {
+          // best-effort server revocation; local state is cleared regardless
+        }
         clearRememberPreference()
         setUser(null)
         setLoading(false)
@@ -134,6 +145,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
+    // Fallback: if onAuthStateChange never fires (edge case), getUser() resolves loading.
+    supabase.auth
+      .getUser()
+      .then(async ({ data }) => {
+        if (!mounted || resolvedByStateChange) return
+        if (data.user && !shouldKeepSession()) {
+          try {
+            await supabase.auth.signOut()
+          } catch {
+            // best-effort
+          }
+          clearRememberPreference()
+          setUser(null)
+          setLoading(false)
+          return
+        }
+        if (data.user) {
+          const next = await buildAppUser(data.user)
+          if (!mounted) return
+          setUser(next)
+        } else {
+          setUser(null)
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        if (!mounted || resolvedByStateChange) return
+        setLoading(false)
+      })
+
     return () => {
       mounted = false
       subscription.unsubscribe()
@@ -147,20 +188,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         clearRememberPreference()
-        return { ok: false, error: error.message }
+        // 429: Supabase rate-limits auth endpoints. Map to a user-friendly message.
+        const message =
+          error.status === 429
+            ? "Too many attempts. Please wait a few minutes before trying again."
+            : error.message
+        return { ok: false, error: message }
       }
-      if (data.user) {
-        const next = await buildAppUser(data.user)
-        setUser(next)
-      }
+      // onAuthStateChange fires SIGNED_IN and handles setUser — no need to call buildAppUser here.
       return { ok: true }
     },
-    [supabase, buildAppUser]
+    [supabase]
   )
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // Network failure — SDK still clears local session; SIGNED_OUT fires locally.
+      // clearRememberPreference() and setUser(null) must still run.
+    }
     clearRememberPreference()
+    // Optimistic clear: onAuthStateChange SIGNED_OUT also calls setUser(null),
+    // but this fires first so the UI updates without waiting for the event.
     setUser(null)
   }, [supabase])
 

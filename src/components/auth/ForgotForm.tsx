@@ -27,7 +27,12 @@ export function ForgotForm() {
     setPending(false)
 
     if (resetError) {
-      setError(resetError.message)
+      // 429: rate limit — show a friendly message instead of the raw SDK string
+      setError(
+        resetError.status === 429
+          ? "Too many attempts. Please wait a few minutes before trying again."
+          : resetError.message
+      )
       return
     }
 
@@ -53,11 +58,7 @@ export function ForgotForm() {
       ) : null}
 
       <ActionTooltip label="Send reset instructions">
-        <Button
-          type="submit"
-          disabled={pending}
-          className="h-11 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-        >
+        <Button type="submit" disabled={pending} className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg">
           <MailCheck className="size-4" />
           {pending ? "Sending reset link" : "Send reset link"}
         </Button>
