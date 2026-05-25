@@ -93,7 +93,6 @@ export default function ApplicantTable({
   const [items, setItems] = useState<Applicant[]>(() => (initialSort ? sortApplicants(data, initialSort.key, initialSort.dir) : [...data]))
   const [sortKey, setSortKey] = useState<CandidateSortKey | null>(initialSort?.key ?? null)
   const [sortDir, setSortDir] = useState<CandidateSortDir>(initialSort?.dir ?? "asc")
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
   const sortStateRef = useRef<{ sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }>({
     sortKey: initialSort?.key ?? null,
     sortDir: initialSort?.dir ?? "asc",
@@ -146,26 +145,6 @@ export default function ApplicantTable({
     const next = items.map(a => (a.id === id ? { ...a, ...patch } : a))
     setItems(next)
     onDataChange?.(next)
-  }
-
-  function togglePin(id: string) {
-    setPinnedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-        // Restore to current sort order
-        setItems(cur => (sortKey ? sortApplicants(cur, sortKey, sortDir) : [...originalOrderRef.current]))
-      } else {
-        next.add(id)
-        // Move pinned item to front
-        setItems(cur => {
-          const item = cur.find(a => a.id === id)
-          if (!item) return cur
-          return [item, ...cur.filter(a => a.id !== id)]
-        })
-      }
-      return next
-    })
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -321,12 +300,10 @@ export default function ApplicantTable({
                       onViewDetail={onViewDetail}
                       pinAction={renderPinAction?.(applicant)}
                       onUpdateApplicant={handleUpdateApplicant}
-                      isPinned={pinnedIds.has(applicant.id)}
-                      onTogglePin={togglePin}
                       searchQuery={searchQuery}
                       isSelected={selectedIds?.has(applicant.id)}
                       selectionMode={(selectedIds?.size ?? 0) > 0}
-                      onSelect={onToggleSelect ? (id) => onToggleSelect(id) : undefined}
+                      onSelect={onToggleSelect ? id => onToggleSelect(id) : undefined}
                     />
                   ))
                 ) : (

@@ -10,7 +10,6 @@ import { ThemedView } from "@/components/views/ThemedView"
 import { ApplicantDetailDrawer } from "@/components/views/ApplicantDetailDrawer"
 import { ViewPillNav } from "@/components/layout/ViewPillNav"
 import { CandidateFiltersBar } from "@/components/candidates/CandidateFiltersBar"
-import { BulkActionBar } from "@/components/table/BulkActionBar"
 import {
   formatCandidateSort,
   parseCandidateUrlState,
@@ -140,10 +139,7 @@ export default function CandidatesPage() {
     <>
       <div className="p-3 pb-36 sm:p-4 sm:pb-28 lg:p-6 lg:pb-28">
         {uploadSession ? (
-          <div
-            data-cid="uploaded-candidates-banner"
-            className="mb-4 rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-4"
-          >
+          <div data-cid="uploaded-candidates-banner" className="mb-4 rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#1b1b1b]">Using uploaded candidates from {uploadSession.dataset.fileName}</p>
@@ -181,16 +177,14 @@ export default function CandidatesPage() {
           onBatchChange={setBatchFilter}
           onResultChange={setResultFilter}
           onClearAll={clearFilters}
+          selectedCount={urlState.view === "table" ? selectedIds.size : 0}
+          onBulkClear={handleClearSelection}
+          onBulkBatch={handleBulkBatch}
+          onBulkPic={handleBulkPic}
+          onBulkDelete={handleBulkDelete}
         />
         {urlState.view === "table" ? (
           <>
-            <BulkActionBar
-              selectedCount={selectedIds.size}
-              onClear={handleClearSelection}
-              onBulkBatch={handleBulkBatch}
-              onBulkPic={handleBulkPic}
-              onBulkDelete={handleBulkDelete}
-            />
             <TableView
               key={formatCandidateSort(urlState.sort)}
               data={pagedData}

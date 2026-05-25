@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
+import { usePinned } from "@/lib/pin/usePinned"
 
 interface DraggableRowProps {
   applicant: Applicant
@@ -17,8 +18,6 @@ interface DraggableRowProps {
   onViewDetail?: (applicant: Applicant) => void
   pinAction?: ReactNode
   onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
-  isPinned?: boolean
-  onTogglePin?: (id: string) => void
   searchQuery?: string
   isSelected?: boolean
   selectionMode?: boolean
@@ -31,8 +30,8 @@ const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"] as con
 
 const CHIP_STYLES: Record<string, string> = {
   Passed: "border-green-300 bg-green-100 text-green-900",
-  Failed: "border-red-300 bg-red-50 text-red-800",
-  "Waiting list": "border-amber-300 bg-amber-50 text-amber-800",
+  Failed: "border-red-300 bg-red-100 text-red-800",
+  "Waiting list": "border-amber-300 bg-amber-100 text-amber-800",
   "Batch 1": "border-sky-300 bg-sky-50 text-sky-800",
   "Batch 2": "border-violet-300 bg-violet-50 text-violet-800",
   "Batch 3": "border-orange-300 bg-orange-50 text-orange-800",
@@ -199,19 +198,22 @@ function exportRowCSV(applicant: Applicant) {
 
 type SubMenu = "copy" | "pic" | null
 
+function effectiveStatus(a: Applicant): string | undefined {
+  return a.round2Result || a.round1Result
+}
+
 export default function DraggableRow({
   applicant,
   index,
   onViewDetail,
   pinAction,
   onUpdateApplicant,
-  isPinned,
-  onTogglePin,
   searchQuery,
   isSelected,
   selectionMode,
   onSelect,
 }: DraggableRowProps) {
+  const { has: isPinned, add: pinAdd, remove: pinRemove } = usePinned()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
   })
@@ -266,7 +268,15 @@ export default function DraggableRow({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const rowBg = applicant.round1Result === "Passed" ? "bg-green-50/60" : applicant.round1Result === "Waiting list" ? "bg-amber-50/60" : ""
+  const status = effectiveStatus(applicant)
+  const rowBg =
+    status === "Passed"
+      ? "border-l-2 border-emerald-300 bg-emerald-50"
+      : status === "Failed"
+        ? "border-l-2 border-red-300 bg-red-50"
+        : status === "Waiting list"
+          ? "border-l-2 border-amber-300 bg-amber-50"
+          : ""
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
@@ -299,9 +309,9 @@ export default function DraggableRow({
               />
             </div>
           ) : (
-            <>
-              <span className="group-hover:hidden">{index + 1}</span>
-              <span className="hidden group-hover:flex justify-center">
+            <div className="relative flex h-4 items-center justify-center">
+              <span className="absolute group-hover:invisible">{index + 1}</span>
+              <span className="invisible absolute flex items-center justify-center group-hover:visible">
                 <Checkbox
                   checked={false}
                   onCheckedChange={checked => onSelect?.(applicant.id, !!checked)}
@@ -309,7 +319,7 @@ export default function DraggableRow({
                   onClick={e => e.stopPropagation()}
                 />
               </span>
-            </>
+            </div>
           )}
         </td>
 
@@ -533,13 +543,17 @@ export default function DraggableRow({
             <button
               type="button"
               onClick={() => {
-                onTogglePin?.(applicant.id)
+                isPinned(applicant.id) ? pinRemove(applicant.id) : pinAdd(applicant.id)
                 closeAll()
               }}
               className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
             >
-              {isPinned ? <PinOff className="text-muted-foreground size-4 shrink-0" /> : <Pin className="text-primary size-4 shrink-0" />}
-              {isPinned ? "Unpin row" : "Pin to top"}
+              {isPinned(applicant.id) ? (
+                <PinOff className="text-muted-foreground size-4 shrink-0" />
+              ) : (
+                <Pin className="text-primary size-4 shrink-0" />
+              )}
+              {isPinned(applicant.id) ? "Unpin" : "Pin to compare"}
             </button>
             <button
               type="button"

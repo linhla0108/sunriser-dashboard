@@ -1,11 +1,23 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import { ChevronDown, Search, SlidersHorizontal } from "lucide-react"
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/select"
 import type { Applicant } from "@/lib/types"
+
+const BATCH_OPTIONS = [1, 2, 3] as const
+const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"] as const
+
+const BATCH_DOT: Record<number, string> = {
+  1: "border-sky-300 bg-sky-100",
+  2: "border-violet-300 bg-violet-100",
+  3: "border-orange-300 bg-orange-100",
+}
+
+type BulkStep = "menu" | "batch" | "pic" | "delete"
 
 const POSITIONS = [
   "AI Engineering Intern",
@@ -33,6 +45,12 @@ interface CandidateFiltersBarProps {
   onBatchChange: (v: string) => void
   onResultChange: (v: string) => void
   onClearAll: () => void
+  // Bulk action props — when selectedCount > 0, renders bulk bar instead of filters
+  selectedCount?: number
+  onBulkClear?: () => void
+  onBulkBatch?: (batch: number) => void
+  onBulkPic?: (pic: string) => void
+  onBulkDelete?: () => void
 }
 
 export function CandidateFiltersBar({
@@ -49,23 +67,209 @@ export function CandidateFiltersBar({
   onBatchChange,
   onResultChange,
   onClearAll,
+  selectedCount = 0,
+  onBulkClear,
+  onBulkBatch,
+  onBulkPic,
+  onBulkDelete,
 }: CandidateFiltersBarProps) {
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkStep, setBulkStep] = useState<BulkStep>("menu")
+  const [pendingBatch, setPendingBatch] = useState<number | null>(null)
+  const [pendingPic, setPendingPic] = useState<string | null>(null)
+
+  function resetBulkPopover() {
+    setBulkStep("menu")
+    setPendingBatch(null)
+    setPendingPic(null)
+  }
+
+  function handleBulkOpenChange(next: boolean) {
+    setBulkOpen(next)
+    if (!next) resetBulkPopover()
+  }
+
+  function confirmBatch() {
+    if (pendingBatch == null) return
+    onBulkBatch?.(pendingBatch)
+    setBulkOpen(false)
+    resetBulkPopover()
+  }
+
+  function confirmPic() {
+    if (!pendingPic) return
+    onBulkPic?.(pendingPic)
+    setBulkOpen(false)
+    resetBulkPopover()
+  }
+
+  function confirmDelete() {
+    onBulkDelete?.()
+    setBulkOpen(false)
+    resetBulkPopover()
+  }
+
+  if (selectedCount > 0) {
+    return (
+      <div
+        data-cid="bulk-action-bar"
+        className="mb-3 flex items-center gap-3 rounded-3xl bg-white px-4 py-2.5"
+        style={{ boxShadow: "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.08) 0px 4px 6px -1px" }}
+      >
+        <span className="text-sm text-[#555555]">
+          <span className="font-semibold text-[#FF5533]">{selectedCount}</span> selected
+        </span>
+
+        <Popover open={bulkOpen} onOpenChange={handleBulkOpenChange}>
+          <PopoverTrigger className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border px-3 text-xs font-medium shadow-sm transition-colors">
+            Actions <ChevronDown className="size-3" />
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-52 p-1.5">
+            {bulkStep === "menu" && (
+              <>
+                <button type="button" onClick={() => setBulkStep("batch")} className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm">
+                  Set Batch
+                </button>
+                <button type="button" onClick={() => setBulkStep("pic")} className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm">
+                  Assign PIC
+                </button>
+                <div className="bg-border my-1 h-px" />
+                <button
+                  type="button"
+                  onClick={() => setBulkStep("delete")}
+                  className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm text-red-600"
+                >
+                  Delete selected
+                </button>
+              </>
+            )}
+            {bulkStep === "batch" && (
+              <div className="space-y-2">
+                <p className="px-1 text-xs font-semibold text-[#555555]">Set batch for {selectedCount} candidates</p>
+                <div className="space-y-0.5">
+                  {BATCH_OPTIONS.map(b => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setPendingBatch(b)}
+                      className={`hover:bg-muted flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-sm ${pendingBatch === b ? "bg-muted font-semibold" : ""}`}
+                    >
+                      <span className={`inline-block size-2 rounded-full border ${BATCH_DOT[b]}`} />
+                      Batch {b}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 flex-1 rounded-full text-xs"
+                    onClick={() => {
+                      setBulkStep("menu")
+                      setPendingBatch(null)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 flex-1 rounded-full bg-[#FF5533] text-xs text-white hover:bg-[#E63D1F]"
+                    disabled={pendingBatch == null}
+                    onClick={confirmBatch}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            )}
+            {bulkStep === "pic" && (
+              <div className="space-y-2">
+                <p className="px-1 text-xs font-semibold text-[#555555]">Assign PIC for {selectedCount} candidates</p>
+                <div className="space-y-0.5">
+                  {PIC_OPTIONS.map(pic => (
+                    <button
+                      key={pic}
+                      type="button"
+                      onClick={() => setPendingPic(pic)}
+                      className={`hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm ${pendingPic === pic ? "bg-muted font-semibold" : ""}`}
+                    >
+                      {pic}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 flex-1 rounded-full text-xs"
+                    onClick={() => {
+                      setBulkStep("menu")
+                      setPendingPic(null)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 flex-1 rounded-full bg-[#FF5533] text-xs text-white hover:bg-[#E63D1F]"
+                    disabled={!pendingPic}
+                    onClick={confirmPic}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            )}
+            {bulkStep === "delete" && (
+              <div className="space-y-3 px-1 py-1">
+                <p className="text-sm text-[#1b1b1b]">
+                  Delete <span className="font-semibold">{selectedCount}</span> candidates from this list?
+                </p>
+                <p className="text-xs text-[#767676]">This removes them from the local view only.</p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-7 flex-1 rounded-full text-xs" onClick={() => setBulkStep("menu")}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="h-7 flex-1 rounded-full bg-red-600 text-xs text-white hover:bg-red-700" onClick={confirmDelete}>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBulkClear}
+          aria-label="Clear selection"
+          className="ml-auto h-7 rounded-full px-3 text-xs text-[#767676] hover:text-[#1b1b1b]"
+        >
+          <X className="mr-1 size-3" /> Clear
+        </Button>
+      </div>
+    )
+  }
   const activeCount = [positionFilter, batchFilter, resultFilter].filter(Boolean).length
   const positionLabel = positionFilter ? positionFilter.replace(" Intern", "") : "All Positions"
   const batchLabel = batchFilter ? `Batch ${batchFilter}` : "All Batches"
   const resultLabel = resultFilter || "All Results"
 
-  const matchesSearch = useCallback((applicant: Applicant) => {
-    if (!search.trim()) return true
-    const q = search.toLowerCase()
-    return (
-      applicant.name.toLowerCase().includes(q) ||
-      applicant.email.toLowerCase().includes(q) ||
-      applicant.position1.toLowerCase().includes(q) ||
-      applicant.university.toLowerCase().includes(q)
-    )
-  }, [search])
+  const matchesSearch = useCallback(
+    (applicant: Applicant) => {
+      if (!search.trim()) return true
+      const q = search.toLowerCase()
+      return (
+        applicant.name.toLowerCase().includes(q) ||
+        applicant.email.toLowerCase().includes(q) ||
+        applicant.position1.toLowerCase().includes(q) ||
+        applicant.university.toLowerCase().includes(q)
+      )
+    },
+    [search]
+  )
 
   const positionOptions = useMemo<SearchableSelectOption[]>(() => {
     return [
