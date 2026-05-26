@@ -11,6 +11,8 @@ Fix three bugs and one UI redesign in the candidates table view:
 3. Context menu — Pin becomes "Pin to compare"; Round status sections become submenus (plan only)
 4. Bulk action bar — merge into filter bar row (no separate floating bar)
 
+Note: the final compact filter-bar bulk UI was revised on 26 May 2026. See `docs/tasks/26-05-2026/compact-bulk-action-button.md`.
+
 ## Scope
 
 - Included: DraggableRow, ApplicantTable, CandidateFiltersBar, BulkActionBar, candidates/page.tsx
@@ -241,56 +243,33 @@ Before implementing, confirm with user:
 
 ## Task 5 — Merge Bulk Action Bar into Filter Bar
 
+Superseded UI note: this task removed the separate floating card. A later 26 May update keeps the normal filters visible and exposes bulk actions through one `{N} selected` popover button instead of showing separate count, action, and clear controls.
+
 ### Problem
 
 `BulkActionBar` (when rows are selected) renders as a separate card between filters and the table.
 This creates visual clutter and empty space in the filter row when selection is active.
 
-### Proposed design
+### Current design
 
-When `selectedIds.size > 0`, the filter bar row transforms visually into a "selection mode" strip
-with the same card style as the current BulkActionBar — showing count + actions + clear.
-When `selectedIds.size === 0`, it renders the normal filters.
+When `selectedIds.size > 0`, the normal filter controls remain visible.
+The right side of `CandidateFiltersBar` shows one orange `{N} selected` popover button.
+The popover contains `Set Batch`, `Assign PIC`, `Clear selection`, and `Delete selected`.
 
-Two options:
-
-**Option A — Conditional swap (simpler)**
-`CandidateFiltersBar` receives `selectedCount`, `onClear`, `onBulkBatch`, `onBulkPic`, `onBulkDelete`
-as optional props. When `selectedCount > 0`, it renders the bulk action content in its own wrapper
-div instead of the filters.
-
-Wrapper style matches current BulkActionBar card:
-
-```tsx
-<div className="mb-3 flex items-center gap-3 rounded-3xl bg-white px-4 py-2.5" style={cardShadow}>
-  <span>
-    <strong>{selectedCount}</strong> selected
-  </span>
-  <Popover>Actions ▾</Popover>
-  <Button ml-auto>Clear</Button>
-</div>
-```
-
-The filters don't render when bulk is active. This keeps both uses of the bar in one card slot.
-
-**Option B — Inline bulk strip in the same row (complex)**
-The filter bar shows both filters AND a "X selected · Actions" strip together in the same row.
-This requires the filter bar to collapse or reorder its contents.
-
-**Recommendation: Option A** — simpler, lower risk, same visual result.
+This replaced the earlier separate count, action, and clear controls.
 
 ### Changes
 
 - `BulkActionBar.tsx` — delete file (content merged into CandidateFiltersBar or inlined)
-- `CandidateFiltersBar.tsx` — add selectedCount + bulk action props; swap content when selected > 0
+- `CandidateFiltersBar.tsx` — add selectedCount + bulk action props; keep filters visible and render one compact bulk trigger when selected > 0
 - `candidates/page.tsx` — remove `<BulkActionBar>` render, pass bulk props to `<CandidateFiltersBar>`
 
 ### Acceptance criteria
 
 - No separate floating BulkActionBar card below filters
-- When ≥1 row selected → filter bar area shows "N selected · Actions ▾ · Clear"
+- When ≥1 row selected → filter bar keeps filters and shows one "{N} selected" popover button
 - When 0 rows selected → normal filter controls render
-- All bulk action functionality (Set Batch, Assign PIC, Delete) works identically
+- All bulk action functionality (Set Batch, Assign PIC, Clear selection, Delete) works identically
 - No empty whitespace gap between filters and table
 
 ---
@@ -309,6 +288,6 @@ Task 4 (round submenus)        → BLOCKED on user confirmation of flow
 
 Status: Done — Commit: 8b22beb
 
-All 4 table tasks shipped in one commit. Checkbox uses visibility toggle — no layout shift confirmed by e2e test. Row colors use emerald/red/amber-50 backgrounds with left border accents. Context menu "Pin to compare" wires directly to `usePinned` hook; local pin-to-top state removed from `ApplicantTable`. Bulk action bar merged into `CandidateFiltersBar` — filter content swaps to selection mode when `selectedIds.size > 0`, no separate floating card.
+All 4 table tasks shipped in one commit. Checkbox uses visibility toggle — no layout shift confirmed by e2e test. Row colors use emerald/red/amber-50 backgrounds with left border accents. Context menu "Pin to compare" wires directly to `usePinned` hook; local pin-to-top state removed from `ApplicantTable`. Bulk action bar merged into `CandidateFiltersBar`, removing the separate floating card. Later compact UI revision: filters stay visible and bulk actions live behind one `{N} selected` popover button.
 
 Task 4 (Round status submenus) remains plan-only pending user UX confirmation.

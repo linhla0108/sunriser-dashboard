@@ -2,13 +2,14 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import type { Applicant } from "@/lib/types"
-import ApplicantTable from "../ApplicantTable"
+import ApplicantTable, { reorderApplicantsWithinList } from "../ApplicantTable"
 
 vi.mock("@dnd-kit/core", async importOriginal => {
   const actual = await importOriginal<typeof import("@dnd-kit/core")>()
   return {
     ...actual,
     DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    DragOverlay: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   }
 })
 
@@ -91,14 +92,13 @@ const applicants: Applicant[] = [
   },
 ]
 
-function rowOrder() {
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map(r => r.textContent ?? "")
-}
-
 describe("ApplicantTable — 3-state column sort", () => {
+  it("reorders applicants within a constrained list", () => {
+    const reordered = reorderApplicantsWithinList(applicants, "a1", "a3")
+    expect(reordered.map(a => a.id)).toEqual(["a2", "a3", "a1"])
+    expect(reorderApplicantsWithinList(applicants, "missing", "a3")).toBe(applicants)
+  })
+
   it("renders all 9 sortable column buttons (excluding # and Actions)", () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow = screen.getAllByRole("row")[0]
@@ -253,5 +253,48 @@ describe("ApplicantTable — 3-state column sort", () => {
       .slice(1)
       .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(picNamesDesc[2]).toContain("Bob")
+  })
+
+  it("renders selected rows in a collapsible section above filtered rows", async () => {
+    render(
+      <ApplicantTable
+        data={[applicants[1]]}
+        selectedData={[applicants[0]]}
+        selectedIds={new Set(["a1"])}
+        selectedSectionOpen={true}
+        onSelectedSectionOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Selected candidates: 1")).toBeInTheDocument()
+    expect(screen.getByText("Filtered results · 1")).toBeInTheDocument()
+
+    const rowTexts = screen.getAllByRole("row").map(row => row.textContent ?? "")
+    const selectedRowIndex = rowTexts.findIndex(text => text.includes("Charlie"))
+    const dividerIndex = rowTexts.findIndex(text => text.includes("Filtered results · 1"))
+    const filteredRowIndex = rowTexts.findIndex(text => text.includes("Alice"))
+
+    expect(selectedRowIndex).toBeGreaterThan(-1)
+    expect(dividerIndex).toBeGreaterThan(selectedRowIndex)
+    expect(filteredRowIndex).toBeGreaterThan(dividerIndex)
+  })
+
+  it("collapses selected rows while keeping the selected section header", async () => {
+    const onSelectedSectionOpenChange = vi.fn()
+    render(
+      <ApplicantTable
+        data={[applicants[1]]}
+        selectedData={[applicants[0]]}
+        selectedIds={new Set(["a1"])}
+        selectedSectionOpen={false}
+        onSelectedSectionOpenChange={onSelectedSectionOpenChange}
+      />
+    )
+
+    expect(screen.getByText("Selected candidates: 1")).toBeInTheDocument()
+    expect(screen.queryByText("Charlie")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /expand selected candidates/i }))
+    expect(onSelectedSectionOpenChange).toHaveBeenCalledWith(true)
   })
 })

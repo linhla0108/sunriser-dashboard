@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react"
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -45,7 +45,7 @@ interface CandidateFiltersBarProps {
   onBatchChange: (v: string) => void
   onResultChange: (v: string) => void
   onClearAll: () => void
-  // Bulk action props — when selectedCount > 0, renders bulk bar instead of filters
+  // Bulk action props — when selectedCount > 0, renders one compact action trigger in the filter row
   selectedCount?: number
   onBulkClear?: () => void
   onBulkBatch?: (batch: number) => void
@@ -110,20 +110,95 @@ export function CandidateFiltersBar({
     resetBulkPopover()
   }
 
-  if (selectedCount > 0) {
-    return (
-      <div
-        data-cid="bulk-action-bar"
-        className="mb-3 flex items-center gap-3 rounded-3xl bg-white px-4 py-2.5"
-        style={{ boxShadow: "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.08) 0px 4px 6px -1px" }}
-      >
-        <span className="text-sm text-[#555555]">
-          <span className="font-semibold text-[#FF5533]">{selectedCount}</span> selected
-        </span>
+  function clearBulkSelection() {
+    onBulkClear?.()
+    setBulkOpen(false)
+    resetBulkPopover()
+  }
 
+  const activeCount = [positionFilter, batchFilter, resultFilter].filter(Boolean).length
+  const positionLabel = positionFilter ? positionFilter.replace(" Intern", "") : "All Positions"
+  const batchLabel = batchFilter ? `Batch ${batchFilter}` : "All Batches"
+  const resultLabel = resultFilter || "All Results"
+
+  const matchesSearch = useCallback(
+    (applicant: Applicant) => {
+      if (!search.trim()) return true
+      const q = search.toLowerCase()
+      return (
+        applicant.name.toLowerCase().includes(q) ||
+        applicant.email.toLowerCase().includes(q) ||
+        applicant.position1.toLowerCase().includes(q) ||
+        applicant.university.toLowerCase().includes(q)
+      )
+    },
+    [search]
+  )
+
+  const positionOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Positions", searchText: "all positions" },
+      ...POSITIONS.map(position => ({
+        value: position,
+        label: position.replace(" Intern", ""),
+        searchText: position,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.position1 === position &&
+              (!batchFilter || applicant.batch === Number(batchFilter)) &&
+              (!resultFilter || applicant.round1Result === resultFilter)
+          ),
+      })),
+    ]
+  }, [applicants, batchFilter, matchesSearch, resultFilter])
+
+  const batchOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Batches", searchText: "all batches" },
+      ...[1, 2, 3].map(batch => ({
+        value: String(batch),
+        label: `Batch ${batch}`,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.batch === batch &&
+              (!positionFilter || applicant.position1 === positionFilter) &&
+              (!resultFilter || applicant.round1Result === resultFilter)
+          ),
+      })),
+    ]
+  }, [applicants, matchesSearch, positionFilter, resultFilter])
+
+  const resultOptions = useMemo<SearchableSelectOption[]>(() => {
+    return [
+      { value: "all", label: "All Results", searchText: "all results" },
+      ...RESULTS.map(result => ({
+        value: result,
+        label: result,
+        disabled:
+          applicants.length > 0 &&
+          !applicants.some(
+            applicant =>
+              matchesSearch(applicant) &&
+              applicant.round1Result === result &&
+              (!positionFilter || applicant.position1 === positionFilter) &&
+              (!batchFilter || applicant.batch === Number(batchFilter))
+          ),
+      })),
+    ]
+  }, [applicants, batchFilter, matchesSearch, positionFilter])
+
+  const bulkActions =
+    selectedCount > 0 ? (
+      <div data-cid="bulk-action-bar" className="order-last flex w-full sm:order-none sm:ml-auto sm:w-auto">
         <Popover open={bulkOpen} onOpenChange={handleBulkOpenChange}>
-          <PopoverTrigger className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border px-3 text-xs font-medium shadow-sm transition-colors">
-            Actions <ChevronDown className="size-3" />
+          <PopoverTrigger className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl border border-[#FF5533] bg-[#FF5533] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:border-[#E63D1F] hover:bg-[#E63D1F] sm:h-7 sm:w-auto sm:rounded-full">
+            {selectedCount} selected <ChevronDown className="size-3" />
           </PopoverTrigger>
           <PopoverContent align="start" className="w-52 p-1.5">
             {bulkStep === "menu" && (
@@ -135,6 +210,13 @@ export function CandidateFiltersBar({
                   Assign PIC
                 </button>
                 <div className="bg-border my-1 h-px" />
+                <button
+                  type="button"
+                  onClick={clearBulkSelection}
+                  className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm"
+                >
+                  Clear selection
+                </button>
                 <button
                   type="button"
                   onClick={() => setBulkStep("delete")}
@@ -239,99 +321,12 @@ export function CandidateFiltersBar({
             )}
           </PopoverContent>
         </Popover>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onBulkClear}
-          aria-label="Clear selection"
-          className="ml-auto h-7 rounded-full px-3 text-xs text-[#767676] hover:text-[#1b1b1b]"
-        >
-          <X className="mr-1 size-3" /> Clear
-        </Button>
       </div>
-    )
-  }
-  const activeCount = [positionFilter, batchFilter, resultFilter].filter(Boolean).length
-  const positionLabel = positionFilter ? positionFilter.replace(" Intern", "") : "All Positions"
-  const batchLabel = batchFilter ? `Batch ${batchFilter}` : "All Batches"
-  const resultLabel = resultFilter || "All Results"
-
-  const matchesSearch = useCallback(
-    (applicant: Applicant) => {
-      if (!search.trim()) return true
-      const q = search.toLowerCase()
-      return (
-        applicant.name.toLowerCase().includes(q) ||
-        applicant.email.toLowerCase().includes(q) ||
-        applicant.position1.toLowerCase().includes(q) ||
-        applicant.university.toLowerCase().includes(q)
-      )
-    },
-    [search]
-  )
-
-  const positionOptions = useMemo<SearchableSelectOption[]>(() => {
-    return [
-      { value: "all", label: "All Positions", searchText: "all positions" },
-      ...POSITIONS.map(position => ({
-        value: position,
-        label: position.replace(" Intern", ""),
-        searchText: position,
-        disabled:
-          applicants.length > 0 &&
-          !applicants.some(
-            applicant =>
-              matchesSearch(applicant) &&
-              applicant.position1 === position &&
-              (!batchFilter || applicant.batch === Number(batchFilter)) &&
-              (!resultFilter || applicant.round1Result === resultFilter)
-          ),
-      })),
-    ]
-  }, [applicants, batchFilter, matchesSearch, resultFilter])
-
-  const batchOptions = useMemo<SearchableSelectOption[]>(() => {
-    return [
-      { value: "all", label: "All Batches", searchText: "all batches" },
-      ...[1, 2, 3].map(batch => ({
-        value: String(batch),
-        label: `Batch ${batch}`,
-        disabled:
-          applicants.length > 0 &&
-          !applicants.some(
-            applicant =>
-              matchesSearch(applicant) &&
-              applicant.batch === batch &&
-              (!positionFilter || applicant.position1 === positionFilter) &&
-              (!resultFilter || applicant.round1Result === resultFilter)
-          ),
-      })),
-    ]
-  }, [applicants, matchesSearch, positionFilter, resultFilter])
-
-  const resultOptions = useMemo<SearchableSelectOption[]>(() => {
-    return [
-      { value: "all", label: "All Results", searchText: "all results" },
-      ...RESULTS.map(result => ({
-        value: result,
-        label: result,
-        disabled:
-          applicants.length > 0 &&
-          !applicants.some(
-            applicant =>
-              matchesSearch(applicant) &&
-              applicant.round1Result === result &&
-              (!positionFilter || applicant.position1 === positionFilter) &&
-              (!batchFilter || applicant.batch === Number(batchFilter))
-          ),
-      })),
-    ]
-  }, [applicants, batchFilter, matchesSearch, positionFilter])
+    ) : null
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      <div className="border-border mb-3 flex flex-wrap items-center gap-2 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur">
         <div className="relative max-w-xs min-w-[180px] flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
           <Input
@@ -400,13 +395,15 @@ export function CandidateFiltersBar({
             onClick={onClearAll}
             className="text-muted-foreground hidden h-9 rounded-full px-3 text-xs font-semibold sm:inline-flex"
           >
-            Clear
+            Clear filter
           </Button>
         ) : null}
 
-        <span className="text-muted-foreground ml-auto text-xs font-medium">
-          {filteredCount} of {total}
-        </span>
+        {bulkActions ?? (
+          <span className="text-muted-foreground ml-auto text-xs font-medium">
+            {filteredCount} of {total}
+          </span>
+        )}
       </div>
 
       {mobileFilterOpen && (

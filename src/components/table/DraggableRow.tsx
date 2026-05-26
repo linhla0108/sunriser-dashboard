@@ -22,6 +22,12 @@ interface DraggableRowProps {
   isSelected?: boolean
   selectionMode?: boolean
   onSelect?: (id: string, checked: boolean) => void
+  selectedCount?: number
+  onBulkBatch?: (batch: number) => void
+  onBulkPic?: (pic: string) => void
+  onBulkRound1?: (result: string) => void
+  onBulkRound2?: (result: string) => void
+  onBulkDelete?: () => void
 }
 
 const ROUND_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
@@ -126,7 +132,7 @@ function SelectChip<T extends string | number>({
                   onChange(undefined)
                   setOpen(false)
                 }}
-                className="text-muted-foreground hover:bg-muted w-full px-3 py-1.5 text-left text-xs"
+                className="text-muted-foreground hover:bg-muted w-full justify-start px-3 py-1.5 text-left text-xs"
               >
                 {unsetLabel}
               </Button>
@@ -141,7 +147,10 @@ function SelectChip<T extends string | number>({
                   onChange(opt.value)
                   setOpen(false)
                 }}
-                className={cn("hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs", value === opt.value && "font-semibold")}
+                className={cn(
+                  "hover:bg-muted flex w-full items-center justify-start gap-2 px-3 py-1.5 text-left text-xs",
+                  value === opt.value && "font-semibold"
+                )}
               >
                 <span className={cn("inline-block size-2 rounded-full border", CHIP_STYLES[opt.styleKey ?? opt.label])} />
                 {opt.label}
@@ -196,10 +205,16 @@ function exportRowCSV(applicant: Applicant) {
   URL.revokeObjectURL(url)
 }
 
-type SubMenu = "copy" | "pic" | null
+type SubMenu = "copy" | "pic" | "batch" | "round1" | "round2" | null
 
 function effectiveStatus(a: Applicant): string | undefined {
   return a.round2Result || a.round1Result
+}
+
+function RoundStatusIcon({ result }: { result: string }) {
+  if (result === "Passed") return <CheckCircle2 className="size-4 shrink-0 text-green-600" />
+  if (result === "Failed") return <XCircle className="size-4 shrink-0 text-red-500" />
+  return <Clock className="size-4 shrink-0 text-amber-500" />
 }
 
 export default function DraggableRow({
@@ -212,6 +227,12 @@ export default function DraggableRow({
   isSelected,
   selectionMode,
   onSelect,
+  selectedCount = 0,
+  onBulkBatch,
+  onBulkPic,
+  onBulkRound1,
+  onBulkRound2,
+  onBulkDelete,
 }: DraggableRowProps) {
   const { has: isPinned, add: pinAdd, remove: pinRemove } = usePinned()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -224,6 +245,9 @@ export default function DraggableRow({
   const subMenuRef = useRef<HTMLDivElement>(null)
   const copyBtnRef = useRef<HTMLButtonElement>(null)
   const picBtnRef = useRef<HTMLButtonElement>(null)
+  const batchBtnRef = useRef<HTMLButtonElement>(null)
+  const round1BtnRef = useRef<HTMLButtonElement>(null)
+  const round2BtnRef = useRef<HTMLButtonElement>(null)
 
   const closeAll = useCallback(() => {
     setCtxPos(null)
@@ -250,10 +274,6 @@ export default function DraggableRow({
   }, [ctxPos, closeAll])
 
   function openSubMenu(which: SubMenu, btnRef: React.RefObject<HTMLButtonElement | null>) {
-    if (subMenu === which) {
-      setSubMenu(null)
-      return
-    }
     const rect = btnRef.current?.getBoundingClientRect()
     if (!rect) return
     const SUB_W = 176
@@ -269,14 +289,21 @@ export default function DraggableRow({
   }
 
   const status = effectiveStatus(applicant)
+  const showSelectionCheckbox = selectionMode || isSelected
+  const useBulkContext = !!isSelected && selectedCount > 0
   const rowBg =
     status === "Passed"
-      ? "border-l-2 border-emerald-300 bg-emerald-50"
+      ? "border-l-2 border-l-emerald-300 bg-emerald-50"
       : status === "Failed"
-        ? "border-l-2 border-red-300 bg-red-50"
+        ? "border-l-2 border-l-red-300 bg-red-50"
         : status === "Waiting list"
-          ? "border-l-2 border-amber-300 bg-amber-50"
+          ? "border-l-2 border-l-amber-300 bg-amber-50"
           : ""
+  const selectedRowStyle = isSelected
+    ? status
+      ? "shadow-[inset_0_0_0_1px_rgba(255,85,51,0.24)]"
+      : "border-l-2 border-l-[#FF5533] bg-[#fff5f3] shadow-[inset_0_0_0_1px_rgba(255,85,51,0.22)]"
+    : ""
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
@@ -296,31 +323,32 @@ export default function DraggableRow({
         ref={setNodeRef}
         style={style}
         onContextMenu={handleContextMenu}
-        className={`group border-border hover:bg-muted/70 border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg} ${isSelected ? "bg-[#fff5f3]" : ""}`}
+        data-selected={isSelected ? "true" : undefined}
+        className={`group hover:bg-muted/70 border-border border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg} ${selectedRowStyle}`}
       >
-        <td className="text-foreground w-8 px-3 py-3 text-center font-mono text-xs">
-          {selectionMode || isSelected ? (
-            <div className="flex justify-center">
+        <td className="text-foreground w-11 min-w-11 px-0 py-3 text-center font-mono text-xs">
+          <div className="relative mx-auto h-4 w-6">
+            <span
+              className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                showSelectionCheckbox ? "opacity-0" : "opacity-100 group-hover:opacity-0"
+              }`}
+            >
+              {index + 1}
+            </span>
+            <span
+              className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                showSelectionCheckbox ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}
+            >
               <Checkbox
                 checked={!!isSelected}
                 onCheckedChange={checked => onSelect?.(applicant.id, !!checked)}
                 aria-label={`Select ${applicant.name}`}
                 onClick={e => e.stopPropagation()}
+                className={showSelectionCheckbox ? "" : "pointer-events-none group-hover:pointer-events-auto"}
               />
-            </div>
-          ) : (
-            <div className="relative flex h-4 items-center justify-center">
-              <span className="absolute group-hover:invisible">{index + 1}</span>
-              <span className="invisible absolute flex items-center justify-center group-hover:visible">
-                <Checkbox
-                  checked={false}
-                  onCheckedChange={checked => onSelect?.(applicant.id, !!checked)}
-                  aria-label={`Select ${applicant.name}`}
-                  onClick={e => e.stopPropagation()}
-                />
-              </span>
-            </div>
-          )}
+            </span>
+          </div>
         </td>
 
         {/* Name — always visible */}
@@ -423,154 +451,167 @@ export default function DraggableRow({
         createPortal(
           <div
             ref={ctxMenuRef}
+            data-cid={useBulkContext ? "bulk-context-menu" : "row-context-menu"}
             style={{ top: ctxPos.y, left: ctxPos.x }}
             className="border-border fixed z-[9999] min-w-52 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
           >
-            <div className="text-muted-foreground truncate px-3 py-1 text-xs font-semibold">{applicant.name}</div>
+            <div className="text-muted-foreground truncate px-3 py-1 text-xs font-semibold">
+              {useBulkContext ? `${selectedCount} candidates selected` : applicant.name}
+            </div>
             <div className="bg-border -mx-0 my-1 h-px" />
 
-            {onViewDetail && (
-              <button
-                type="button"
-                onClick={() => {
-                  onViewDetail(applicant)
-                  closeAll()
-                }}
-                className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
-              >
-                <Eye className="size-4 shrink-0" /> View detail
-              </button>
+            {useBulkContext ? (
+              <>
+                <button
+                  ref={batchBtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("batch", batchBtnRef)}
+                  onClick={() => openSubMenu("batch", batchBtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "batch" ? "bg-muted" : ""}`}
+                >
+                  <span className="size-4 shrink-0 rounded-full border border-orange-300 bg-orange-100" /> Set Batch
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+                <button
+                  ref={picBtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("pic", picBtnRef)}
+                  onClick={() => openSubMenu("pic", picBtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "pic" ? "bg-muted" : ""}`}
+                >
+                  <UserCheck className="size-4 shrink-0" /> Assign PIC
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+                <button
+                  ref={round1BtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("round1", round1BtnRef)}
+                  onClick={() => openSubMenu("round1", round1BtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "round1" ? "bg-muted" : ""}`}
+                >
+                  <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Set Round 1 status
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+                <button
+                  ref={round2BtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("round2", round2BtnRef)}
+                  onClick={() => openSubMenu("round2", round2BtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "round2" ? "bg-muted" : ""}`}
+                >
+                  <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Set Round 2 status
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+                <div className="bg-border -mx-0 my-1 h-px" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    onBulkDelete?.()
+                    closeAll()
+                  }}
+                  className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-red-600"
+                >
+                  <XCircle className="size-4 shrink-0" /> Delete selected
+                </button>
+              </>
+            ) : (
+              <>
+                {onViewDetail && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onViewDetail(applicant)
+                      closeAll()
+                    }}
+                    className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+                  >
+                    <Eye className="size-4 shrink-0" /> View detail
+                  </button>
+                )}
+
+                <button
+                  ref={copyBtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("copy", copyBtnRef)}
+                  onClick={() => openSubMenu("copy", copyBtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "copy" ? "bg-muted" : ""}`}
+                >
+                  <Copy className="size-4 shrink-0" /> Copy
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+
+                <button
+                  ref={picBtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("pic", picBtnRef)}
+                  onClick={() => openSubMenu("pic", picBtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "pic" ? "bg-muted" : ""}`}
+                >
+                  <UserCheck className="size-4 shrink-0" /> Assign PIC
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+
+                <div className="bg-border -mx-0 my-1 h-px" />
+                <button
+                  ref={round1BtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("round1", round1BtnRef)}
+                  onClick={() => openSubMenu("round1", round1BtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "round1" ? "bg-muted" : ""}`}
+                >
+                  <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Set Round 1 status
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+                <button
+                  ref={round2BtnRef}
+                  type="button"
+                  onMouseEnter={() => openSubMenu("round2", round2BtnRef)}
+                  onClick={() => openSubMenu("round2", round2BtnRef)}
+                  className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "round2" ? "bg-muted" : ""}`}
+                >
+                  <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Set Round 2 status
+                  <ChevronDown className="ml-auto size-3.5 -rotate-90" />
+                </button>
+
+                <div className="bg-border -mx-0 my-1 h-px" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isPinned(applicant.id)) {
+                      pinRemove(applicant.id)
+                    } else {
+                      pinAdd(applicant.id)
+                    }
+                    closeAll()
+                  }}
+                  className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+                >
+                  {isPinned(applicant.id) ? (
+                    <PinOff className="text-muted-foreground size-4 shrink-0" />
+                  ) : (
+                    <Pin className="text-primary size-4 shrink-0" />
+                  )}
+                  {isPinned(applicant.id) ? "Unpin" : "Pin to compare"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportRowCSV(applicant)
+                    closeAll()
+                  }}
+                  className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+                >
+                  <Download className="size-4 shrink-0" /> Export row as CSV
+                </button>
+              </>
             )}
-
-            {/* Copy submenu */}
-            <button
-              ref={copyBtnRef}
-              type="button"
-              onClick={() => openSubMenu("copy", copyBtnRef)}
-              className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "copy" ? "bg-muted" : ""}`}
-            >
-              <Copy className="size-4 shrink-0" /> Copy
-              <ChevronDown className="ml-auto size-3.5 -rotate-90" />
-            </button>
-
-            {/* Assign PIC submenu */}
-            <button
-              ref={picBtnRef}
-              type="button"
-              onClick={() => openSubMenu("pic", picBtnRef)}
-              className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${subMenu === "pic" ? "bg-muted" : ""}`}
-            >
-              <UserCheck className="size-4 shrink-0" /> Assign PIC
-              <ChevronDown className="ml-auto size-3.5 -rotate-90" />
-            </button>
-
-            {/* Round 1 status */}
-            <div className="bg-border -mx-0 my-1 h-px" />
-            <div className="text-muted-foreground px-3 py-1 text-xs font-semibold">Round 1 status</div>
-            <button
-              type="button"
-              disabled={applicant.round1Result === "Passed"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round1Result: "Passed" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Mark as Passed
-            </button>
-            <button
-              type="button"
-              disabled={applicant.round1Result === "Failed"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round1Result: "Failed" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <XCircle className="size-4 shrink-0 text-red-500" /> Mark as Failed
-            </button>
-            <button
-              type="button"
-              disabled={applicant.round1Result === "Waiting list"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round1Result: "Waiting list" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <Clock className="size-4 shrink-0 text-amber-500" /> Waiting list
-            </button>
-
-            {/* Round 2 status */}
-            <div className="bg-border -mx-0 my-1 h-px" />
-            <div className="text-muted-foreground px-3 py-1 text-xs font-semibold">Round 2 status</div>
-            <button
-              type="button"
-              disabled={applicant.round2Result === "Passed"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round2Result: "Passed" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <CheckCircle2 className="size-4 shrink-0 text-green-600" /> Mark as Passed
-            </button>
-            <button
-              type="button"
-              disabled={applicant.round2Result === "Failed"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round2Result: "Failed" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <XCircle className="size-4 shrink-0 text-red-500" /> Mark as Failed
-            </button>
-            <button
-              type="button"
-              disabled={applicant.round2Result === "Waiting list"}
-              onClick={() => {
-                onUpdateApplicant?.(applicant.id, { round2Result: "Waiting list" })
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-40"
-            >
-              <Clock className="size-4 shrink-0 text-amber-500" /> Waiting list
-            </button>
-
-            {/* Pin + Export */}
-            <div className="bg-border -mx-0 my-1 h-px" />
-            <button
-              type="button"
-              onClick={() => {
-                isPinned(applicant.id) ? pinRemove(applicant.id) : pinAdd(applicant.id)
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
-            >
-              {isPinned(applicant.id) ? (
-                <PinOff className="text-muted-foreground size-4 shrink-0" />
-              ) : (
-                <Pin className="text-primary size-4 shrink-0" />
-              )}
-              {isPinned(applicant.id) ? "Unpin" : "Pin to compare"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                exportRowCSV(applicant)
-                closeAll()
-              }}
-              className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
-            >
-              <Download className="size-4 shrink-0" /> Export row as CSV
-            </button>
           </div>,
           document.body
         )}
 
       {/* Copy flyout */}
       {subMenu === "copy" &&
+        !useBulkContext &&
         createPortal(
           <div
             ref={subMenuRef}
@@ -623,17 +664,89 @@ export default function DraggableRow({
               <button
                 key={pic}
                 type="button"
-                disabled={applicant.pic === pic}
+                disabled={!useBulkContext && applicant.pic === pic}
                 onClick={() => {
-                  onUpdateApplicant?.(applicant.id, { pic })
+                  if (useBulkContext) {
+                    onBulkPic?.(pic)
+                  } else {
+                    onUpdateApplicant?.(applicant.id, { pic })
+                  }
                   closeAll()
                 }}
                 className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50"
               >
-                {applicant.pic === pic ? <CheckCircle2 className="size-3.5 shrink-0 text-green-600" /> : <span className="size-3.5 shrink-0" />}
+                {!useBulkContext && applicant.pic === pic ? (
+                  <CheckCircle2 className="size-3.5 shrink-0 text-green-600" />
+                ) : (
+                  <span className="size-3.5 shrink-0" />
+                )}
                 {pic}
               </button>
             ))}
+          </div>,
+          document.body
+        )}
+
+      {/* Set Batch flyout */}
+      {subMenu === "batch" &&
+        useBulkContext &&
+        createPortal(
+          <div
+            ref={subMenuRef}
+            style={{ top: subPos.y, left: subPos.x }}
+            className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
+          >
+            {BATCH_OPTIONS.map(batch => (
+              <button
+                key={batch}
+                type="button"
+                onClick={() => {
+                  onBulkBatch?.(batch)
+                  closeAll()
+                }}
+                className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
+              >
+                <span className={cn("inline-block size-2 rounded-full border", CHIP_STYLES[`Batch ${batch}`])} />
+                Batch {batch}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+
+      {/* Round status flyout */}
+      {(subMenu === "round1" || subMenu === "round2") &&
+        createPortal(
+          <div
+            ref={subMenuRef}
+            style={{ top: subPos.y, left: subPos.x }}
+            className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
+          >
+            {ROUND_OPTIONS.map(result => {
+              const current = subMenu === "round1" ? applicant.round1Result : applicant.round2Result
+              return (
+                <button
+                  key={result}
+                  type="button"
+                  disabled={!useBulkContext && current === result}
+                  onClick={() => {
+                    if (useBulkContext) {
+                      if (subMenu === "round1") onBulkRound1?.(result)
+                      else onBulkRound2?.(result)
+                    } else if (subMenu === "round1") {
+                      onUpdateApplicant?.(applicant.id, { round1Result: result })
+                    } else {
+                      onUpdateApplicant?.(applicant.id, { round2Result: result })
+                    }
+                    closeAll()
+                  }}
+                  className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <RoundStatusIcon result={result} />
+                  {result === "Waiting list" ? "Waiting list" : `Mark as ${result}`}
+                </button>
+              )
+            })}
           </div>,
           document.body
         )}

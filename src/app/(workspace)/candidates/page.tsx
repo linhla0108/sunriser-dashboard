@@ -52,18 +52,23 @@ export default function CandidatesPage() {
   const applicants = editedApplicants.sourceId === sourceId ? editedApplicants.applicants : (uploadSession?.applicants ?? mockApplicants)
   const [detailApplicant, setDetailApplicant] = useState<Applicant | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectedSectionOpen, setSelectedSectionOpen] = useState(true)
 
   function handleToggleSelect(id: string) {
     setSelectedIds(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
-      else next.add(id)
+      else {
+        if (prev.size === 0) setSelectedSectionOpen(true)
+        next.add(id)
+      }
       return next
     })
   }
 
   function handleClearSelection() {
     setSelectedIds(new Set())
+    setSelectedSectionOpen(true)
   }
 
   function handleBulkBatch(batch: number) {
@@ -77,6 +82,20 @@ export default function CandidatesPage() {
     setEditedApplicants(prev => ({
       sourceId: prev.sourceId,
       applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, pic } : a)),
+    }))
+  }
+
+  function handleBulkRound1(result: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, round1Result: result } : a)),
+    }))
+  }
+
+  function handleBulkRound2(result: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, round2Result: result } : a)),
     }))
   }
 
@@ -121,12 +140,16 @@ export default function CandidatesPage() {
     onClearFilters: () => updateUrlState({ search: "", position: "", batch: "", result: "", page: 1 }),
   })
 
-  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(filtered.length, 15, {
+  const showSelectedSection = hasFilters && selectedIds.size > 0
+  const selectedData = showSelectedSection ? applicants.filter(applicant => selectedIds.has(applicant.id)) : []
+  const filteredTableData = showSelectedSection ? filtered.filter(applicant => !selectedIds.has(applicant.id)) : filtered
+
+  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(filteredTableData.length, 15, {
     page: urlState.page,
     onPageChange: page => updateUrlState({ page }),
   })
 
-  const pagedData = filtered.slice(startIndex, endIndex)
+  const pagedData = filteredTableData.slice(startIndex, endIndex)
 
   function handleReorder(reordered: Applicant[]) {
     setEditedApplicants({
@@ -188,15 +211,23 @@ export default function CandidatesPage() {
             <TableView
               key={formatCandidateSort(urlState.sort)}
               data={pagedData}
+              selectedData={selectedData}
               onDataChange={handleReorder}
               onViewDetail={setDetailApplicant}
               indexOffset={startIndex}
-              paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
+              paginationInfo={{ start: startIndex, end: endIndex, total: filteredTableData.length, currentPage, totalPages }}
               searchQuery={search}
               sortState={urlState.sort}
               onSortChange={sort => updateUrlState({ sort, page: 1 })}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
+              selectedSectionOpen={selectedSectionOpen}
+              onSelectedSectionOpenChange={setSelectedSectionOpen}
+              onBulkBatch={handleBulkBatch}
+              onBulkPic={handleBulkPic}
+              onBulkRound1={handleBulkRound1}
+              onBulkRound2={handleBulkRound2}
+              onBulkDelete={handleBulkDelete}
             />
           </>
         ) : null}

@@ -5,6 +5,7 @@ import type { Applicant } from "@/lib/types"
 
 interface TableViewProps {
   data: Applicant[]
+  selectedData?: Applicant[]
   onViewDetail?: (applicant: Applicant) => void
   onDataChange?: (applicants: Applicant[]) => void
   indexOffset?: number
@@ -14,10 +15,18 @@ interface TableViewProps {
   onSortChange?: (sortState: CandidateSortState) => void
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
+  selectedSectionOpen?: boolean
+  onSelectedSectionOpenChange?: (open: boolean) => void
+  onBulkBatch?: (batch: number) => void
+  onBulkPic?: (pic: string) => void
+  onBulkRound1?: (result: string) => void
+  onBulkRound2?: (result: string) => void
+  onBulkDelete?: () => void
 }
 
 export function TableView({
   data,
+  selectedData,
   onViewDetail,
   onDataChange,
   indexOffset,
@@ -27,10 +36,18 @@ export function TableView({
   onSortChange,
   selectedIds,
   onToggleSelect,
+  selectedSectionOpen,
+  onSelectedSectionOpenChange,
+  onBulkBatch,
+  onBulkPic,
+  onBulkRound1,
+  onBulkRound2,
+  onBulkDelete,
 }: TableViewProps) {
   return (
     <ApplicantTable
       data={data}
+      selectedData={selectedData}
       onViewDetail={onViewDetail}
       onDataChange={onDataChange}
       renderPinAction={applicant => <PinStarButton id={applicant.id} />}
@@ -41,6 +58,13 @@ export function TableView({
       onSortChange={onSortChange}
       selectedIds={selectedIds}
       onToggleSelect={onToggleSelect}
+      selectedSectionOpen={selectedSectionOpen}
+      onSelectedSectionOpenChange={onSelectedSectionOpenChange}
+      onBulkBatch={onBulkBatch}
+      onBulkPic={onBulkPic}
+      onBulkRound1={onBulkRound1}
+      onBulkRound2={onBulkRound2}
+      onBulkDelete={onBulkDelete}
     />
   )
 }
