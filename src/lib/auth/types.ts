@@ -30,6 +30,11 @@ export interface AppUser {
   profile: AppProfile
   access: AppAccess
   settings: AppSettings
+  /**
+   * Set to true when loadProfileData threw (network/RLS error).
+   * Distinguishes "DB unreachable" from an actual deactivated account.
+   */
+  profileError?: true
 }
 
 export interface AuthContextValue {

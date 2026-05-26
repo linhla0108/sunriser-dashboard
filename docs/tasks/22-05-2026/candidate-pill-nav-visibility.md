@@ -1,4 +1,5 @@
 # Candidate Pill Nav Visibility
+
 Tag: candidates/fix
 
 ## Goal
@@ -149,6 +150,7 @@ Implemented the pill nav behavior change. `ViewPillNav` no longer hides itself w
 Also corrected the `WorkspaceShell.shortcuts.test.tsx` provider order so the existing workspace shell regression tests match the current app order: `AuthProvider` outside `ThemeProvider`.
 
 Verification passed:
+
 - `npm test -- ViewPillNav` — 1 file, 7 tests.
 - `npm test -- ViewPillNav TableView ApplicantTable WorkspaceShell` — 5 files, 40 tests.
 - `npm run build`.
@@ -161,10 +163,12 @@ Verification passed:
 - Mobile 390x844 `/candidates?view=table`: nav stayed fully visible with the mobile bottom offset.
 
 Evidence:
+
 - Desktop fixed nav: `docs/tasks/22-05-2026/candidate-pill-nav-desktop-fixed.png`.
 - Mobile fixed nav: `docs/tasks/22-05-2026/candidate-pill-nav-mobile-fixed.png`.
 - Earlier unauthenticated redirect evidence, before valid credentials were provided: `docs/tasks/22-05-2026/candidate-pill-nav-auth-redirect.png`.
 
 Unrelated repo blockers:
+
 - Full `npm run lint` still fails on existing admin-page issues outside this task: `src/app/(workspace)/admin/users/page.tsx:45` and `src/components/admin/UserEditDrawer.tsx:35` use state updates in effects. Existing warnings remain in `UserEditDrawer.tsx`, `Sidebar.tsx`, and `ApplicantTable.sort.test.tsx`.
 - Standalone `npx tsc --noEmit` is currently blocked by an untracked file outside this task: `src/lib/upload/__tests__/parseUploadFile.test.ts` imports missing `../parseUploadFile`.

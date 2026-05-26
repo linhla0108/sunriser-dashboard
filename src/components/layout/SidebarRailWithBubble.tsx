@@ -77,7 +77,6 @@ export function SidebarRailWithBubble() {
         >
           <div className="bg-popover text-popover-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium shadow-md ring-1 ring-black/8 dark:ring-white/10">
             {isCollapsed ? "Open sidebar" : "Close sidebar"}
-            <kbd className="border-border bg-muted text-muted-foreground rounded border px-1.5 py-0.5 font-mono text-[10px]">⌘B</kbd>
           </div>
         </div>
       )}

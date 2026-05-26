@@ -15,11 +15,7 @@ export function OtpForm({ onSuccess }: OtpFormProps) {
         Supabase will send a confirmation link to your email. Open that link, then return to sign in.
       </p>
       <ActionTooltip label="Verify code">
-        <Button
-          type="button"
-          className="h-11 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={onSuccess}
-        >
+        <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg" onClick={onSuccess}>
           <ShieldCheck className="size-4" />
           Back to sign in
         </Button>

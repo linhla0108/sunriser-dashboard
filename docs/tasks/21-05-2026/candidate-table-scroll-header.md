@@ -121,6 +121,7 @@ Status: Blocked QA | Commit: uncommitted
 Implementation is complete, but the task is not Done because protected-route browser QA is blocked. The workspace top bar sticky behavior now belongs to the animated shell wrapper, so the header is not constrained by a short parent wrapper. The shared table primitive now supports an optional scroll-container class, and `ApplicantTable` uses it for bounded vertical scrolling with a sticky table header. The candidates page also has extra bottom padding so the floating ViewPillNav does not cover the table footer area.
 
 Verification passed:
+
 - `npm test -- ApplicantTable TableView ViewPillNav WorkspaceShell` — 5 files, 36 tests.
 - `npm test -- WorkspaceShell` — 1 file, 3 tests.
 - `npx tsc --noEmit`.

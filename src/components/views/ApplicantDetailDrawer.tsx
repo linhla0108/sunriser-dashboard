@@ -37,7 +37,7 @@ export function ApplicantDetailDrawer({ applicant, open, onOpenChange }: Applica
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent data-v2-glass-panel="strong" className="overflow-y-auto bg-card/90 backdrop-blur-xl">
+      <SheetContent data-v2-glass-panel="strong" className="bg-card/90 overflow-y-auto backdrop-blur-xl">
         {displayed && (
           <>
             <SheetHeader>

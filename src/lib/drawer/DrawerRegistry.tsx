@@ -76,7 +76,12 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
   )
   const orderedIds = useMemo(() => normalizeOrder(dockOrder), [dockOrder])
   const dockedIds = useMemo(() => orderedIds.filter(id => open[id] && mode[id] === "dock"), [mode, open, orderedIds])
-  const dockedWidth = dockedIds.length === 0 ? 0 : dockLayout === "columns" ? dockedIds.reduce((total, id) => total + width[id], 0) : Math.max(...dockedIds.map(id => width[id]))
+  const dockedWidth =
+    dockedIds.length === 0
+      ? 0
+      : dockLayout === "columns"
+        ? dockedIds.reduce((total, id) => total + width[id], 0)
+        : Math.max(...dockedIds.map(id => width[id]))
 
   const setOpenById = useCallback(
     (id: V2DrawerId, next: boolean | ((current: boolean) => boolean)) => {
@@ -165,7 +170,24 @@ export function DrawerRegistryProvider({ children }: { children: React.ReactNode
       floatPos,
       setFloatPos,
     }),
-    [activeFloatId, dockedIds, dockLayout, dockedWidth, floatPos, getDockPlacement, mode, moveDock, open, setActiveFloat, setDockLayoutValue, setFloatPos, setMode, setOpenById, setWidth, width]
+    [
+      activeFloatId,
+      dockedIds,
+      dockLayout,
+      dockedWidth,
+      floatPos,
+      getDockPlacement,
+      mode,
+      moveDock,
+      open,
+      setActiveFloat,
+      setDockLayoutValue,
+      setFloatPos,
+      setMode,
+      setOpenById,
+      setWidth,
+      width,
+    ]
   )
 
   return <DrawerRegistryContext.Provider value={value}>{children}</DrawerRegistryContext.Provider>

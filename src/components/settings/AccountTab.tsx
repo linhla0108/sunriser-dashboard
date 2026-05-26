@@ -45,21 +45,21 @@ export function AccountTab() {
 
   return (
     <div className="mt-6 space-y-6">
-      <section className="flex items-center gap-4 rounded-2xl border border-foreground/10 p-4">
+      <section className="border-foreground/10 flex items-center gap-4 rounded-2xl border p-4">
         <Avatar className="size-12">
           <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">{user?.name ?? "Guest"}</p>
-          <p className="truncate text-xs text-muted-foreground">{user?.email ?? "No active session"}</p>
+          <p className="text-foreground text-sm font-semibold">{user?.name ?? "Guest"}</p>
+          <p className="text-muted-foreground truncate text-xs">{user?.email ?? "No active session"}</p>
         </div>
         <Badge variant="secondary" className="capitalize">
           {role}
         </Badge>
       </section>
 
-      <section className="rounded-2xl border border-foreground/10 p-4">
-        <h2 className="font-heading text-sm font-semibold text-foreground">Change password</h2>
+      <section className="border-foreground/10 rounded-2xl border p-4">
+        <h2 className="font-heading text-foreground text-sm font-semibold">Change password</h2>
         <form className="mt-3 space-y-3" onSubmit={handleChangePassword}>
           <div className="space-y-1.5">
             <Label htmlFor="password-current">Current password</Label>
@@ -93,10 +93,10 @@ export function AccountTab() {
         </form>
       </section>
 
-      <section className="flex items-center justify-between gap-4 rounded-2xl border border-foreground/10 p-4">
+      <section className="border-foreground/10 flex items-center justify-between gap-4 rounded-2xl border p-4">
         <div>
-          <p className="text-sm font-medium text-foreground">Sign out of this workspace</p>
-          <p className="text-xs text-muted-foreground">Returns you to the login screen.</p>
+          <p className="text-foreground text-sm font-medium">Sign out of this workspace</p>
+          <p className="text-muted-foreground text-xs">Returns you to the login screen.</p>
         </div>
         <Button variant="outline" onClick={() => setConfirmOpen(true)}>
           Sign out
@@ -106,7 +106,7 @@ export function AccountTab() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogTitle>Sign out?</DialogTitle>
-          <p className="text-sm text-muted-foreground">Your local drafts and notes will remain on this device.</p>
+          <p className="text-muted-foreground text-sm">Your local drafts and notes will remain on this device.</p>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button

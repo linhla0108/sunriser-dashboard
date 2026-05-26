@@ -1,4 +1,5 @@
 # Candidate Table Row Selection and Bulk Actions
+
 Tag: candidates/feature
 
 ## Goal

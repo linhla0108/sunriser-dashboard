@@ -17,7 +17,7 @@ function reducer(state: HrStaff[], action: Action): HrStaff[] {
     case "DELETE":
       return state.filter(s => s.id !== action.id)
     case "TOGGLE_STATUS":
-      return state.map(s => s.id === action.id ? { ...s, status: s.status === "active" ? "inactive" : "active" } : s)
+      return state.map(s => (s.id === action.id ? { ...s, status: s.status === "active" ? "inactive" : "active" } : s))
     default:
       return state
   }

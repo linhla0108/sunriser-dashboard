@@ -12,7 +12,6 @@ import { TopBar } from "@/components/layout/TopBar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import GlobalDropZone from "@/components/upload/GlobalDropZone"
 import { DrawerRegistryProvider, useDrawerRegistry } from "@/lib/drawer/DrawerRegistry"
-import { useShortcut } from "@/lib/keyboard/useShortcut"
 import { UploadSessionProvider, useUploadSession, type UploadSession } from "@/lib/upload/UploadSessionContext"
 import { persistUploadSessionDraft } from "@/lib/upload/persistUploadSessionDraft"
 import { WorkspaceContextMenu } from "@/components/context/WorkspaceContextMenu"
@@ -47,12 +46,16 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
     [router, setUploadSession]
   )
 
-  useShortcut({ key: "j", meta: true }, toggleChat)
-  useShortcut({ key: "n", meta: true }, toggleNotes)
-  useShortcut({ key: "r", meta: true }, openReport)
-
   return (
-    <SidebarProvider style={{ "--sidebar-width": "15rem", "--sidebar-width-icon": "4rem", "--sidebar-icon-button-size": "calc(var(--sidebar-width-icon) - 1rem)" } as React.CSSProperties}>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "15rem",
+          "--sidebar-width-icon": "4rem",
+          "--sidebar-icon-button-size": "calc(var(--sidebar-width-icon) - 1rem)",
+        } as React.CSSProperties
+      }
+    >
       <GlobalDropZone onAnalyze={analyzeUpload}>
         <WorkspaceContextMenu onCreateReport={openReport}>
           <div data-workspace="" className="bg-background relative flex h-screen w-full overflow-hidden">

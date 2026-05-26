@@ -84,9 +84,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           aria-label="Remember me for 6 days"
           className="mt-0.5"
         />
-        <span className="text-foreground text-sm font-medium">
-          Remember me
-        </span>
+        <span className="text-foreground text-sm font-medium">Remember me</span>
       </label>
 
       {error ? (

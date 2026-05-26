@@ -267,10 +267,22 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
             backdropFilter: dropState === "dragging" ? "blur(24px)" : undefined,
           }}
         >
-          {dropState === "popup-open" && <Button type="button" variant="plain" size="plain" aria-label="Close upload popup" className="absolute inset-0 z-0 h-full w-full" onClick={closePopup} />}
+          {dropState === "popup-open" && (
+            <Button
+              type="button"
+              variant="plain"
+              size="plain"
+              aria-label="Close upload popup"
+              className="absolute inset-0 z-0 h-full w-full"
+              onClick={closePopup}
+            />
+          )}
 
           {dropState === "dragging" && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ animation: "slideUpFade 200ms ease-out" }}>
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              style={{ animation: "slideUpFade 200ms ease-out" }}
+            >
               <div className="absolute inset-5 rounded-3xl border-2 border-dashed border-[#FF5533]/60" />
               <div className="relative flex flex-col items-center gap-5 px-8 text-center">
                 <div
@@ -281,7 +293,10 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                     boxShadow: "0 0 0 1px rgba(255,85,51,0.25), 0 0 48px rgba(255,85,51,0.18)",
                   }}
                 >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(255,218,211,0.15)", animation: "dropzoneRing 2.2s ease-out infinite" }}>
+                  <div
+                    className="flex h-16 w-16 items-center justify-center rounded-full"
+                    style={{ background: "rgba(255,218,211,0.15)", animation: "dropzoneRing 2.2s ease-out infinite" }}
+                  >
                     <UploadCloud size={34} strokeWidth={1.6} className="text-[#FF5533]" />
                   </div>
                 </div>
@@ -291,11 +306,18 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                 </div>
                 <div className="flex flex-wrap justify-center gap-2">
                   {ACCEPTED_EXTENSIONS.map(ext => (
-                    <span key={ext} className="rounded-full border border-[#e2e2e2] px-3 py-1 text-xs font-medium text-[#555555]" style={{ background: "rgba(249,249,249,0.9)" }}>
+                    <span
+                      key={ext}
+                      className="rounded-full border border-[#e2e2e2] px-3 py-1 text-xs font-medium text-[#555555]"
+                      style={{ background: "rgba(249,249,249,0.9)" }}
+                    >
                       {ext}
                     </span>
                   ))}
-                  <span className="rounded-full border border-[#FF5533]/40 px-3 py-1 text-xs font-semibold text-[#FF5533]" style={{ background: "rgba(255,85,51,0.08)" }}>
+                  <span
+                    className="rounded-full border border-[#FF5533]/40 px-3 py-1 text-xs font-semibold text-[#FF5533]"
+                    style={{ background: "rgba(255,85,51,0.08)" }}
+                  >
                     Max 50 MB
                   </span>
                 </div>
@@ -322,7 +344,12 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                   <X size={16} />
                 </Button>
               </div>
-              <Button variant="plain" size="plain" onClick={closePopup} className="mt-4 h-10 w-full rounded-full border border-[#1b1b1b] text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]">
+              <Button
+                variant="plain"
+                size="plain"
+                onClick={closePopup}
+                className="mt-4 h-10 w-full rounded-full border border-[#1b1b1b] text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
+              >
                 Dismiss
               </Button>
             </div>
@@ -339,7 +366,9 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
               }}
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">{getFileIcon(dataset.fileType)}</div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">
+                  {getFileIcon(dataset.fileType)}
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-[#1b1b1b]" title={dataset.fileName}>
                     {dataset.fileName}
@@ -349,7 +378,13 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                     {dataset.activeSheetName ? ` · ${dataset.activeSheetName}` : ""}
                   </p>
                 </div>
-                <Button variant="plain" size="plain" onClick={closePopup} className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]" aria-label="Close">
+                <Button
+                  variant="plain"
+                  size="plain"
+                  onClick={closePopup}
+                  className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]"
+                  aria-label="Close"
+                >
                   <X size={16} />
                 </Button>
               </div>
@@ -371,7 +406,9 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
 
               <div>
                 <p className="mb-2.5 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Columns Detected</p>
-                {filteredColumns.length === 0 && filterText && <p className="mb-2 text-xs text-[#767676]">No columns match. Re-analyze to add it as a missing column.</p>}
+                {filteredColumns.length === 0 && filterText && (
+                  <p className="mb-2 text-xs text-[#767676]">No columns match. Re-analyze to add it as a missing column.</p>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {visibleColumns.map(col => {
                     const isAdded = dataset.addedColumns.includes(col)
@@ -379,7 +416,9 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                       <span
                         key={col}
                         className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-medium ${
-                          isAdded ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]" : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
+                          isAdded
+                            ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]"
+                            : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
                         }`}
                       >
                         {col}
@@ -387,12 +426,22 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                     )
                   })}
                   {!pillsExpanded && hiddenCount > 0 && (
-                    <Button variant="plain" size="plain" onClick={() => setPillsExpanded(true)} className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]">
+                    <Button
+                      variant="plain"
+                      size="plain"
+                      onClick={() => setPillsExpanded(true)}
+                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
+                    >
                       +{hiddenCount} more
                     </Button>
                   )}
                   {pillsExpanded && hiddenCount > 0 && (
-                    <Button variant="plain" size="plain" onClick={() => setPillsExpanded(false)} className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]">
+                    <Button
+                      variant="plain"
+                      size="plain"
+                      onClick={() => setPillsExpanded(false)}
+                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
+                    >
                       Collapse
                     </Button>
                   )}
@@ -403,7 +452,9 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs font-semibold text-[#1b1b1b]">Missing fields</p>
                   <p className="text-xs text-[#767676]">
-                    {analysis.missingFields.length ? analysis.missingFields.map(field => field.label).join(", ") : "Required candidate fields are covered."}
+                    {analysis.missingFields.length
+                      ? analysis.missingFields.map(field => field.label).join(", ")
+                      : "Required candidate fields are covered."}
                   </p>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
@@ -435,15 +486,27 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                 <div className="overflow-hidden rounded-2xl border border-[#e2e2e2]">
                   <div className="grid bg-[#f9f9f9]" style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}>
                     {previewColumns.map(column => (
-                      <div key={column} className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs font-semibold text-[#555555] last:border-r-0" title={column}>
+                      <div
+                        key={column}
+                        className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs font-semibold text-[#555555] last:border-r-0"
+                        title={column}
+                      >
                         {column}
                       </div>
                     ))}
                   </div>
                   {previewRows.map(row => (
-                    <div key={row.rowNumber} className="grid border-t border-[#e2e2e2]" style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}>
+                    <div
+                      key={row.rowNumber}
+                      className="grid border-t border-[#e2e2e2]"
+                      style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}
+                    >
                       {previewColumns.map(column => (
-                        <div key={column} className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs text-[#1b1b1b] last:border-r-0" title={formatCell(row.values[column])}>
+                        <div
+                          key={column}
+                          className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs text-[#1b1b1b] last:border-r-0"
+                          title={formatCell(row.values[column])}
+                        >
                           {formatCell(row.values[column])}
                         </div>
                       ))}
@@ -462,7 +525,12 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
                 >
                   Confirm upload
                 </Button>
-                <Button variant="plain" size="plain" onClick={closePopup} className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]">
+                <Button
+                  variant="plain"
+                  size="plain"
+                  onClick={closePopup}
+                  className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
+                >
                   Clear
                 </Button>
               </div>

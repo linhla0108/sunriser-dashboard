@@ -11,9 +11,15 @@ function ThemeProbe() {
     <>
       <span data-testid="theme">{theme}</span>
       <span data-testid="custom-color">{customColor ?? "none"}</span>
-      <button type="button" onClick={() => setTheme("glass-blue")}>switchBlue</button>
-      <button type="button" onClick={() => setCustomColor("#123456")}>setColor</button>
-      <button type="button" onClick={() => setCustomColor(null)}>resetColor</button>
+      <button type="button" onClick={() => setTheme("glass-blue")}>
+        switchBlue
+      </button>
+      <button type="button" onClick={() => setCustomColor("#123456")}>
+        setColor
+      </button>
+      <button type="button" onClick={() => setCustomColor(null)}>
+        resetColor
+      </button>
     </>
   )
 }

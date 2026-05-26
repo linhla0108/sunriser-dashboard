@@ -93,20 +93,20 @@ describe("T17 — PipelineView smoke test", () => {
     expect(screen.getByText("Waiting")).toBeInTheDocument()
   })
 
-  it("renders View buttons on pipeline cards", () => {
+  it("renders clickable pipeline cards", () => {
     render(<PipelineView data={mockApplicants} />, { wrapper: TestProviders })
 
-    const viewButtons = screen.getAllByRole("button", { name: /^view$/i })
-    expect(viewButtons.length).toBeGreaterThanOrEqual(2)
+    const cards = document.querySelectorAll("[data-v2-card]")
+    expect(cards.length).toBeGreaterThanOrEqual(2)
   })
 
-  it("calls onViewDetail when a View button is clicked", async () => {
+  it("calls onViewDetail when a card is clicked", async () => {
     const onViewDetail = vi.fn()
 
     render(<PipelineView data={mockApplicants} onViewDetail={onViewDetail} />, { wrapper: TestProviders })
 
-    const viewButtons = screen.getAllByRole("button", { name: /^view$/i })
-    await userEvent.click(viewButtons[0])
+    const cards = document.querySelectorAll("[data-v2-card]")
+    await userEvent.click(cards[0] as HTMLElement)
 
     expect(onViewDetail).toHaveBeenCalledTimes(1)
     expect(onViewDetail).toHaveBeenCalledWith(expect.objectContaining({ name: "Chi Nguyen" }))

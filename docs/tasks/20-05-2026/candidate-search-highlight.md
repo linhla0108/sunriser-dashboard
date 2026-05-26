@@ -1,10 +1,13 @@
 # Candidate Search Highlight
+
 Tag: candidates/feature
 
 ## Goal
+
 Show the active candidate search term inside visible candidate text across table, pipeline, and gallery views.
 
 ## Scope
+
 - Included: case-insensitive highlight for the current search query.
 - Included: table fields for name, email, position, and university.
 - Included: pipeline card fields for name and position.
@@ -22,6 +25,7 @@ Show the active candidate search term inside visible candidate text across table
 - Highlight markup uses inline `mark` elements with token-based styling and no layout-changing behavior.
 
 ## Acceptance criteria
+
 - [x] Searching by name highlights matching name text in table, pipeline, and gallery.
 - [x] Searching by email highlights matching email text in the table.
 - [x] Searching by position highlights visible position text in table, pipeline, and gallery.
@@ -32,6 +36,7 @@ Show the active candidate search term inside visible candidate text across table
 ---
 
 ## Report
+
 Status: Done | Commit: uncommitted
 
 Added a reusable search highlight renderer and wired `searchQuery` through the candidate table, pipeline, and gallery view contracts. The table highlights name, email, position, and university. Pipeline highlights name and position. Gallery highlights name, position, and university.
@@ -39,6 +44,7 @@ Added a reusable search highlight renderer and wired `searchQuery` through the c
 Remaining: full `npm test` timed out across unrelated suites in this environment. Focused affected tests passed after rerun.
 
 ## Verification
+
 - `npm test -- candidateUrlState SearchHighlight TableView PipelineGallery` — passed, 5 files, 33 tests.
 - `npx tsc --noEmit` — passed.
 - `npm run lint` — passed with 2 existing warnings:

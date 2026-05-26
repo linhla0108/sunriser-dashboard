@@ -48,12 +48,7 @@ function AdminUsersInner() {
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase()
     if (!q) return rows
-    return rows.filter(
-      r =>
-        r.full_name.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q) ||
-        r.user_id.toLowerCase().includes(q)
-    )
+    return rows.filter(r => r.full_name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.user_id.toLowerCase().includes(q))
   }, [rows, filter])
 
   async function submitInvite() {
@@ -76,7 +71,7 @@ function AdminUsersInner() {
     <div className="space-y-4 p-3 sm:p-4 lg:p-6">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-h1 font-semibold text-foreground">Users</h1>
+          <h1 className="text-h1 text-foreground font-semibold">Users</h1>
           <p className="text-muted-foreground mt-0.5 text-sm">Manage roles, permissions, and profiles.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -92,7 +87,7 @@ function AdminUsersInner() {
         </div>
       </header>
 
-      <div className="overflow-hidden rounded-3xl border border-foreground/10 bg-white">
+      <div className="border-foreground/10 overflow-hidden rounded-3xl border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-foreground/5 text-muted-foreground">
             <tr>
@@ -107,14 +102,14 @@ function AdminUsersInner() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="text-muted-foreground px-4 py-10 text-center">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="text-muted-foreground px-4 py-10 text-center">
                   No users found.
                 </td>
               </tr>
@@ -123,17 +118,17 @@ function AdminUsersInner() {
               filtered.map(row => {
                 const isSelf = row.user_id === user?.id
                 return (
-                  <tr key={row.user_id} className="border-t border-foreground/5">
+                  <tr key={row.user_id} className="border-foreground/5 border-t">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">{row.full_name || "(unnamed)"}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-foreground font-medium">{row.full_name || "(unnamed)"}</div>
+                      <div className="text-muted-foreground text-xs">
                         {row.email || `${row.user_id.slice(0, 8)}…`}
                         {isSelf ? " · you" : ""}
                       </div>
                     </td>
                     <td className="hidden px-4 py-3 sm:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {row.positions.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                        {row.positions.length === 0 && <span className="text-muted-foreground text-xs">—</span>}
                         {row.positions.map(p => (
                           <span key={p} className={`rounded-full px-2 py-0.5 text-xs ${badge("muted")}`}>
                             {p}
@@ -154,7 +149,9 @@ function AdminUsersInner() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${row.active ? badge("ok") : badge("warn")}`}>{row.active ? "active" : "inactive"}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${row.active ? badge("ok") : badge("warn")}`}>
+                        {row.active ? "active" : "inactive"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
@@ -179,7 +176,13 @@ function AdminUsersInner() {
           <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="invite-email">Email</Label>
-              <Input id="invite-email" type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="name@sunriser.com" />
+              <Input
+                id="invite-email"
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="name@sunriser.com"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="invite-name">Full name (optional)</Label>

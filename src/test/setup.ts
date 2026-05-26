@@ -1,5 +1,5 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import "@testing-library/jest-dom"
+import { vi } from "vitest"
 
 type MockSupabaseUser = {
   id: string
@@ -153,7 +153,7 @@ class MemoryStorage implements Storage {
   }
 }
 
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   configurable: true,
   value: new MemoryStorage(),
 })

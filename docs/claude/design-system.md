@@ -51,7 +51,7 @@ Use one step tighter than "comfortable" defaults at every breakpoint:
 
 ```js
 // Standard card shadow — use inline style, not Tailwind
-boxShadow: 'rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px'
+boxShadow: "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px"
 ```
 
 ## Responsive Layout

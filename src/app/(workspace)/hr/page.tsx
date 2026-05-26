@@ -17,7 +17,11 @@ export default function HrPage() {
   const [editTarget, setEditTarget] = useState<HrStaff | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<HrStaff | null>(null)
 
-  const { staff, filtered, activeCount, inactiveCount, createStaff, updateStaff, deleteStaff, toggleStatus } = useHrStaff(search, roleFilter, statusFilter)
+  const { staff, filtered, activeCount, inactiveCount, createStaff, updateStaff, deleteStaff, toggleStatus } = useHrStaff(
+    search,
+    roleFilter,
+    statusFilter
+  )
 
   function handleAdd() {
     setEditTarget(null)
@@ -47,8 +51,8 @@ export default function HrPage() {
   return (
     <div className="p-3 sm:p-4 lg:p-6">
       <header className="mb-4">
-        <h1 className="font-heading text-xl font-semibold text-foreground">HR Team</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Manage your recruitment and HR staff members.</p>
+        <h1 className="font-heading text-foreground text-xl font-semibold">HR Team</h1>
+        <p className="text-muted-foreground mt-0.5 text-sm">Manage your recruitment and HR staff members.</p>
       </header>
 
       <HrStaffStats total={staff.length} active={activeCount} inactive={inactiveCount} />
@@ -63,25 +67,11 @@ export default function HrPage() {
         onAdd={handleAdd}
       />
 
-      <HrStaffTable
-        staff={filtered}
-        onEdit={handleEdit}
-        onDelete={setDeleteTarget}
-        onToggleStatus={toggleStatus}
-      />
+      <HrStaffTable staff={filtered} onEdit={handleEdit} onDelete={setDeleteTarget} onToggleStatus={toggleStatus} />
 
-      <HrStaffFormDialog
-        open={formOpen}
-        initial={editTarget}
-        onSave={handleSave}
-        onClose={() => setFormOpen(false)}
-      />
+      <HrStaffFormDialog open={formOpen} initial={editTarget} onSave={handleSave} onClose={() => setFormOpen(false)} />
 
-      <HrStaffDeleteDialog
-        staff={deleteTarget}
-        onConfirm={handleDeleteConfirm}
-        onClose={() => setDeleteTarget(null)}
-      />
+      <HrStaffDeleteDialog staff={deleteTarget} onConfirm={handleDeleteConfirm} onClose={() => setDeleteTarget(null)} />
     </div>
   )
 }

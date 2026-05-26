@@ -36,7 +36,12 @@ const CANDIDATE_FIELDS: Array<{ key: keyof Applicant; label: string; aliases: st
   { key: "name", label: "Name", aliases: ["name", "full name", "candidate name", "họ và tên", "ho ten", "tên", "ten"], required: true },
   { key: "email", label: "Email", aliases: ["email", "e-mail", "mail"], required: true },
   { key: "phone", label: "Phone", aliases: ["phone", "phone number", "mobile", "sdt", "số điện thoại", "so dien thoai"], required: true },
-  { key: "position1", label: "Position 1", aliases: ["position 1", "position", "role", "first position", "nguyện vọng 1", "nguyen vong 1"], required: true },
+  {
+    key: "position1",
+    label: "Position 1",
+    aliases: ["position 1", "position", "role", "first position", "nguyện vọng 1", "nguyen vong 1"],
+    required: true,
+  },
   { key: "position2", label: "Position 2", aliases: ["position 2", "second position", "nguyện vọng 2", "nguyen vong 2"] },
   { key: "dob", label: "Date of birth", aliases: ["dob", "date of birth", "birth date", "birthday", "ngày sinh", "ngay sinh"] },
   { key: "university", label: "University", aliases: ["university", "school", "college", "trường", "truong"] },
@@ -44,7 +49,11 @@ const CANDIDATE_FIELDS: Array<{ key: keyof Applicant; label: string; aliases: st
   { key: "major", label: "Major", aliases: ["major", "field of study", "ngành", "nganh"] },
   { key: "gpa", label: "GPA", aliases: ["gpa", "grade", "score", "điểm", "diem"] },
   { key: "hasExperience", label: "Has experience", aliases: ["has experience", "experience", "kinh nghiệm", "kinh nghiem"] },
-  { key: "experienceDesc", label: "Experience description", aliases: ["experience description", "experience desc", "kinh nghiệm chi tiết", "kinh nghiem chi tiet"] },
+  {
+    key: "experienceDesc",
+    label: "Experience description",
+    aliases: ["experience description", "experience desc", "kinh nghiệm chi tiết", "kinh nghiem chi tiet"],
+  },
   { key: "portfolio", label: "Portfolio", aliases: ["portfolio", "cv", "resume", "github", "behance"] },
   { key: "fullTime", label: "Full-time", aliases: ["full-time", "full time", "availability", "toàn thời gian", "toan thoi gian"] },
   { key: "discoveryChannel", label: "Discovery channel", aliases: ["discovery channel", "source", "channel", "biết qua", "biet qua"] },
@@ -201,7 +210,9 @@ export async function parseUploadFile(file: File): Promise<ParsedUploadDataset> 
 
   const parsed = JSON.parse(text) as unknown
   const records = Array.isArray(parsed) ? parsed : [parsed]
-  const objectRecords = records.filter((record): record is Record<string, unknown> => !!record && typeof record === "object" && !Array.isArray(record))
+  const objectRecords = records.filter(
+    (record): record is Record<string, unknown> => !!record && typeof record === "object" && !Array.isArray(record)
+  )
   const columns = Array.from(new Set(objectRecords.flatMap(record => Object.keys(record))))
   const rows = objectRecords.map((record, index) => ({
     rowNumber: index + 1,
@@ -212,7 +223,10 @@ export async function parseUploadFile(file: File): Promise<ParsedUploadDataset> 
 
 export function addColumnsToParsedDataset(dataset: ParsedUploadDataset, columnNames: string[]) {
   const existing = new Set(dataset.columns.map(column => normalizeKey(column)))
-  const additions = columnNames.map(column => column.trim()).filter(Boolean).filter(column => !existing.has(normalizeKey(column)))
+  const additions = columnNames
+    .map(column => column.trim())
+    .filter(Boolean)
+    .filter(column => !existing.has(normalizeKey(column)))
   if (additions.length === 0) return dataset
 
   return {
@@ -234,7 +248,10 @@ export function analyzeUploadDataset(dataset: ParsedUploadDataset): UploadAnalys
   const normalizedColumns = new Map(dataset.columns.map(column => [normalizeKey(column), column]))
   const matchedFields = Object.fromEntries(
     CANDIDATE_FIELDS.flatMap(field => {
-      const matched = field.aliases.map(normalizeKey).map(alias => normalizedColumns.get(alias)).find(Boolean)
+      const matched = field.aliases
+        .map(normalizeKey)
+        .map(alias => normalizedColumns.get(alias))
+        .find(Boolean)
       return matched ? [[field.key, matched]] : []
     })
   ) as Partial<Record<keyof Applicant, string>>

@@ -74,24 +74,16 @@ export function BulkActionBar({ selectedCount, onClear, onBulkBatch, onBulkPic, 
       </span>
 
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+        <PopoverTrigger className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border px-3 text-xs font-medium shadow-sm transition-colors">
           Actions <ChevronDown className="size-3" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-52 p-1.5">
           {step === "menu" && (
             <>
-              <button
-                type="button"
-                onClick={() => setStep("batch")}
-                className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm"
-              >
+              <button type="button" onClick={() => setStep("batch")} className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm">
                 Set Batch
               </button>
-              <button
-                type="button"
-                onClick={() => setStep("pic")}
-                className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm"
-              >
+              <button type="button" onClick={() => setStep("pic")} className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm">
                 Assign PIC
               </button>
               <div className="bg-border my-1 h-px" />
@@ -191,19 +183,10 @@ export function BulkActionBar({ selectedCount, onClear, onBulkBatch, onBulkPic, 
               </p>
               <p className="text-xs text-[#767676]">This removes them from the local view only.</p>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 flex-1 rounded-full text-xs"
-                  onClick={() => setStep("menu")}
-                >
+                <Button size="sm" variant="outline" className="h-7 flex-1 rounded-full text-xs" onClick={() => setStep("menu")}>
                   Cancel
                 </Button>
-                <Button
-                  size="sm"
-                  className="h-7 flex-1 rounded-full bg-red-600 text-xs text-white hover:bg-red-700"
-                  onClick={confirmDelete}
-                >
+                <Button size="sm" className="h-7 flex-1 rounded-full bg-red-600 text-xs text-white hover:bg-red-700" onClick={confirmDelete}>
                   Delete
                 </Button>
               </div>

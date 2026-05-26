@@ -38,12 +38,9 @@ export function PublicReport({ shareId }: { shareId: string }) {
   if (!snapshot) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-        <h1 className="font-heading text-2xl font-semibold text-foreground">Report not found</h1>
-        <p className="mt-2 text-sm text-muted-foreground">This share link is invalid or has expired on this device.</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-        >
+        <h1 className="font-heading text-foreground text-2xl font-semibold">Report not found</h1>
+        <p className="text-muted-foreground mt-2 text-sm">This share link is invalid or has expired on this device.</p>
+        <Link href="/login" className="bg-primary text-primary-foreground mt-6 inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold">
           Return to login
         </Link>
       </section>
@@ -56,18 +53,18 @@ export function PublicReport({ shareId }: { shareId: string }) {
   return (
     <section className="mx-auto max-w-3xl px-4 pb-12 sm:px-6">
       <header className="mb-6">
-        <p className="text-xs tracking-widest text-muted-foreground uppercase">Shared report</p>
-        <h1 className="font-heading mt-1 text-2xl font-semibold text-foreground">
+        <p className="text-muted-foreground text-xs tracking-widest uppercase">Shared report</p>
+        <h1 className="font-heading text-foreground mt-1 text-2xl font-semibold">
           {candidateCount} candidate{candidateCount === 1 ? "" : "s"} reviewed
         </h1>
-        <p className="mt-1 text-xs text-muted-foreground">Generated {generated}</p>
+        <p className="text-muted-foreground mt-1 text-xs">Generated {generated}</p>
       </header>
 
       <div className="space-y-4">
         {snapshot.sections.map(section => (
-          <article key={section.id} className="rounded-2xl border border-foreground/10 bg-card p-5">
-            <h2 className="font-heading text-base font-semibold text-foreground">{section.title}</h2>
-            <p className="mt-2 text-sm whitespace-pre-line text-foreground/85">{section.content}</p>
+          <article key={section.id} className="border-foreground/10 bg-card rounded-2xl border p-5">
+            <h2 className="font-heading text-foreground text-base font-semibold">{section.title}</h2>
+            <p className="text-foreground/85 mt-2 text-sm whitespace-pre-line">{section.content}</p>
           </article>
         ))}
       </div>

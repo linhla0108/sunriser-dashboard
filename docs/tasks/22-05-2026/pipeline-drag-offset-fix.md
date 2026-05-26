@@ -1,20 +1,25 @@
 # Pipeline & Pinbar Drag Offset Fix
+
 Tag: candidates/fix
 
 ## Goal
+
 Fix DragOverlay appearing far from the mouse cursor when dragging cards in PipelineView and chips in PinnedToolbar.
 
 ## Scope
+
 - Included: `PipelineCard` in `PipelineView.tsx`, `PinnedChip` in `PinnedToolbar.tsx`
 - Excluded: drag behavior in `ApplicantTable` (different setup, unaffected)
 
 ## Acceptance criteria
+
 - DragOverlay follows the cursor tightly from the grip handle in both PipelineView and PinnedToolbar
 - No TypeScript errors
 
 ---
 
 ## Report
+
 Status: Done | Commit: —
 
 Three separate issues — all three required to fully fix the bug.

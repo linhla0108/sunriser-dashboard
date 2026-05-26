@@ -27,14 +27,9 @@ interface Props {
 export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onRoleChange, onStatusChange, onAdd }: Props) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <div className="relative flex-1 min-w-[160px]">
-        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search staff..."
-          value={search}
-          onChange={e => onSearch(e.target.value)}
-          className="rounded-full pl-9 text-sm h-9"
-        />
+      <div className="relative min-w-[160px] flex-1">
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+        <Input placeholder="Search staff..." value={search} onChange={e => onSearch(e.target.value)} className="h-9 rounded-full pl-9 text-sm" />
       </div>
 
       <SearchableSelect
@@ -55,7 +50,7 @@ export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onR
         className="h-9 w-[120px] rounded-full text-sm"
       />
 
-      <Button onClick={onAdd} className="h-9 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 ml-auto">
+      <Button onClick={onAdd} className="bg-primary text-primary-foreground hover:bg-primary/90 ml-auto h-9 rounded-full px-4 text-sm font-semibold">
         <Plus className="mr-1.5 h-3.5 w-3.5" />
         Add Staff
       </Button>

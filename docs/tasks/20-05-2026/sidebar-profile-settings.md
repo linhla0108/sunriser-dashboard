@@ -1,14 +1,18 @@
 # Sidebar — Profile & Settings Cleanup
+
 Tag: ui/fix
 
 ## Goal
+
 Clean up the sidebar footer: remove "Mock workspace", move Settings to the footer as a gear icon, and place Profile + Settings in a single row.
 
 ## Scope
+
 - Included: nav item height, gap between items, footer layout, Settings relocation, Profile icon
 - Excluded: route changes, auth integration, real user data
 
 ## Acceptance criteria
+
 - "Mock workspace" chip removed
 - Settings removed from nav items list
 - Nav items use fit-height (no `size="lg"`) with `gap-0.5` between items
@@ -19,9 +23,11 @@ Clean up the sidebar footer: remove "Mock workspace", move Settings to the foote
 ---
 
 ## Report
+
 Status: Done
 
 Changes in `src/components/layout/Sidebar.tsx`:
+
 - Removed `{ href: "/settings", label: "Settings", icon: Settings }` from `NAV_ITEMS`
 - Removed `size="lg"` from `SidebarMenuButton`; added `gap-0.5` to `SidebarMenu` for tight item spacing
 - Removed "Mock workspace" `SidebarFooter` block entirely

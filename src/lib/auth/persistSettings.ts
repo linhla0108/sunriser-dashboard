@@ -20,12 +20,7 @@ export async function persistUserSettings(patch: SettingsPatch): Promise<boolean
     } = await supabase.auth.getUser()
     if (!user) return false
 
-    const { error } = await supabase
-      .from("user_settings")
-      .update(patch)
-      .eq("user_id", user.id)
-      .select("user_id")
-      .maybeSingle()
+    const { error } = await supabase.from("user_settings").update(patch).eq("user_id", user.id).select("user_id").maybeSingle()
 
     return !error
   } catch {

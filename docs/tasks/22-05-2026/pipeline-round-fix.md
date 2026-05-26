@@ -1,4 +1,5 @@
 # Pipeline Round Fix — Round Switcher + Correct Status Columns
+
 Tag: candidates/fix
 
 ## Goal
@@ -53,18 +54,21 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Description:** Extend the data layer so `"round2"` is a valid `CandidatePipelineGroup` and `groupApplicants()` can produce round2 status columns. This is the foundation everything else depends on.
 
 **Acceptance criteria:**
+
 - [ ] `CANDIDATE_PIPELINE_GROUP_KEYS` includes `"round2"` → `CandidatePipelineGroup` type now includes `"round2"`
 - [ ] `ROUND_2_GROUPS` exported from `viewUtils.ts` with keys `not-reviewed | pass | waiting | fail` and tests against `round2Result`
 - [ ] `round2Tone(result?: string)` exported from `viewUtils.ts`, same colour logic as `round1Tone`
 - [ ] `groupApplicants(items, "round2")` returns 4 columns grouping by `round2Result`
 
 **Verification:**
+
 - [ ] `npx tsc --noEmit` — no errors
 - [ ] `npm run lint` — clean
 
 **Dependencies:** None
 
 **Files:**
+
 - `src/lib/candidates/candidateUrlState.ts` — add `"round2"` to `CANDIDATE_PIPELINE_GROUP_KEYS`
 - `src/components/views/viewUtils.ts` — add `ROUND_2_GROUPS`, `round2Tone()`, extend `groupApplicants`
 
@@ -87,16 +91,19 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Description:** When a card is dragged across columns in round2 mode, `updateItemColumn` must write to `round2Result`, not `round1Result`. Currently there is no branch for `groupBy === "round2"`.
 
 **Acceptance criteria:**
+
 - [ ] `ROUND2_KEY_TO_VALUE` map defined in `PipelineView.tsx` mapping `not-reviewed | pass | waiting | fail` → `round2Result` string values
 - [ ] `updateItemColumn()` branch for `groupBy === "round2"` returns `{ ...item, round2Result: ROUND2_KEY_TO_VALUE[columnKey] }`
 - [ ] Existing round1 branch unchanged
 
 **Verification:**
+
 - [ ] `npx tsc --noEmit` — no errors
 
 **Dependencies:** Task 1
 
 **Files:**
+
 - `src/components/views/PipelineView.tsx` — add `ROUND2_KEY_TO_VALUE`, extend `updateItemColumn`
 
 **Scope:** XS (1 file, ~8 lines)
@@ -117,6 +124,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Description:** Replace the round selection mechanism in the header with a pill-style "Round 1 | Round 2" tab toggle. Remove "Round 1" from the Group by `<select>` (keep Position / Batch). Update `PipelineCard` and `PipelineCardOverlay` to display the correct round's result based on active `groupBy`.
 
 **Acceptance criteria:**
+
 - [ ] Pill toggle "Round 1 | Round 2" rendered in the header, using `rounded-full` pills, active state `bg-primary text-white`, inactive `bg-foreground/5 text-muted-foreground`
 - [ ] Clicking a round tab calls `setGroupBy("round1")` or `setGroupBy("round2")`
 - [ ] Group by `<select>` retains only "Position" and "Batch" options
@@ -126,6 +134,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 - [ ] No styled-jsx
 
 **Verification:**
+
 - [ ] `npx tsc --noEmit` — no errors
 - [ ] `npm run lint` — clean
 - [ ] Manual: switch to Round 2 tab → columns change → cards show round2Result badge
@@ -135,6 +144,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Dependencies:** Tasks 1 and 2
 
 **Files:**
+
 - `src/components/views/PipelineView.tsx` — header UI, pass `groupBy` to `PipelineCard` and `PipelineCardOverlay`
 
 **Scope:** S (1 file, ~30–40 lines changed)
@@ -149,17 +159,18 @@ Build bottom-up: type layer → data/util layer → UI layer.
 
 **Color map (Tailwind v4 classes):**
 
-| Status key | Column bg | Overlay bg | Overlay border | Badge bg |
-|---|---|---|---|---|
-| `pass` | `bg-emerald-50/30` | `bg-emerald-50/60` | `border-emerald-300/60` | `bg-emerald-100/80` |
-| `fail` | `bg-rose-50/30` | `bg-rose-50/60` | `border-rose-300/60` | `bg-rose-100/80` |
-| `waiting` | `bg-amber-50/30` | `bg-amber-50/60` | `border-amber-300/60` | `bg-amber-100/80` |
-| `not-reviewed` | `bg-foreground/[0.02]` | `bg-foreground/5` | `border-foreground/20` | `bg-foreground/8` |
-| any other (position/batch) | none | `bg-primary/8` | `border-primary/40` | `bg-primary/10` (existing) |
+| Status key                 | Column bg              | Overlay bg         | Overlay border          | Badge bg                   |
+| -------------------------- | ---------------------- | ------------------ | ----------------------- | -------------------------- |
+| `pass`                     | `bg-emerald-50/30`     | `bg-emerald-50/60` | `border-emerald-300/60` | `bg-emerald-100/80`        |
+| `fail`                     | `bg-rose-50/30`        | `bg-rose-50/60`    | `border-rose-300/60`    | `bg-rose-100/80`           |
+| `waiting`                  | `bg-amber-50/30`       | `bg-amber-50/60`   | `border-amber-300/60`   | `bg-amber-100/80`          |
+| `not-reviewed`             | `bg-foreground/[0.02]` | `bg-foreground/5`  | `border-foreground/20`  | `bg-foreground/8`          |
+| any other (position/batch) | none                   | `bg-primary/8`     | `border-primary/40`     | `bg-primary/10` (existing) |
 
 **Implementation approach:** Add `getColumnTheme(columnKey: string)` to `viewUtils.ts` returning a typed object `{ colBg, overlayBg, overlayBorder, badgeBg, badgeText, badgeIcon }`. `PipelineColumn` calls it and applies to column wrapper + overlay elements.
 
 **Acceptance criteria:**
+
 - [ ] `getColumnTheme` exported from `viewUtils.ts`; returns correct tokens per key; unknown keys fall back to primary/neutral
 - [ ] Column wrapper `<div>` has a subtle bg tint for round-status columns
 - [ ] Cross-column drag-over overlay uses per-column border + bg color, not uniform primary
@@ -167,6 +178,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 - [ ] No Tailwind v4 violations (no multiline className, no `--spacing-*`)
 
 **Verification:**
+
 - [ ] `npx tsc --noEmit` — no errors
 - [ ] `npm run lint` — clean
 - [ ] Manual: drag card over "Pass" column → green tinted overlay; over "Fail" → rose
@@ -174,6 +186,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Dependencies:** Task 3 (column rendering already works)
 
 **Files:**
+
 - `src/components/views/viewUtils.ts` — add `getColumnTheme()`
 - `src/components/views/PipelineView.tsx` — apply theme in `PipelineColumn`
 
@@ -196,12 +209,14 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Description:** Remove the explicit "View" button from the card bottom. Remove the `GripVertical` drag handle button. Spread `listeners` on the `<article>` element so the whole card is draggable. Add `onClick` on `<article>` to open detail. The existing `PointerSensor` `activationConstraint: { distance: 6 }` already prevents accidental drag on short clicks — no additional mechanism needed.
 
 **Interaction contract:**
+
 - Short press / click → `onClick` fires → `onViewDetail?.(applicant)` called
 - Press + move ≥6px → dnd-kit drag activates → `onClick` does NOT fire (pointer event consumed by dnd-kit)
 - `cursor-pointer` on card (click is primary action; drag is secondary)
 - During active drag: card becomes `opacity-40` (existing), `cursor-grabbing` via CSS `[data-dragging] { cursor: grabbing }`
 
 **What changes in `PipelineCard`:**
+
 - Remove `setActivatorNodeRef` assignment from grip button
 - Remove `<Button>` grip handle element entirely
 - Remove `<Button>` "View" element entirely
@@ -211,9 +226,11 @@ Build bottom-up: type layer → data/util layer → UI layer.
 - Adjust avatar/name layout since grip column is gone (reclaim the ~20px horizontal space)
 
 **What changes in `PipelineCardOverlay`:**
+
 - No grip icon needed — it's just a visual preview, no listeners
 
 **Acceptance criteria:**
+
 - [ ] Clicking a card (no drag movement) opens detail view
 - [ ] Dragging a card (≥6px movement) moves it between columns without firing detail open
 - [ ] No "View" button visible on any card
@@ -222,6 +239,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 - [ ] Card layout fills the freed horizontal space (avatar + name left-aligned, no gap for handle)
 
 **Verification:**
+
 - [ ] `npx tsc --noEmit` — no errors
 - [ ] `npm run lint` — clean
 - [ ] Manual: single click → detail opens
@@ -230,6 +248,7 @@ Build bottom-up: type layer → data/util layer → UI layer.
 **Dependencies:** Task 3 (card structure stable after badge + groupBy prop changes)
 
 **Files:**
+
 - `src/components/views/PipelineView.tsx` — `PipelineCard` and `PipelineCardOverlay`
 
 **Scope:** S (1 file, ~20 lines removed / changed)
@@ -247,13 +266,13 @@ Build bottom-up: type layer → data/util layer → UI layer.
 
 ## Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| `groupBy` prop threading — `PipelineCard` currently doesn't receive `groupBy` | Med | Pass as prop in Task 3; `PipelineCardOverlay` also needs it |
-| round2Result sparse in mock (only 13 candidates) | Low | "Not Reviewed" column will dominate — accurate representation |
-| Whole-card drag vs click conflict | Med | `PointerSensor` `distance: 6` constraint already in place — confirmed sufficient |
-| Turbopack: multiline className | Low | All classNames must be single-line strings |
-| Column bg tint Tailwind purge | Low | Use static class strings, not dynamic template strings; Tailwind v4 scans source |
+| Risk                                                                          | Impact | Mitigation                                                                       |
+| ----------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| `groupBy` prop threading — `PipelineCard` currently doesn't receive `groupBy` | Med    | Pass as prop in Task 3; `PipelineCardOverlay` also needs it                      |
+| round2Result sparse in mock (only 13 candidates)                              | Low    | "Not Reviewed" column will dominate — accurate representation                    |
+| Whole-card drag vs click conflict                                             | Med    | `PointerSensor` `distance: 6` constraint already in place — confirmed sufficient |
+| Turbopack: multiline className                                                | Low    | All classNames must be single-line strings                                       |
+| Column bg tint Tailwind purge                                                 | Low    | Use static class strings, not dynamic template strings; Tailwind v4 scans source |
 
 ## Open questions
 

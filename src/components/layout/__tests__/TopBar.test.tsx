@@ -2,15 +2,22 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { AuthProvider } from "@/lib/auth/AuthProvider"
 import { TopBar } from "../TopBar"
 
+vi.mock("@/lib/auth/useAuth", () => ({
+  useAuth: () => ({
+    user: null,
+    loading: false,
+    role: "admin",
+    isAdmin: true,
+    can: () => true,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  }),
+}))
+
 function TestProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProvider>
-      <TooltipProvider delay={0}>{children}</TooltipProvider>
-    </AuthProvider>
-  )
+  return <TooltipProvider delay={0}>{children}</TooltipProvider>
 }
 
 describe("TopBar", () => {

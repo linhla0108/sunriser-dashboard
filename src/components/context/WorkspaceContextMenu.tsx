@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Download, FileText, Keyboard, BarChart3, FilterX, Link2 } from "lucide-react"
+import { Copy, Download, FileText, Keyboard, FilterX, Link2 } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -26,7 +26,7 @@ interface WorkspaceContextMenuProps {
 
 function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
   const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
-  const rows = applicants.map((a) => [
+  const rows = applicants.map(a => [
     a.name,
     a.email,
     a.position1,
@@ -37,7 +37,7 @@ function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
     a.round1Result ?? "",
     a.round2Result ?? "",
   ])
-  const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n")
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n")
   const blob = new Blob([csv], { type: "text/csv" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -47,11 +47,7 @@ function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
   URL.revokeObjectURL(url)
 }
 
-const SHORTCUTS = [
-  { label: "Open AI Chat", keys: "⌘J" },
-  { label: "Open Notes", keys: "⌘N" },
-  { label: "Create Report", keys: "⌘R" },
-]
+const SHORTCUTS = [{ label: "Focus view switcher first, then press 1-3" }, { label: "Focus table pager first, then press arrow keys" }]
 
 export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters }: WorkspaceContextMenuProps) {
   const [copied, setCopied] = useState(false)
@@ -74,7 +70,11 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
   }
 
   return (
-    <ContextMenu onOpenChange={(open) => { if (open) handleContextOpen() }}>
+    <ContextMenu
+      onOpenChange={open => {
+        if (open) handleContextOpen()
+      }}
+    >
       <ContextMenuTrigger className="contents select-text">{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuItem onClick={handleCopy} disabled={!selectionText}>
@@ -98,13 +98,11 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
           <ContextMenuSubContent>
             <ContextMenuGroup>
               <ContextMenuLabel>Download as</ContextMenuLabel>
-              <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>
-                CSV — all applicants
-              </ContextMenuItem>
+              <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>CSV — all applicants</ContextMenuItem>
               <ContextMenuItem
                 onClick={() =>
                   exportCSV(
-                    mockApplicants.filter((a) => a.round1Result === "Passed"),
+                    mockApplicants.filter(a => a.round1Result === "Passed"),
                     "passed-applicants.csv"
                   )
                 }
@@ -119,7 +117,6 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
           <ContextMenuItem onClick={onCreateReport}>
             <FileText />
             Create report
-            <ContextMenuShortcut>⌘R</ContextMenuShortcut>
           </ContextMenuItem>
         )}
 
@@ -140,11 +137,9 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
           <ContextMenuSubContent className="w-52">
             <ContextMenuGroup>
               <ContextMenuLabel>Shortcuts</ContextMenuLabel>
-              {SHORTCUTS.map((s) => (
-                <ContextMenuItem key={s.label} disabled>
-                  <BarChart3 className="opacity-0" />
-                  {s.label}
-                  <ContextMenuShortcut>{s.keys}</ContextMenuShortcut>
+              {SHORTCUTS.map(shortcut => (
+                <ContextMenuItem key={shortcut.label} disabled>
+                  {shortcut.label}
                 </ContextMenuItem>
               ))}
             </ContextMenuGroup>
