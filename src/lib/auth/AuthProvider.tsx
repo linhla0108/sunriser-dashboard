@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { loadProfileData, PROFILE_DEFAULTS } from "./loadProfile"
@@ -11,6 +11,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null)
 const REMEMBER_UNTIL_KEY = "sunriser.auth.rememberUntil"
 const SESSION_ONLY_KEY = "sunriser.auth.sessionOnly"
 const REMEMBER_DURATION_MS = 6 * 24 * 60 * 60 * 1000
+const INITIAL_SESSION_TIMEOUT_MS = 5000
 
 function roleFromAppMetadata(user: User): Exclude<AppRole, "public"> {
   const role = user.app_metadata?.role
@@ -82,6 +83,8 @@ function clearUserData() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
+  const initialSessionResolvedRef = useRef(false)
+  const initialSessionTimedOutRef = useRef(false)
 
   // undefined = onAuthStateChange hasn't fired yet (auth lock not yet released)
   // null      = no authenticated session
@@ -99,11 +102,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // forever after a hard reload.
   useEffect(() => {
     let mounted = true
+    const initialSessionTimer = window.setTimeout(() => {
+      if (!mounted || initialSessionResolvedRef.current) return
+      initialSessionResolvedRef.current = true
+      initialSessionTimedOutRef.current = true
+      setAuthUser(null)
+      setUser(null)
+      setLoading(false)
+    }, INITIAL_SESSION_TIMEOUT_MS)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
 
       if (event === "SIGNED_OUT") {
+        initialSessionResolvedRef.current = true
+        window.clearTimeout(initialSessionTimer)
         setAuthUser(null)
         setUser(null)
         setLoading(false)
@@ -121,7 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // INITIAL_SESSION | SIGNED_IN | USER_UPDATED
+      initialSessionResolvedRef.current = true
+      window.clearTimeout(initialSessionTimer)
       if (session?.user) {
+        if (initialSessionTimedOutRef.current) setLoading(true)
         setAuthUser(session.user)
         // loading stays true — Effect 2 will resolve it after profile loads
       } else {
@@ -133,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false
+      window.clearTimeout(initialSessionTimer)
       subscription.unsubscribe()
     }
   }, [supabase])
@@ -178,13 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Session-only preference check — reads localStorage, no Supabase calls.
     if (!shouldKeepSession()) {
-      setUser(null)
-      setLoading(false)
       clearRememberPreference()
-      // Schedule signOut outside the current call stack so it doesn't re-enter
-      // the auth system while Effect 1's subscription may still be processing.
-      setTimeout(() => { supabase.auth.signOut().catch(() => {}) }, 0)
-      return
+      const signOutTimer = window.setTimeout(() => {
+        if (cancelled) return
+        setUser(null)
+        setLoading(false)
+        supabase.auth.signOut().catch(() => {})
+      }, 0)
+      return () => {
+        cancelled = true
+        window.clearTimeout(signOutTimer)
+      }
     }
 
     buildAppUser(authUser).then(next => {
