@@ -300,9 +300,13 @@ export default function DraggableRow({
           ? "border-l-2 border-l-amber-300 bg-amber-50"
           : ""
   const selectedRowStyle = isSelected
-    ? status
-      ? "shadow-[inset_0_0_0_1px_rgba(255,85,51,0.24)]"
-      : "border-l-2 border-l-[#FF5533] bg-[#fff5f3] shadow-[inset_0_0_0_1px_rgba(255,85,51,0.22)]"
+    ? status === "Passed"
+      ? "shadow-[inset_2px_0_0_rgb(110,231,183),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
+      : status === "Failed"
+        ? "shadow-[inset_2px_0_0_rgb(252,165,165),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
+        : status === "Waiting list"
+          ? "shadow-[inset_2px_0_0_rgb(252,211,77),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
+          : "bg-[#fff5f3] shadow-[inset_2px_0_0_#FF5533,inset_0_0_0_1px_rgba(255,85,51,0.22)]"
     : ""
 
   function handleContextMenu(e: React.MouseEvent) {

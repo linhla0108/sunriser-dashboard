@@ -43,3 +43,23 @@ export interface DashboardStats {
   passRate: number
   avgGpa: number
 }
+
+export interface TimelineEntry {
+  id: string
+  startDate: string
+  endDate?: string
+  batch: string
+  todo: string
+  pic: string
+  note: string
+}
+
+export const TIMELINE_BATCHES = ["1", "2", "3", "HR", "General"] as const
+
+export type TimelineBatch = (typeof TIMELINE_BATCHES)[number]
+
+export function normalizeTimelineBatch(value: string): TimelineBatch {
+  const trimmed = value.trim()
+  if (trimmed === "") return "General"
+  return (TIMELINE_BATCHES as readonly string[]).includes(trimmed) ? (trimmed as TimelineBatch) : "General"
+}

@@ -193,13 +193,13 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
           <p className="text-muted-foreground text-sm">Click a card to view details. Drag to move between columns.</p>
         </div>
         <div className="bg-foreground/5 flex flex-wrap items-center gap-0.5 rounded-full p-1">
-          {(["round1", "round2", "position", "batch"] as const).map(key => (
+          {(["round1", "round2"] as const).map(key => (
             <button
               key={key}
               onClick={() => setGroupBy(key)}
               className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${groupBy === key ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
-              {key === "round1" ? "Round 1" : key === "round2" ? "Round 2" : key === "position" ? "Position" : "Batch"}
+              {key === "round1" ? "Round 1" : "Round 2"}
             </button>
           ))}
         </div>
@@ -341,7 +341,13 @@ function PipelineCard({
         ) : (
           <span className="text-muted-foreground/60 text-xs">No PIC</span>
         )}
-        <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
+        <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-semibold">
+          <span className="min-w-0 truncate" title={applicant.university}>
+            <SearchHighlight text={applicant.university} query={searchQuery} />
+          </span>
+          <span className="text-foreground/30">·</span>
+          <span className="shrink-0">GPA {applicant.gpa.toFixed(1)}</span>
+        </div>
       </div>
     </article>
   )
@@ -372,7 +378,13 @@ function PipelineCardOverlay({ applicant }: { applicant: Applicant }) {
         ) : (
           <span className="text-muted-foreground/60 text-xs">No PIC</span>
         )}
-        <span className="text-muted-foreground text-xs font-semibold">GPA {applicant.gpa.toFixed(1)}</span>
+        <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-semibold">
+          <span className="min-w-0 truncate" title={applicant.university}>
+            {applicant.university}
+          </span>
+          <span className="text-foreground/30">·</span>
+          <span className="shrink-0">GPA {applicant.gpa.toFixed(1)}</span>
+        </div>
       </div>
     </article>
   )

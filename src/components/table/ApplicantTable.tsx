@@ -477,7 +477,7 @@ export default function ApplicantTable({
                       <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]" data-cid="selected-section-panel">
                         <TableCell colSpan={11} className="p-0">
                           <div ref={selectedPanelRef} className="overflow-hidden">
-                            <table className="w-full min-w-[600px] caption-bottom text-sm">
+                            <table className="-ml-px w-[calc(100%+1px)] min-w-[601px] caption-bottom text-sm">
                               <tbody>
                                 {selectedItems.map((applicant, i) => (
                                   <DraggableRow

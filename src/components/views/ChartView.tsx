@@ -132,10 +132,13 @@ function ChartCard({ id, title, children }: { id: string; title: string; childre
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-v2-card=""
-      className={`rounded-3xl bg-white p-4 shadow-[rgba(4,23,43,0.05)_0px_0px_0px_1px,rgba(0,0,0,0.1)_0px_20px_25px_-5px,rgba(0,0,0,0.1)_0px_8px_10px_-6px] ${isDragging ? "opacity-60" : ""}`}
+      className={`group rounded-3xl bg-white p-5 shadow-[rgba(4,23,43,0.08)_0px_0px_0px_1px,rgba(15,23,42,0.06)_0px_1px_2px,rgba(15,23,42,0.10)_0px_12px_24px_-8px,rgba(15,23,42,0.06)_0px_24px_48px_-12px] transition-shadow duration-200 hover:shadow-[rgba(255,85,51,0.22)_0px_0px_0px_1px,rgba(15,23,42,0.08)_0px_2px_4px,rgba(15,23,42,0.14)_0px_18px_32px_-8px,rgba(15,23,42,0.08)_0px_28px_56px_-12px] ${isDragging ? "opacity-60" : ""}`}
     >
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-semibold tracking-widest text-[#6B5549] uppercase">{title}</h3>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 rounded-full bg-[#FF5533]" aria-hidden="true" />
+          <h3 className="text-xs font-semibold tracking-widest text-[#1b1b1b] uppercase">{title}</h3>
+        </div>
         <Button
           variant="plain"
           size="plain"
@@ -143,7 +146,7 @@ function ChartCard({ id, title, children }: { id: string; title: string; childre
           {...listeners}
           type="button"
           aria-label={`Drag ${title}`}
-          className="cursor-grab rounded-lg p-1 text-[#767676] hover:bg-[#f9f9f9]"
+          className="cursor-grab rounded-lg p-1 text-[#767676] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#f9f9f9] focus:opacity-100"
         >
           <GripVertical className="size-4" />
         </Button>
