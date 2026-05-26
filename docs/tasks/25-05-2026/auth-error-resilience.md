@@ -150,4 +150,15 @@ if (res.status === 503) {
 
 ## Report
 
-Status: Pending
+Status: Done — commit b512f95
+
+All 6 fixes shipped. TypeScript clean. Test suite: 343/343 passing (+7 new tests).
+
+| Fix | What changed |
+|-----|-------------|
+| 1 — proxy.ts 500 | `getClaims()` wrapped in try/catch → JWKS unreachable = redirect to /login |
+| 2 — confirm route 500 | `verifyOtp()` wrapped in try/catch → Supabase unreachable = `/login?error=confirmation_failed` |
+| 3 — Safari storage crash | `setRememberPreference` wraps `setItem` in try/catch; `signOut()` wrapped in try/catch |
+| 4 — 429 UX | `signIn()` and `ForgotForm` map `error.status === 429` → "Too many attempts…" |
+| 5 — 401 vs 403 | `requireAdmin()` returns `status: 401` for unauthenticated, `403` for non-admin; all 3 admin routes use it |
+| 6 — 503 silent swallow | `refreshUserClaims` now logs `console.warn` when 503 instead of silently ignoring |
