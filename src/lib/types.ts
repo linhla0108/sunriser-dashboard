@@ -11,17 +11,54 @@ export interface Applicant {
   major: string
   gpa: number
   hasExperience: boolean
+  academicFile?: string
   experienceDesc?: string
   portfolio?: string
+  portfolioLinks?: string[]
   fullTime: boolean
+  internshipCommitment?: string
+  postInternshipFullTime?: string
   discoveryChannel: string
+  internalReferrer?: string
+  sunStudioMessage?: string
   submittedAt: string
+  typeformSubmittedAt?: string
+  typeformToken?: string
   batch: number
+  sourceBatch?: number
+  sourcePic?: string
+  sourcePositions?: string
+  screeningNote?: string
   pic?: string
   round1Result?: string
   round1Notes?: string
   round2Result?: string
+  note?: string
 }
+
+export type CandidateTypeformSupplement = Pick<Applicant, "id"> &
+  Partial<
+    Pick<
+      Applicant,
+      | "academicFile"
+      | "hasExperience"
+      | "experienceDesc"
+      | "portfolio"
+      | "portfolioLinks"
+      | "internshipCommitment"
+      | "postInternshipFullTime"
+      | "discoveryChannel"
+      | "internalReferrer"
+      | "sunStudioMessage"
+      | "typeformSubmittedAt"
+      | "typeformToken"
+      | "sourceBatch"
+      | "sourcePic"
+      | "sourcePositions"
+      | "screeningNote"
+      | "note"
+    >
+  >
 
 export type Position =
   | "AI Engineering Intern"

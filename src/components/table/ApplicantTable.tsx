@@ -334,7 +334,7 @@ export default function ApplicantTable({
         >
           <Table
             containerClassName="max-h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:max-h-[calc(100dvh-15.5rem)]"
-            className="min-w-[600px]"
+            className="min-w-[1180px]"
           >
             <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
               <TableRow className="border-border bg-white hover:bg-white">
@@ -388,6 +388,18 @@ export default function ApplicantTable({
                     GPA
                     <SortIcon col="gpa" sortKey={sortKey} sortDir={sortDir} />
                   </Button>
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
+                  Academic
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
+                  Description
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
+                  Portfolio
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
+                  Message
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
                   <Button
@@ -459,7 +471,7 @@ export default function ApplicantTable({
                 {hasSelectedSection ? (
                   <>
                     <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]">
-                      <TableCell colSpan={11} className="p-0">
+                      <TableCell colSpan={15} className="p-0">
                         <Button
                           type="button"
                           variant="plain"
@@ -475,9 +487,9 @@ export default function ApplicantTable({
                     </TableRow>
                     {selectedPanelMounted ? (
                       <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]" data-cid="selected-section-panel">
-                        <TableCell colSpan={11} className="p-0">
+                        <TableCell colSpan={15} className="p-0">
                           <div ref={selectedPanelRef} className="overflow-hidden">
-                            <table className="-ml-px w-[calc(100%+1px)] min-w-[601px] caption-bottom text-sm">
+                            <table className="-ml-px w-[calc(100%+1px)] min-w-[1181px] caption-bottom text-sm">
                               <tbody>
                                 {selectedItems.map((applicant, i) => (
                                   <DraggableRow
@@ -506,7 +518,7 @@ export default function ApplicantTable({
                       </TableRow>
                     ) : null}
                     <TableRow className="border-border bg-muted/30 hover:bg-muted/30">
-                      <TableCell colSpan={11} className="text-muted-foreground px-4 py-2 text-xs font-semibold">
+                      <TableCell colSpan={15} className="text-muted-foreground px-4 py-2 text-xs font-semibold">
                         Filtered results · {items.length}
                       </TableCell>
                     </TableRow>
@@ -535,7 +547,7 @@ export default function ApplicantTable({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="px-4 py-10 text-center">
+                    <TableCell colSpan={15} className="px-4 py-10 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="bg-muted flex size-12 items-center justify-center rounded-full">
                           <Search className="text-muted-foreground size-5" />

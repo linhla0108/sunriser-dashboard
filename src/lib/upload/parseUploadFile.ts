@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx"
+import { extractCandidateUrls } from "@/lib/candidates/candidateLinks"
 import type { Applicant } from "@/lib/types"
 
 export type UploadCellValue = string | number | boolean | Date | null
@@ -48,16 +49,38 @@ const CANDIDATE_FIELDS: Array<{ key: keyof Applicant; label: string; aliases: st
   { key: "yearOfStudy", label: "Year of study", aliases: ["year of study", "student year", "năm học", "nam hoc", "year"] },
   { key: "major", label: "Major", aliases: ["major", "field of study", "ngành", "nganh"] },
   { key: "gpa", label: "GPA", aliases: ["gpa", "grade", "score", "điểm", "diem"] },
+  {
+    key: "academicFile",
+    label: "Academic file",
+    aliases: ["academic file", "academic transcript", "transcript", "bảng điểm", "bang diem"],
+  },
   { key: "hasExperience", label: "Has experience", aliases: ["has experience", "experience", "kinh nghiệm", "kinh nghiem"] },
   {
     key: "experienceDesc",
     label: "Experience description",
     aliases: ["experience description", "experience desc", "kinh nghiệm chi tiết", "kinh nghiem chi tiet"],
   },
-  { key: "portfolio", label: "Portfolio", aliases: ["portfolio", "cv", "resume", "github", "behance"] },
+  { key: "portfolio", label: "Portfolio", aliases: ["portfolio", "project links", "project link", "cv", "resume", "github", "behance"] },
   { key: "fullTime", label: "Full-time", aliases: ["full-time", "full time", "availability", "toàn thời gian", "toan thoi gian"] },
+  {
+    key: "internshipCommitment",
+    label: "Internship commitment",
+    aliases: ["internship commitment", "commit to at least 3 months", "starting from june 2026", "cam kết", "cam ket"],
+  },
+  {
+    key: "postInternshipFullTime",
+    label: "Post-internship full-time",
+    aliases: ["post internship full time", "sau thời gian thực tập", "sau thoi gian thuc tap", "thăng tiến", "thang tien"],
+  },
   { key: "discoveryChannel", label: "Discovery channel", aliases: ["discovery channel", "source", "channel", "biết qua", "biet qua"] },
+  {
+    key: "internalReferrer",
+    label: "Internal referrer",
+    aliases: ["internal referrer", "employee referral", "nhân viên giới thiệu", "nhan vien gioi thieu"],
+  },
+  { key: "sunStudioMessage", label: "Message", aliases: ["message", "share with sun studio", "gửi gắm", "gui gam"] },
   { key: "submittedAt", label: "Submitted at", aliases: ["submitted at", "timestamp", "created at", "submission time", "thời gian", "thoi gian"] },
+  { key: "typeformToken", label: "Token", aliases: ["token", "typeform token"] },
   { key: "batch", label: "Batch", aliases: ["batch", "wave", "đợt", "dot"] },
   { key: "pic", label: "PIC", aliases: ["pic", "owner", "assignee", "hr"] },
   { key: "round1Result", label: "Round 1 result", aliases: ["round 1 result", "r1 result", "round1", "kết quả vòng 1", "ket qua vong 1"] },
@@ -313,14 +336,23 @@ export function mapUploadDatasetToApplicants(dataset: ParsedUploadDataset): Appl
     gpa: numberValue(valueFor(row, analysis, "gpa")),
     hasExperience: booleanValue(valueFor(row, analysis, "hasExperience")),
     experienceDesc: stringValue(valueFor(row, analysis, "experienceDesc")) || undefined,
+    academicFile: stringValue(valueFor(row, analysis, "academicFile")) || undefined,
     portfolio: stringValue(valueFor(row, analysis, "portfolio")) || undefined,
+    portfolioLinks: extractCandidateUrls(stringValue(valueFor(row, analysis, "portfolio"))),
     fullTime: booleanValue(valueFor(row, analysis, "fullTime")),
+    internshipCommitment: stringValue(valueFor(row, analysis, "internshipCommitment")) || undefined,
+    postInternshipFullTime: stringValue(valueFor(row, analysis, "postInternshipFullTime")) || undefined,
     discoveryChannel: stringValue(valueFor(row, analysis, "discoveryChannel"), "Uploaded file"),
+    internalReferrer: stringValue(valueFor(row, analysis, "internalReferrer")) || undefined,
+    sunStudioMessage: stringValue(valueFor(row, analysis, "sunStudioMessage")) || undefined,
     submittedAt: stringValue(valueFor(row, analysis, "submittedAt"), new Date().toISOString()),
+    typeformSubmittedAt: stringValue(valueFor(row, analysis, "submittedAt")) || undefined,
+    typeformToken: stringValue(valueFor(row, analysis, "typeformToken")) || undefined,
     batch: numberValue(valueFor(row, analysis, "batch"), 1),
     pic: stringValue(valueFor(row, analysis, "pic")) || undefined,
     round1Result: stringValue(valueFor(row, analysis, "round1Result")) || undefined,
     round1Notes: stringValue(valueFor(row, analysis, "round1Notes")) || undefined,
     round2Result: stringValue(valueFor(row, analysis, "round2Result")) || undefined,
+    note: "",
   }))
 }

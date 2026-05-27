@@ -2,12 +2,14 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff } from "lucide-react"
+import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff, FileText, Link2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
+import { CandidatePreviewDialog, DelayedTextPreview } from "@/components/candidates/CandidatePreviewDialog"
+import { candidateLinksFromApplicant } from "@/lib/candidates/candidateLinks"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
 import { usePinned } from "@/lib/pin/usePinned"
@@ -183,19 +185,41 @@ function PicChip({ value, onChange }: { value?: string; onChange?: (v: string | 
 }
 
 function exportRowCSV(applicant: Applicant) {
-  const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
+  const headers = [
+    "Name",
+    "Email",
+    "Phone",
+    "Position",
+    "University",
+    "GPA",
+    "Academic File",
+    "Experience Description",
+    "Portfolio",
+    "Message",
+    "Note",
+    "Batch",
+    "PIC",
+    "Round 1",
+    "Round 2",
+  ]
   const row = [
     applicant.name,
     applicant.email,
+    applicant.phone,
     applicant.position1,
     applicant.university,
     applicant.gpa,
+    applicant.academicFile ?? "",
+    applicant.experienceDesc ?? "",
+    applicant.portfolio ?? "",
+    applicant.sunStudioMessage ?? "",
+    applicant.note ?? "",
     applicant.batch,
     applicant.pic ?? "",
     applicant.round1Result ?? "",
     applicant.round2Result ?? "",
   ]
-  const csv = [headers, row].map(r => r.map(v => `"${v}"`).join(",")).join("\n")
+  const csv = [headers, row].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n")
   const blob = new Blob([csv], { type: "text/csv" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -308,6 +332,9 @@ export default function DraggableRow({
           ? "shadow-[inset_2px_0_0_rgb(252,211,77),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
           : "bg-[#fff5f3] shadow-[inset_2px_0_0_#FF5533,inset_0_0_0_1px_rgba(255,85,51,0.22)]"
     : ""
+  const portfolioLinks = candidateLinksFromApplicant(applicant)
+  const academicTargets = applicant.academicFile ? [{ label: "Academic file", url: applicant.academicFile }] : []
+  const portfolioTargets = portfolioLinks.map((url, i) => ({ label: portfolioLinks.length > 1 ? `Portfolio ${i + 1}` : "Portfolio", url }))
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
@@ -388,6 +415,36 @@ export default function DraggableRow({
           >
             {applicant.gpa.toFixed(1)}
           </span>
+        </td>
+
+        {/* Academic file — desktop only */}
+        <td className="hidden px-3 py-3 text-center lg:table-cell">
+          <CandidatePreviewDialog
+            title={`${applicant.name} academic file`}
+            targets={academicTargets}
+            triggerLabel={`Preview academic file for ${applicant.name}`}
+            icon={FileText}
+          />
+        </td>
+
+        {/* Description — wide desktop only */}
+        <td className="hidden max-w-[260px] px-3 py-3 xl:table-cell">
+          <DelayedTextPreview text={applicant.experienceDesc} />
+        </td>
+
+        {/* Portfolio — desktop only */}
+        <td className="hidden px-3 py-3 text-center lg:table-cell">
+          <CandidatePreviewDialog
+            title={`${applicant.name} portfolio`}
+            targets={portfolioTargets}
+            triggerLabel={`Preview portfolio for ${applicant.name}`}
+            icon={Link2}
+          />
+        </td>
+
+        {/* Message — wide desktop only */}
+        <td className="hidden max-w-[260px] px-3 py-3 xl:table-cell">
+          <DelayedTextPreview text={applicant.sunStudioMessage} />
         </td>
 
         {/* Year — desktop only */}

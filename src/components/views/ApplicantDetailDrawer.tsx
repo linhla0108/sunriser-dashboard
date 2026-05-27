@@ -1,13 +1,17 @@
 "use client"
 
+import { FileText, Link2 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { CandidatePreviewDialog } from "@/components/candidates/CandidatePreviewDialog"
+import { candidateLinksFromApplicant } from "@/lib/candidates/candidateLinks"
 import type { Applicant } from "@/lib/types"
 
 interface ApplicantDetailDrawerProps {
   applicant: Applicant | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
 }
 
 function ResultBadge({ result }: { result: string }) {
@@ -25,19 +29,30 @@ function ResultBadge({ result }: { result: string }) {
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[120px_1fr] gap-2 py-1.5">
+    <div className="grid grid-cols-[150px_1fr] gap-3 py-1.5">
       <span className="text-muted-foreground text-sm">{label}</span>
-      <span className="text-foreground text-sm">{children}</span>
+      <span className="text-foreground min-w-0 text-sm">{children}</span>
     </div>
   )
 }
 
-export function ApplicantDetailDrawer({ applicant, open, onOpenChange }: ApplicantDetailDrawerProps) {
+function LongText({ children }: { children?: string }) {
+  if (!children) return <span className="text-muted-foreground">-</span>
+  return <span className="block whitespace-pre-wrap">{children}</span>
+}
+
+export function ApplicantDetailDrawer({ applicant, open, onOpenChange, onUpdateApplicant }: ApplicantDetailDrawerProps) {
   const displayed = applicant
+  const portfolioTargets = displayed
+    ? candidateLinksFromApplicant(displayed).map((url, i, links) => ({
+        label: links.length > 1 ? `Portfolio ${i + 1}` : "Portfolio",
+        url,
+      }))
+    : []
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent data-v2-glass-panel="strong" className="bg-card/90 overflow-y-auto backdrop-blur-xl">
+      <SheetContent data-v2-glass-panel="strong" className="bg-card/90 w-[calc(100vw-1rem)] overflow-y-auto backdrop-blur-xl sm:max-w-[720px]">
         {displayed && (
           <>
             <SheetHeader>
@@ -53,6 +68,45 @@ export function ApplicantDetailDrawer({ applicant, open, onOpenChange }: Applica
                   <DetailRow label="Year of Study">{displayed.yearOfStudy}</DetailRow>
                   <DetailRow label="GPA">{displayed.gpa.toFixed(1)}</DetailRow>
                   <DetailRow label="Batch">{displayed.batch}</DetailRow>
+                  {displayed.sourcePositions ? <DetailRow label="Typeform roles">{displayed.sourcePositions}</DetailRow> : null}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-foreground mb-2 text-sm font-medium">Application</h3>
+                <div data-v2-card="" className="border-border bg-card/80 rounded-lg border p-3">
+                  <DetailRow label="Academic file">
+                    <CandidatePreviewDialog
+                      title={`${displayed.name} academic file`}
+                      targets={displayed.academicFile ? [{ label: "Academic file", url: displayed.academicFile }] : []}
+                      triggerLabel={`Preview academic file for ${displayed.name}`}
+                      icon={FileText}
+                    />
+                  </DetailRow>
+                  <DetailRow label="Has experience">{displayed.hasExperience ? "Yes" : "No"}</DetailRow>
+                  <DetailRow label="Description">
+                    <LongText>{displayed.experienceDesc}</LongText>
+                  </DetailRow>
+                  <DetailRow label="Portfolio">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <CandidatePreviewDialog
+                        title={`${displayed.name} portfolio`}
+                        targets={portfolioTargets}
+                        triggerLabel={`Preview portfolio for ${displayed.name}`}
+                        icon={Link2}
+                      />
+                      <span className="text-muted-foreground truncate text-xs">{displayed.portfolio || "No detected URL"}</span>
+                    </div>
+                  </DetailRow>
+                  <DetailRow label="Internship">
+                    <LongText>{displayed.internshipCommitment}</LongText>
+                  </DetailRow>
+                  <DetailRow label="Post-internship">
+                    <LongText>{displayed.postInternshipFullTime}</LongText>
+                  </DetailRow>
+                  <DetailRow label="Message">
+                    <LongText>{displayed.sunStudioMessage}</LongText>
+                  </DetailRow>
                 </div>
               </section>
 
@@ -67,6 +121,11 @@ export function ApplicantDetailDrawer({ applicant, open, onOpenChange }: Applica
                       <ResultBadge result={displayed.round2Result} />
                     </DetailRow>
                   )}
+                  {displayed.screeningNote ? (
+                    <DetailRow label="Screening note">
+                      <LongText>{displayed.screeningNote}</LongText>
+                    </DetailRow>
+                  ) : null}
                 </div>
               </section>
 
@@ -74,8 +133,23 @@ export function ApplicantDetailDrawer({ applicant, open, onOpenChange }: Applica
                 <h3 className="text-foreground mb-2 text-sm font-medium">Contact</h3>
                 <div data-v2-card="" className="border-border bg-card/80 rounded-lg border p-3">
                   <DetailRow label="Email">{displayed.email}</DetailRow>
+                  <DetailRow label="Phone">{displayed.phone}</DetailRow>
+                  <DetailRow label="Discovery">{displayed.discoveryChannel}</DetailRow>
+                  {displayed.internalReferrer ? <DetailRow label="Referrer">{displayed.internalReferrer}</DetailRow> : null}
                   {displayed.pic && <DetailRow label="PIC">{displayed.pic}</DetailRow>}
+                  {displayed.typeformSubmittedAt ? <DetailRow label="Submitted">{displayed.typeformSubmittedAt}</DetailRow> : null}
+                  {displayed.typeformToken ? <DetailRow label="Token">{displayed.typeformToken}</DetailRow> : null}
                 </div>
+              </section>
+
+              <section>
+                <h3 className="text-foreground mb-2 text-sm font-medium">Note</h3>
+                <textarea
+                  value={displayed.note ?? ""}
+                  onChange={event => onUpdateApplicant?.(displayed.id, { note: event.currentTarget.value })}
+                  placeholder="Add candidate note..."
+                  className="border-border bg-card/80 text-foreground focus:border-primary min-h-28 w-full resize-y rounded-lg border px-3 py-2 text-sm outline-none"
+                />
               </section>
             </div>
           </>

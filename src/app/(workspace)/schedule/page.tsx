@@ -119,12 +119,7 @@ export default function SchedulePage() {
         entry={drawerEntry}
         mode={drawerMode}
         open={drawerOpen}
-        onOpenChange={open => {
-          setDrawerOpen(open)
-          if (!open) {
-            setDrawerEntry(null)
-          }
-        }}
+        onOpenChange={setDrawerOpen}
         onSave={handleSave}
         onDelete={handleDelete}
       />

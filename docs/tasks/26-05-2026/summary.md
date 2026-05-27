@@ -10,4 +10,4 @@
 | 6   | Candidate Table Selected Animation    | candidates/ui         | Done   | Smooth selected-section collapse/expand                              |
 | 7   | Compact Bulk Action Button            | candidates/ui         | Done   | Filter row keeps filters; one `N selected` button opens bulk actions |
 | 8   | Working Timeline Schedule             | schedule/feature      | Done        | New /schedule screen — Gantt swimlanes + Agenda fallback, mock data from sheet |
-| 9   | Schedule Drawer Polish                | schedule/ui           | Planned     | Drawer slide animation, mode crossfade, save/delete feedback, padding consistency |
+| 9   | Schedule Drawer Polish                | schedule/ui           | Done        | Drawer slide animation, mode crossfade, save/delete feedback, padding consistency, mobile fullwidth |

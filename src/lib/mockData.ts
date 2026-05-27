@@ -1,6 +1,8 @@
 import { Applicant, DashboardStats } from "./types"
+import { candidateTypeformSupplement } from "./candidateTypeformSupplement"
+import { candidateLinksFromApplicant } from "./candidates/candidateLinks"
 
-export const mockApplicants: Applicant[] = [
+const baseMockApplicants: Applicant[] = [
   {
     id: "001",
     name: "Nguyễn Minh Khoa",
@@ -870,6 +872,42 @@ export const mockApplicants: Applicant[] = [
     round2Result: "Passed",
   },
 ]
+
+function applyTypeformSupplement(applicants: Applicant[]): Applicant[] {
+  const supplementById = new Map(candidateTypeformSupplement.map(row => [row.id, row]))
+
+  return applicants.map(applicant => {
+    const supplement = supplementById.get(applicant.id)
+    if (!supplement) {
+      return {
+        ...applicant,
+        portfolioLinks: candidateLinksFromApplicant(applicant),
+        note: applicant.note ?? "",
+      }
+    }
+
+    const merged = {
+      ...applicant,
+      ...supplement,
+      // The current mock GPA is intentionally preserved.
+      gpa: applicant.gpa,
+      submittedAt: applicant.submittedAt,
+      batch: applicant.batch,
+      pic: applicant.pic,
+      round1Result: applicant.round1Result,
+      round1Notes: applicant.round1Notes,
+      round2Result: applicant.round2Result,
+      note: supplement.note ?? applicant.note ?? "",
+    }
+
+    return {
+      ...merged,
+      portfolioLinks: candidateLinksFromApplicant(merged),
+    }
+  })
+}
+
+export const mockApplicants: Applicant[] = applyTypeformSupplement(baseMockApplicants)
 
 // Summary statistics
 export const dashboardStats: DashboardStats = {

@@ -72,4 +72,59 @@ Drawer `ScheduleEntryDrawer` hiện tại có animation nhưng quá subtle (tran
 
 ## Report
 
-(To be filled after implementation)
+Status: Done
+
+**Slice 1 — Base Sheet animation** ([src/components/ui/sheet.tsx](src/components/ui/sheet.tsx)):
+
+- Translate distance `2.5rem` → `translate-x-full` (panel slides from full off-screen).
+- Duration `200ms` → `300ms`.
+- Easing `ease-in-out` → `ease-[cubic-bezier(0.16,1,0.3,1)]` (ease-out-expo).
+- Backdrop `bg-black/10` + `duration-150` → `bg-black/20` + `duration-300` + same easing.
+- Shadow `shadow-lg` → `shadow-2xl` for depth.
+- Removed redundant opacity-0 transitions (full slide makes them moot).
+
+**Slice 2 — Content stagger + mode crossfade** ([src/app/globals.css](src/app/globals.css), [ScheduleEntryDrawer.tsx](src/components/views/schedule/ScheduleEntryDrawer.tsx)):
+
+- 2 keyframes: `drawerStaggerIn` (8px translateY + opacity), `drawerCrossfade` (6px + opacity, faster).
+- Header / body / footer stagger via inline `animationDelay` 60ms / 140ms / 220ms.
+- View ↔ Edit mode wrap in `<div key={editing ? 'edit' : 'view'} className={CROSSFADE}>` for crossfade on toggle.
+
+**Slice 3 — Save feedback + Delete confirm:**
+
+- `saveState: 'idle' | 'saved'` — Save click shows check icon + "Saved" label (emerald-600), 620ms before drawer closes.
+- `deleteArmed: boolean` — first Delete click changes label to "Confirm delete?" (filled red bg), arms a 3s timer. Second click within window deletes. Outside window, reverts.
+
+**Slice 4 — Padding + tokens:**
+
+- Drawer: header/body/footer `p-5`, content `space-y-5`, form `gap-4`.
+- All form inputs: `mt-2 rounded-2xl border-[#e2e2e2] focus-visible:border-[#FF5533] focus-visible:ring-2 focus-visible:ring-[#FF5533]/20`.
+- Batch toggle chips: active state uses primary `#FF5533` (instead of `#1b1b1b`) for brand consistency.
+- Save button: explicit `#FF5533` (instead of shadcn default `bg-primary` which resolves to oklch dark gray).
+
+**Slice 5 — Mobile fullwidth fix:**
+
+- SheetContent overridden with `data-[side=right]:w-full sm:data-[side=right]:max-w-md`. Mobile drawer 375px = 100%, desktop 448px = max-w-md (28rem).
+
+**Browser verification:**
+
+- Playwright at 1280x800 (desktop) and 375x812 (mobile).
+- ✅ Drawer slide-in from full right with backdrop blur + dim.
+- ✅ View mode: batch chip, time label, cutoff chip, PIC parsed into 3 chips with roles inline, note section.
+- ✅ Edit mode: form fields, batch toggle chips, datetime inputs, textarea for PIC/note.
+- ✅ Save click → button label changes to "Saved" (verified via DOM eval; visual capture missed 620ms window).
+- ✅ Delete click → label "Confirm delete?" (verified via DOM eval; visual capture missed 3s window — screenshot tool latency).
+- ✅ Mobile: AgendaView auto-renders, drawer slides full-width 375px.
+- ✅ Desktop: GanttView default, drawer slides to 448px max-w-md.
+
+**Code health:**
+
+- `npx tsc --noEmit` ✓
+- `npx eslint` ✓
+- Screenshots saved in repo root: `drawer-open-view-v2.png`, `drawer-edit-mode.png`, `drawer-mobile-fullwidth.png`, `schedule-mobile-agenda.png`, `schedule-gantt-initial.png`.
+
+**Remaining / known issues:**
+
+- TopBar title shows "Overview" instead of "Schedule" on /schedule — pre-existing TopBar logic doesn't know the new route. Not in scope for this polish task; should be a small follow-up.
+- Save/Delete feedback visual capture is limited by Playwright screenshot latency (~500ms+) vs feedback window (620ms / 3s). DOM state confirmed; visual works for real users (no screenshot delay).
+
+Commit: pending user review.

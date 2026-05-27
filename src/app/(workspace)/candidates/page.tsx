@@ -158,6 +158,12 @@ export default function CandidatesPage() {
     })
   }
 
+  function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
+    const nextApplicants = applicants.map(applicant => (applicant.id === id ? { ...applicant, ...patch } : applicant))
+    setEditedApplicants({ sourceId, applicants: nextApplicants })
+    setDetailApplicant(current => (current?.id === id ? { ...current, ...patch } : current))
+  }
+
   return (
     <>
       <div className="p-3 pb-36 sm:p-4 sm:pb-28 lg:p-6 lg:pb-28">
@@ -251,6 +257,7 @@ export default function CandidatesPage() {
       <ApplicantDetailDrawer
         applicant={detailApplicant}
         open={!!detailApplicant}
+        onUpdateApplicant={handleUpdateApplicant}
         onOpenChange={open => {
           if (!open) setDetailApplicant(null)
         }}
