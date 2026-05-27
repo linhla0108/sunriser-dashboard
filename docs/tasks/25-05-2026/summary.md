@@ -6,7 +6,7 @@
 | 2   | Row status colors + round2 override       | candidates/fix     | Done             | commit 8b22beb — emerald/red/amber palette, round2 overrides round1                       |
 | 3   | Context menu: Pin → compare               | candidates/feature | Done             | commit 8b22beb — usePinned wired, local pin-to-top removed                                |
 | 4   | Bulk action bar merged into filter row    | candidates/ui      | Done             | commit 8b22beb — CandidateFiltersBar swaps to bulk mode when selection > 0                |
-| 5   | Context menu: Round status submenus       | candidates/plan    | Awaiting confirm | PLAN ONLY — user must confirm UX flow                                                     |
+| 5   | Context menu: Round status submenus       | candidates/feature | Done             | Submenu flyout cho Round 1/2 status trong context menu                                    |
 | 6   | Auth system hardening                     | auth/fix           | Done             | all 6 fixes shipped — see auth-hardening.md                                               |
 | 14  | Auth error resilience                     | auth/fix           | Done             | 6 fixes: proxy 500, confirm 500, Safari storage crash, 429 UX, signOut safe, 401/403      |
 | 15  | Auth hard-reload deadlock fix             | auth/fix           | Done             | split onAuthStateChange (sync) from profile loader (effect) — see auth-reload-deadlock.md |
