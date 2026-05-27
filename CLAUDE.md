@@ -10,48 +10,133 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @docs/claude/feedback-turbopack.md
 @docs/claude/feedback-dndkit.md
 @docs/claude/feedback-tailwind-v4.md
+@docs/claude/feedback-testing-tools.md
 
-## Architecture
+## Stack
 
-Single-page application — one URL (`/`), no client-side routing. `src/app/page.tsx` is a `'use client'` component that holds `activeView` state and conditionally renders one of two views. Upload and chat are overlays, not views.
+- **Next.js 16** App Router on React 19, Turbopack
+- **Supabase** (`@supabase/ssr` + `@supabase/supabase-js`) for auth, profile, settings, RBAC
+- **Tailwind CSS v4** (config-less) + **shadcn/ui** (`base-nova`, neutral)
+- **@dnd-kit**, **Recharts**, **lucide-react**, **sonner**, **cmdk**, **animejs**
+- **Vitest** for unit, **Playwright** for e2e
+
+## Scripts
+
+```bash
+npm run dev          # next dev (Turbopack)
+npm run build        # production build
+npm run lint         # eslint
+npm run format       # prettier (+ tailwind class sort)
+npm test             # vitest run
+npm run test:watch   # vitest in watch mode
+npm run test:e2e     # playwright e2e
+```
+
+**Error checking:** use `npx tsc --noEmit` and `npm run lint`. Never `npm run dev` / `npm run build` just to check errors — see `docs/claude/tooling.md`.
+
+Run a single Vitest file: `npm test -- path/to/file.test.ts`.
+Run a single Playwright spec: `npx playwright test tests/e2e/auth.spec.ts`.
+
+## Routing & route groups
 
 ```
-page.tsx  (activeView: 'dashboard' | 'table')
-├── GlobalDropZone     — document-level drag-and-drop; popup card + toast stack
-├── Sidebar            — hidden on mobile; icon-only on tablet (sm), full on desktop (lg)
-├── MobileBottomNav    — fixed bottom nav, sm:hidden
-├── FloatingChat       — fixed floating button + panel; full-screen on mobile
-└── main
-    ├── TopBar         — title/subtitle + actions (Export Data, Create Report)
-    ├── dashboard view — StatsCard × 4 + OverviewCharts (Recharts)
-    └── table view     — ApplicantTable (dnd-kit sortable + filters)
+src/app/
+├── layout.tsx           Root html. Providers: TooltipProvider → AuthProvider → ThemeProvider
+├── page.tsx             redirect("/dashboard")
+├── login | signup | forgot | otp | auth/confirm   public auth routes
+├── lab                  unauthenticated experiments
+├── public               public share pages
+├── api/admin/*          server-only admin routes (service_role)
+└── (workspace)/         protected route group, wrapped by WorkspaceShell
+    ├── layout.tsx       <WorkspaceShell>
+    ├── dashboard
+    ├── candidates       table + pipeline + gallery + chart views
+    ├── compare          pinned candidate comparison
+    ├── schedule         interview Gantt / agenda
+    ├── settings
+    ├── admin/users      RequireAdmin gated
+    └── hr
 ```
 
-**State flow:** `activeView` lives only in `page.tsx`. GlobalDropZone's "Analyze in Table" calls `onAnalyze()` → `activeView = 'table'`. File data from drop zone is NOT passed to the table (known limitation).
+**Auth gate:** `src/proxy.ts` (Next.js 16 middleware, renamed from `middleware.ts`) checks the Supabase session for every non-public route and redirects to `/login?from=…`. Public allow-list lives at the top of `proxy.ts`. The path-safety helper is `src/lib/auth/safePath.ts`.
+
+## Provider / shell hierarchy
+
+```
+RootLayout
+└── TooltipProvider
+    └── AuthProvider                       loads user_profiles / user_access / user_settings; exposes can()
+        └── ThemeProvider                  reads settings; persists theme/mode → Supabase + localStorage
+            └── (workspace)/layout.tsx
+                └── WorkspaceShell
+                    └── RequireAuth                  redirects unauthenticated, shows InactiveAccount
+                        └── DrawerRegistryProvider   single source of truth for chat/notes/detail drawers
+                            └── UploadSessionProvider
+                                └── SidebarProvider (shadcn)
+                                    └── GlobalDropZone + WorkspaceContextMenu + Sidebar + TopBar + page
+```
+
+`ThemeProvider` **must** sit inside `AuthProvider` (it calls `useAuth`).
+
+## State patterns
+
+- **Auth user shape:** `AppUser` extends Supabase user with `profile`, `access` (role + permissions), `settings`. Built in `src/lib/auth/loadProfile.ts`. Use `can(action)` for permission gating (Create Report needs `edit`, Export Data needs `delete`).
+- **URL state for candidates:** filter / sort / view / page / group are persisted as search params on `/candidates`. The page parses URL → state; state → router.replace.
+- **Drawer state:** centralized via `DrawerRegistry`. Components call `registry.toggle("chat" | "notes" | …)` instead of holding local open flags.
+- **Upload session:** dropped files land in `UploadSessionProvider`, persisted as draft (`persistUploadSessionDraft`); "Analyze in Table" navigates to `/candidates`. Files are parsed but not yet merged into the table dataset.
+- **Pinned compare:** `usePinned` drives `PinnedToolbar`, the row context-menu "Pin to compare", and `/compare`.
+
+## Candidate views
+
+`/candidates` swaps between Table / Pipeline / Gallery / Chart from `src/components/views/`. All views share dataset + URL-driven filter/sort/group state.
+
+- `TableView` → `ApplicantTable` → `DraggableRow` (dnd-kit). Row selection + bulk actions live inside `CandidateFiltersBar` (no separate floating bar — selection shows one orange `{N} selected` popover button).
+- `PipelineView` — kanban grouped by round1, round2, PIC, or batch. Drag mutation writes the right field; round2 overrides round1 for row color. Per-status color map in `viewUtils.ts`.
+- `ChartView` — 7 Recharts cards, draggable layout, global filter shared with the other views.
+- `GalleryView` — card grid.
+
+The `dnd-kit` rule: `DndContext` must wrap the table **card**, never sit inside `<table>` — see `docs/claude/feedback-dndkit.md`.
+
+## Supabase
+
+- Migrations in `supabase/migrations/`. Key one: `20260521120000_user_access_and_profiles.sql` (creates `user_profiles`, `user_access`, `user_settings` + RLS + signup trigger).
+- Server-only admin work uses `src/lib/supabase/admin.ts` (service_role) through `src/app/api/admin/*` routes. Never import that module from client code.
+- Client uses `@supabase/ssr` browser client + the proxy server client.
 
 ## Key files
 
-| Path                                       | Purpose                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------- |
-| `src/lib/types.ts`                         | `Applicant`, `DashboardStats`, `Position`, `Round1Result` types              |
-| `src/lib/mockData.ts`                      | Static mock data (646 applicants) + `dashboardStats`                         |
-| `src/lib/utils.ts`                         | `cn()` utility (clsx + tailwind-merge)                                       |
-| `src/app/globals.css`                      | Tailwind v4 `@theme` tokens — colors, type scale, radius, shadows, keyframes |
-| `src/components/ui/`                       | shadcn/ui components (style: `base-nova`, baseColor: `neutral`)              |
-| `src/components/layout/`                   | Sidebar, TopBar, MobileBottomNav                                             |
-| `src/components/chat/FloatingChat.tsx`     | Floating AI chat panel                                                       |
-| `src/components/upload/GlobalDropZone.tsx` | Document-level drop zone wrapper                                             |
+| Path                                                | Purpose                                                                 |
+| --------------------------------------------------- | ----------------------------------------------------------------------- |
+| `src/proxy.ts`                                      | Next 16 middleware — Supabase session check + redirect                  |
+| `src/lib/auth/AuthProvider.tsx`                     | Session, profile loader, `can()` helper                                 |
+| `src/lib/auth/loadProfile.ts`                       | Builds `AppUser` from `user_profiles` / `user_access` / `user_settings` |
+| `src/lib/theme/ThemeProvider.tsx`                   | Theme + mode, persisted to Supabase                                     |
+| `src/lib/drawer/DrawerRegistry.tsx`                 | Centralized drawer open/close                                           |
+| `src/lib/upload/UploadSessionContext.tsx`           | Upload draft session                                                    |
+| `src/lib/types.ts`                                  | `Applicant`, `DashboardStats`, `Position`, round result types           |
+| `src/lib/mockData.ts`                               | Static mock candidates + stats                                          |
+| `src/lib/views/viewUtils.ts`                        | Shared view helpers + `PIC_CHIP_STYLE` color map                        |
+| `src/app/globals.css`                               | Tailwind v4 `@theme` tokens                                             |
+| `src/components/layout/WorkspaceShell.tsx`          | Protected workspace frame                                               |
+| `src/components/auth/RequireAuth.tsx`               | Inactive / unauthenticated guard inside shell                           |
+| `src/components/views/`                             | Table / Pipeline / Gallery / Chart                                      |
+| `src/components/table/DraggableRow.tsx`             | Row, checkbox, context menu (round1/2 status submenus)                  |
+| `src/components/candidates/CandidateFiltersBar.tsx` | Filters + compact bulk-action popover                                   |
+| `src/components/pin/`                               | Pin to compare, `PinnedToolbar`, `ComparePage`                          |
+| `src/components/schedule/`                          | Schedule swimlanes + agenda                                             |
+| `src/components/admin/UserEditDrawer.tsx`           | Admin user management UI                                                |
 
-## UI stack
+## Testing
 
-- **Tailwind CSS v4** — config-less, CSS-first. No `tailwind.config.js`; theme tokens live in `src/app/globals.css`.
-- **shadcn/ui** — aliased to `@/components/ui`. Add components with `npx shadcn add <component>`.
-- **Recharts** — used in `OverviewCharts.tsx` for bar/pie charts.
-- **@dnd-kit** — drag-to-reorder rows in `ApplicantTable` via `DraggableRow`.
-- **lucide-react** — icon library.
+- Unit tests: `**/__tests__/*.test.{ts,tsx}`. Config in `vitest.config.ts`, jsdom env, setup in `src/test/setup.ts`.
+- E2E tests: `tests/e2e/*.spec.ts`. Auth-state caching via `tests/e2e/global-setup.ts` (writes `.auth-state.json`).
+
+## Task documentation
+
+Every non-trivial task gets a file in `docs/tasks/DD-MM-YYYY/`, indexed by `summary.md`. See `docs/claude/plans.md` for the format. Write the plan section **before** code; add the report section **after**.
 
 ## Known limitations
 
-- Uploaded file data is not injected into the table (upload parses only; "Analyze in Table" just switches views).
-- Chat replies are hard-coded mock responses — no LLM integration.
-- All state resets on page refresh (no persistence).
+- Upload parses files but does not merge them into the candidates dataset; "Analyze in Table" only routes to `/candidates`.
+- Chat replies are mock — no LLM call yet.
+- Dashboard stats and table data are computed from different sources and can disagree (tracked in `docs/tasks/23-05-2026/`).
