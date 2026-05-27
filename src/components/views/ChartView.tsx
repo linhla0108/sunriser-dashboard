@@ -132,7 +132,7 @@ function ChartCard({ id, title, children }: { id: string; title: string; childre
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-v2-card=""
-      className={`group rounded-3xl bg-white p-5 shadow-[rgba(4,23,43,0.08)_0px_0px_0px_1px,rgba(15,23,42,0.06)_0px_1px_2px,rgba(15,23,42,0.10)_0px_12px_24px_-8px,rgba(15,23,42,0.06)_0px_24px_48px_-12px] transition-shadow duration-200 hover:shadow-[rgba(255,85,51,0.22)_0px_0px_0px_1px,rgba(15,23,42,0.08)_0px_2px_4px,rgba(15,23,42,0.14)_0px_18px_32px_-8px,rgba(15,23,42,0.08)_0px_28px_56px_-12px] ${isDragging ? "opacity-60" : ""}`}
+      className={`group rounded-3xl border border-[#E8E4DF] bg-white p-5 shadow-[0_2px_4px_rgba(15,23,42,0.04),0_12px_24px_-8px_rgba(15,23,42,0.10),0_28px_48px_-16px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow] duration-200 hover:border-[#FF5533]/40 hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-8px_rgba(255,85,51,0.14),0_36px_64px_-16px_rgba(15,23,42,0.16)] ${isDragging ? "opacity-60" : ""}`}
     >
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
