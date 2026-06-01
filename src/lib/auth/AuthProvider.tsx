@@ -44,12 +44,16 @@ function shouldKeepSession() {
 function setRememberPreference(remember: boolean) {
   if (typeof window === "undefined") return
   if (remember) {
-    try { window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS)) } catch {}
+    try {
+      window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS))
+    } catch {}
     window.sessionStorage.removeItem(SESSION_ONLY_KEY)
     return
   }
   window.localStorage.removeItem(REMEMBER_UNTIL_KEY)
-  try { window.sessionStorage.setItem(SESSION_ONLY_KEY, "true") } catch {}
+  try {
+    window.sessionStorage.setItem(SESSION_ONLY_KEY, "true")
+  } catch {}
 }
 
 function clearRememberPreference() {
@@ -67,17 +71,14 @@ function clearRememberPreference() {
  * v2.chat.open/mode/dockWidth/floatPos, v2.notes.open/mode/dockWidth/floatPos,
  * v2.drawer.*
  */
-const USER_DATA_KEYS = [
-  "v2.notes.items",
-  "v2.pinned",
-  "v2.chat.history",
-  "v2.report.shares",
-] as const
+const USER_DATA_KEYS = ["v2.notes.items", "v2.pinned", "v2.chat.history", "v2.report.shares"] as const
 
 function clearUserData() {
   if (typeof window === "undefined") return
   USER_DATA_KEYS.forEach(key => {
-    try { window.localStorage.removeItem(key) } catch {}
+    try {
+      window.localStorage.removeItem(key)
+    } catch {}
   })
 }
 
@@ -111,7 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, INITIAL_SESSION_TIMEOUT_MS)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
 
       if (event === "SIGNED_OUT") {
@@ -125,11 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Token events that don't change the user identity — no profile reload needed.
-      if (
-        event === "TOKEN_REFRESHED" ||
-        event === "PASSWORD_RECOVERY" ||
-        event === "MFA_CHALLENGE_VERIFIED"
-      ) {
+      if (event === "TOKEN_REFRESHED" || event === "PASSWORD_RECOVERY" || event === "MFA_CHALLENGE_VERIFIED") {
         return
       }
 
@@ -214,7 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [authUser, buildAppUser, supabase])
 
   const signIn = useCallback<AuthContextValue["signIn"]>(
@@ -224,10 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         clearRememberPreference()
-        const message =
-          error.status === 429
-            ? "Too many attempts. Please wait a few minutes before trying again."
-            : error.message
+        const message = error.status === 429 ? "Too many attempts. Please wait a few minutes before trying again." : error.message
         return { ok: false, error: message }
       }
       // onAuthStateChange fires SIGNED_IN → Effect 2 builds the app user
@@ -236,6 +234,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [supabase]
   )
+
+  const signInWithMicrosoft = useCallback<AuthContextValue["signInWithMicrosoft"]>(async () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL ?? "")
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        // Redirect to our callback route which handles code exchange.
+        redirectTo: `${origin}/auth/callback`,
+        // openid email profile only — no Microsoft Graph scopes in v1.
+        scopes: "openid email profile",
+      },
+    })
+    if (error) return { ok: false, error: error.message }
+    // Success: browser is redirecting to Microsoft — return ok but no session yet.
+    return { ok: true }
+  }, [supabase])
 
   const signOut = useCallback(async () => {
     try {
@@ -267,9 +281,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin: user?.role === "admin",
       can,
       signIn,
+      signInWithMicrosoft,
       signOut,
     }),
-    [loading, user, can, signIn, signOut]
+    [loading, user, can, signIn, signInWithMicrosoft, signOut]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -44,5 +44,6 @@ export interface AuthContextValue {
   isAdmin: boolean
   can: (permission: AppPermission) => boolean
   signIn: (email: string, password: string, options?: { remember?: boolean }) => Promise<{ ok: true } | { ok: false; error: string }>
+  signInWithMicrosoft: () => Promise<{ ok: true } | { ok: false; error: string }>
   signOut: () => Promise<void>
 }

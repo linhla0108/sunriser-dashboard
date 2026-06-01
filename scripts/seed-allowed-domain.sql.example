@@ -1,0 +1,13 @@
+-- Seed allowed email domain for Microsoft OAuth login gate.
+-- INSTRUCTIONS:
+--   1. Copy this file. Do NOT modify or commit the copy.
+--   2. Replace <DOMAIN_HERE> with the real company domain (e.g. example.com).
+--   3. Run in Supabase SQL Editor or via psql:
+--        psql "$DATABASE_URL" -f this-file.sql
+--   4. Discard the copy after running.
+--
+-- The domain must be lowercase, no leading @, minimum 3 characters.
+
+insert into private.allowed_email_domains (domain)
+values (lower('<DOMAIN_HERE>'))
+on conflict (domain) do nothing;
