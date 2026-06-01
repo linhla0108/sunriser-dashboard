@@ -20,6 +20,13 @@ vi.mock("@/components/auth/RequireAuth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
+vi.mock("@/lib/announcements/AnnouncementProvider", () => ({
+  AnnouncementProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAnnouncements: () => ({
+    unreadCount: 0,
+  }),
+}))
+
 vi.mock("@/components/pin/PinnedToolbar", () => ({
   PinnedToolbar: () => <div data-testid="pinned-toolbar">Pinned Toolbar</div>,
 }))

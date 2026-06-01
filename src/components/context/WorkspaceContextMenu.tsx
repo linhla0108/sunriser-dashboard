@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Download, FileText, Keyboard, FilterX, Link2 } from "lucide-react"
+import { Copy, Keyboard, Link2 } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -15,41 +15,14 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { mockApplicants } from "@/lib/mockData"
-import type { Applicant } from "@/lib/types"
 
 interface WorkspaceContextMenuProps {
   children: React.ReactNode
-  onCreateReport?: () => void
-  onResetFilters?: () => void
-}
-
-function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
-  const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
-  const rows = applicants.map(a => [
-    a.name,
-    a.email,
-    a.position1,
-    a.university,
-    a.gpa,
-    a.batch,
-    a.pic ?? "",
-    a.round1Result ?? "",
-    a.round2Result ?? "",
-  ])
-  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n")
-  const blob = new Blob([csv], { type: "text/csv" })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 const SHORTCUTS = [{ label: "Focus view switcher first, then press 1-3" }, { label: "Focus table pager first, then press arrow keys" }]
 
-export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters }: WorkspaceContextMenuProps) {
+export function WorkspaceContextMenu({ children }: WorkspaceContextMenuProps) {
   const [copied, setCopied] = useState(false)
 
   const [selectionText, setSelectionText] = useState("")
@@ -87,45 +60,6 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
           <Link2 />
           {copied ? "Copied!" : "Copy page link"}
         </ContextMenuItem>
-
-        <ContextMenuSeparator />
-
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
-            <Download />
-            Export data
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
-            <ContextMenuGroup>
-              <ContextMenuLabel>Download as</ContextMenuLabel>
-              <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>CSV — all applicants</ContextMenuItem>
-              <ContextMenuItem
-                onClick={() =>
-                  exportCSV(
-                    mockApplicants.filter(a => a.round1Result === "Passed"),
-                    "passed-applicants.csv"
-                  )
-                }
-              >
-                CSV — passed only
-              </ContextMenuItem>
-            </ContextMenuGroup>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-
-        {onCreateReport && (
-          <ContextMenuItem onClick={onCreateReport}>
-            <FileText />
-            Create report
-          </ContextMenuItem>
-        )}
-
-        {onResetFilters && (
-          <ContextMenuItem onClick={onResetFilters}>
-            <FilterX />
-            Reset filters
-          </ContextMenuItem>
-        )}
 
         <ContextMenuSeparator />
 

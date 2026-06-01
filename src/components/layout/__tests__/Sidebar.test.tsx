@@ -25,6 +25,12 @@ vi.mock("@/lib/auth/useAuth", () => ({
   }),
 }))
 
+vi.mock("@/lib/announcements/AnnouncementProvider", () => ({
+  useAnnouncements: () => ({
+    unreadCount: 3,
+  }),
+}))
+
 // SidebarProvider uses useIsMobile which calls window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -58,6 +64,7 @@ describe("Sidebar", () => {
 
     expect(screen.getByText("Dashboard").closest("a")).toHaveAttribute("href", "/dashboard")
     expect(screen.getByText("Candidates").closest("a")).toHaveAttribute("href", "/candidates")
+    expect(screen.getByText("Announcements").closest("a")).toHaveAttribute("href", "/announcements")
     expect(screen.getByTitle("Settings")).toHaveAttribute("href", "/settings")
   })
 

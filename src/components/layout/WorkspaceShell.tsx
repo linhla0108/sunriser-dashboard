@@ -12,6 +12,7 @@ import { TopBar } from "@/components/layout/TopBar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import GlobalDropZone from "@/components/upload/GlobalDropZone"
 import { DrawerRegistryProvider, useDrawerRegistry } from "@/lib/drawer/DrawerRegistry"
+import { AnnouncementProvider } from "@/lib/announcements/AnnouncementProvider"
 import { UploadSessionProvider, useUploadSession, type UploadSession } from "@/lib/upload/UploadSessionContext"
 import { persistUploadSessionDraft } from "@/lib/upload/persistUploadSessionDraft"
 import { WorkspaceContextMenu } from "@/components/context/WorkspaceContextMenu"
@@ -19,11 +20,13 @@ import { WorkspaceContextMenu } from "@/components/context/WorkspaceContextMenu"
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   return (
     <RequireAuth>
-      <DrawerRegistryProvider>
-        <UploadSessionProvider>
-          <WorkspaceShellInner>{children}</WorkspaceShellInner>
-        </UploadSessionProvider>
-      </DrawerRegistryProvider>
+      <AnnouncementProvider>
+        <DrawerRegistryProvider>
+          <UploadSessionProvider>
+            <WorkspaceShellInner>{children}</WorkspaceShellInner>
+          </UploadSessionProvider>
+        </DrawerRegistryProvider>
+      </AnnouncementProvider>
     </RequireAuth>
   )
 }
@@ -57,7 +60,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
       }
     >
       <GlobalDropZone onAnalyze={analyzeUpload}>
-        <WorkspaceContextMenu onCreateReport={openReport}>
+        <WorkspaceContextMenu>
           <div data-workspace="" className="bg-background relative flex h-screen w-full overflow-hidden">
             <div className="motion-safe:animate-[workspaceSidebarIn_680ms_cubic-bezier(0.16,1,0.3,1)_backwards]">
               <Sidebar />

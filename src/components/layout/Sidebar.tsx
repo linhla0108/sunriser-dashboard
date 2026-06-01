@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CalendarClock, LayoutDashboard, Settings, Users, UsersRound } from "lucide-react"
+import { Bell, CalendarClock, LayoutDashboard, Settings, Users, UsersRound } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -19,12 +19,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { SidebarRailWithBubble } from "./SidebarRailWithBubble"
+import { useAnnouncements } from "@/lib/announcements/AnnouncementProvider"
 import { useAuth } from "@/lib/auth/useAuth"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/candidates", label: "Candidates", icon: Users },
+  { href: "/announcements", label: "Announcements", icon: Bell },
   { href: "/schedule", label: "Schedule", icon: CalendarClock },
   { href: "/hr", label: "HR Team", icon: UsersRound },
 ]
@@ -46,6 +48,7 @@ function getInitials(name?: string) {
 export function Sidebar() {
   const pathname = usePathname()
   const { role, signOut, user } = useAuth()
+  const { unreadCount } = useAnnouncements()
 
   return (
     <SidebarRoot collapsible="icon" data-testid="v2-sidebar" data-v2-glass-panel="">
@@ -75,6 +78,11 @@ export function Sidebar() {
                     >
                       <Icon />
                       <span className="text-sm group-data-[collapsible=icon]:hidden">{item.label}</span>
+                      {item.href === "/announcements" && unreadCount > 0 ? (
+                        <Badge variant="destructive" className="ml-auto group-data-[collapsible=icon]:hidden">
+                          {unreadCount}
+                        </Badge>
+                      ) : null}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
