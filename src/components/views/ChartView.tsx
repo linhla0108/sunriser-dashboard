@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical } from "lucide-react"
+import { CheckCircle2, Filter, GripVertical, RotateCcw } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -21,6 +21,14 @@ import {
 } from "recharts"
 import type { Applicant } from "@/lib/types"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
 // ─── Design constants ────────────────────────────────────────────────────────
 const PRIMARY = "#FF5533"
@@ -124,38 +132,69 @@ function byFullTime(data: Applicant[]) {
 }
 
 // ─── Chart card wrapper ───────────────────────────────────────────────────────
-function ChartCard({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function ChartCard({
+  id,
+  title,
+  children,
+  activeFilter,
+  onFilterChange,
+  onResetOrder,
+}: {
+  id: string
+  title: string
+  children: React.ReactNode
+  activeFilter: FilterType
+  onFilterChange: (filter: FilterType) => void
+  onResetOrder: () => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
 
   return (
-    <article
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      data-v2-card=""
-      className={`group rounded-3xl border border-[#E8E4DF] bg-white p-5 shadow-[0_2px_4px_rgba(15,23,42,0.04),0_12px_24px_-8px_rgba(15,23,42,0.10),0_28px_48px_-16px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow] duration-200 hover:border-[#FF5533]/40 hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-8px_rgba(255,85,51,0.14),0_36px_64px_-16px_rgba(15,23,42,0.16)] ${isDragging ? "opacity-60" : ""}`}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-[#FF5533]" aria-hidden="true" />
-          <h3 className="text-xs font-semibold tracking-widest text-[#1b1b1b] uppercase">{title}</h3>
-        </div>
-        <Button
-          variant="plain"
-          size="plain"
-          {...attributes}
-          {...listeners}
-          type="button"
-          aria-label={`Drag ${title}`}
-          className="cursor-grab rounded-lg p-1 text-[#767676] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#f9f9f9] focus:opacity-100"
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <article
+          ref={setNodeRef}
+          style={{ transform: CSS.Transform.toString(transform), transition }}
+          data-v2-card=""
+          className={`group rounded-3xl border border-[#E8E4DF] bg-white p-5 shadow-[0_2px_4px_rgba(15,23,42,0.04),0_12px_24px_-8px_rgba(15,23,42,0.10),0_28px_48px_-16px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow] duration-200 hover:border-[#FF5533]/40 hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-8px_rgba(255,85,51,0.14),0_36px_64px_-16px_rgba(15,23,42,0.16)] ${isDragging ? "opacity-60" : ""}`}
         >
-          <GripVertical className="size-4" />
-        </Button>
-      </div>
-      {children}
-    </article>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-[#FF5533]" aria-hidden="true" />
+              <h3 className="text-xs font-semibold tracking-widest text-[#1b1b1b] uppercase">{title}</h3>
+            </div>
+            <Button
+              variant="plain"
+              size="plain"
+              {...attributes}
+              {...listeners}
+              type="button"
+              aria-label={`Drag ${title}`}
+              className="cursor-grab rounded-lg p-1 text-[#767676] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#f9f9f9] focus:opacity-100"
+            >
+              <GripVertical className="size-4" />
+            </Button>
+          </div>
+          {children}
+        </article>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-52">
+        <ContextMenuLabel>{title}</ContextMenuLabel>
+        {(["all", "passed", "failed"] as const).map(nextFilter => (
+          <ContextMenuItem key={nextFilter} disabled={activeFilter === nextFilter} onClick={() => onFilterChange(nextFilter)}>
+            {activeFilter === nextFilter ? <CheckCircle2 className="text-green-600" /> : <Filter />}
+            Show {nextFilter === "all" ? "all applicants" : nextFilter}
+          </ContextMenuItem>
+        ))}
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onResetOrder}>
+          <RotateCcw />
+          Reset chart layout
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
-
 // ─── Pie label renderer ───────────────────────────────────────────────────────
 function pieLabel({ percent }: PieLabelRenderProps) {
   const pct = typeof percent === "number" ? percent : 0
@@ -211,6 +250,12 @@ export function ChartView({ data }: ChartViewProps) {
     setOrder(current => arrayMove(current, current.indexOf(active.id as ChartId), current.indexOf(over.id as ChartId)))
   }
 
+  const chartMenuProps = {
+    activeFilter: filter,
+    onFilterChange: setFilter,
+    onResetOrder: () => setOrder([...CHART_IDS]),
+  }
+
   return (
     <section className="space-y-4">
       {/* Filter bar */}
@@ -236,7 +281,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "kpi") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <div className="flex h-[180px] flex-col items-center justify-center gap-1">
                       <span className="font-[Proxima_Nova,sans-serif] text-[3.5rem] leading-none font-bold text-[#1b1b1b]">{filtered.length}</span>
                       <span className="text-xs text-[#767676]">applicants</span>
@@ -247,7 +292,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "function") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={charts.function} layout="vertical" margin={{ top: 4, right: 48, left: 8, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
@@ -266,7 +311,7 @@ export function ChartView({ data }: ChartViewProps) {
               if (id === "university") {
                 const uniHeight = Math.max(220, charts.university.length * 28)
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <div style={{ overflowY: "auto", maxHeight: 300 }}>
                       <ResponsiveContainer width="100%" height={uniHeight}>
                         <BarChart data={charts.university} layout="vertical" margin={{ top: 4, right: 40, left: 8, bottom: 0 }}>
@@ -286,7 +331,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "year") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <ResponsiveContainer width="100%" height={180}>
                       <BarChart data={charts.year} margin={{ top: 16, right: 8, left: -24, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
@@ -304,7 +349,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "gpa") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <ResponsiveContainer width="100%" height={180}>
                       <BarChart data={charts.gpa} margin={{ top: 16, right: 8, left: -24, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
@@ -322,7 +367,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "experience") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <ResponsiveContainer width="100%" height={180}>
                       <PieChart>
                         <Pie
@@ -358,7 +403,7 @@ export function ChartView({ data }: ChartViewProps) {
 
               if (id === "fulltime") {
                 return (
-                  <ChartCard key={id} id={id} title={title}>
+                  <ChartCard key={id} id={id} title={title} {...chartMenuProps}>
                     <ResponsiveContainer width="100%" height={180}>
                       <PieChart>
                         <Pie

@@ -14,7 +14,8 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    const timer = window.setTimeout(() => setMounted(true), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -48,10 +49,7 @@ export default function DashboardPage() {
   return (
     <>
       <div className="overflow-hidden">
-        <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${slide * 100}%)` }}
-        >
+        <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${slide * 100}%)` }}>
           {/* Slide 0: Overview */}
           <div className="w-full shrink-0 p-3 sm:p-4 lg:p-6">
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -68,18 +66,8 @@ export default function DashboardPage() {
                 accent
                 dataCid="v2-stats-passed"
               />
-              <StatsCard
-                title="Pass Rate"
-                value={`${dashboardStats.passRate}%`}
-                subtitle="Round 1 CV pass rate"
-                dataCid="v2-stats-rate"
-              />
-              <StatsCard
-                title="Average GPA"
-                value={dashboardStats.avgGpa.toFixed(1)}
-                subtitle="Across all applicants"
-                dataCid="v2-stats-gpa"
-              />
+              <StatsCard title="Pass Rate" value={`${dashboardStats.passRate}%`} subtitle="Round 1 CV pass rate" dataCid="v2-stats-rate" />
+              <StatsCard title="Average GPA" value={dashboardStats.avgGpa.toFixed(1)} subtitle="Across all applicants" dataCid="v2-stats-gpa" />
             </div>
             <OverviewCharts />
           </div>

@@ -144,10 +144,14 @@ export default function CandidatesPage() {
   const selectedData = showSelectedSection ? applicants.filter(applicant => selectedIds.has(applicant.id)) : []
   const filteredTableData = showSelectedSection ? filtered.filter(applicant => !selectedIds.has(applicant.id)) : filtered
 
-  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(filteredTableData.length, 15, {
-    page: urlState.page,
-    onPageChange: page => updateUrlState({ page }),
-  })
+  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(
+    filteredTableData.length,
+    urlState.pageSize,
+    {
+      page: urlState.page,
+      onPageChange: page => updateUrlState({ page }),
+    }
+  )
 
   const pagedData = filteredTableData.slice(startIndex, endIndex)
 
@@ -221,7 +225,15 @@ export default function CandidatesPage() {
               onDataChange={handleReorder}
               onViewDetail={setDetailApplicant}
               indexOffset={startIndex}
-              paginationInfo={{ start: startIndex, end: endIndex, total: filteredTableData.length, currentPage, totalPages }}
+              paginationInfo={{
+                start: startIndex,
+                end: endIndex,
+                total: filteredTableData.length,
+                currentPage,
+                totalPages,
+                pageSize: urlState.pageSize,
+                onPageSizeChange: pageSize => updateUrlState({ pageSize, page: 1 }),
+              }}
               searchQuery={search}
               sortState={urlState.sort}
               onSortChange={sort => updateUrlState({ sort, page: 1 })}
@@ -245,6 +257,7 @@ export default function CandidatesPage() {
               data: filtered,
               onReorder: handleReorder,
               onViewDetail: setDetailApplicant,
+              onUpdateApplicant: handleUpdateApplicant,
               searchQuery: search,
               groupBy: urlState.group,
               onGroupByChange: (group: CandidatePipelineGroup) => updateUrlState({ group }),

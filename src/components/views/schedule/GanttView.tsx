@@ -3,6 +3,7 @@
 import { Fragment, useMemo, useState } from "react"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { BatchChip, BATCH_BAR_STYLES } from "@/components/schedule/BatchChip"
+import { ScheduleEntryContextMenu } from "@/components/schedule/ScheduleEntryContextMenu"
 import { Button } from "@/components/ui/button"
 import { normalizeTimelineBatch, TIMELINE_BATCHES, type TimelineBatch, type TimelineEntry } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -44,9 +45,11 @@ function pickDefaultAnchor(entries: TimelineEntry[]): Date {
 interface GanttViewProps {
   entries: TimelineEntry[]
   onSelect: (entry: TimelineEntry) => void
+  onEdit: (entry: TimelineEntry) => void
+  onDelete: (id: string) => void
 }
 
-export function GanttView({ entries, onSelect }: GanttViewProps) {
+export function GanttView({ entries, onSelect, onEdit, onDelete }: GanttViewProps) {
   const [zoom, setZoom] = useState<ZoomKey>("2week")
   const [anchor, setAnchor] = useState<Date>(() => pickDefaultAnchor(entries))
   const [collapsedBatches, setCollapsedBatches] = useState<Set<string>>(new Set())
@@ -169,6 +172,8 @@ export function GanttView({ entries, onSelect }: GanttViewProps) {
                 windowStart={windowStart}
                 windowDuration={windowDuration}
                 onSelect={onSelect}
+                onEdit={onEdit}
+                onDelete={onDelete}
               />
             ))}
           </div>
@@ -224,9 +229,11 @@ interface SwimlaneRowProps {
   windowStart: Date
   windowDuration: number
   onSelect: (entry: TimelineEntry) => void
+  onEdit: (entry: TimelineEntry) => void
+  onDelete: (id: string) => void
 }
 
-function SwimlaneRow({ batch, entries, collapsed, onToggle, windowStart, windowDuration, onSelect }: SwimlaneRowProps) {
+function SwimlaneRow({ batch, entries, collapsed, onToggle, windowStart, windowDuration, onSelect, onEdit, onDelete }: SwimlaneRowProps) {
   const hasEntries = entries.length > 0
   return (
     <div className="border-b border-[#f0f0f0] last:border-b-0">
@@ -238,7 +245,15 @@ function SwimlaneRow({ batch, entries, collapsed, onToggle, windowStart, windowD
       {!collapsed && hasEntries ? (
         <div className="flex flex-col">
           {entries.map(entry => (
-            <EntryRow key={entry.id} entry={entry} windowStart={windowStart} windowDuration={windowDuration} onSelect={() => onSelect(entry)} />
+            <EntryRow
+              key={entry.id}
+              entry={entry}
+              windowStart={windowStart}
+              windowDuration={windowDuration}
+              onSelect={() => onSelect(entry)}
+              onEdit={() => onEdit(entry)}
+              onDelete={() => onDelete(entry.id)}
+            />
           ))}
         </div>
       ) : null}
@@ -252,9 +267,11 @@ interface EntryRowProps {
   windowStart: Date
   windowDuration: number
   onSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
 }
 
-function EntryRow({ entry, windowStart, windowDuration, onSelect }: EntryRowProps) {
+function EntryRow({ entry, windowStart, windowDuration, onSelect, onEdit, onDelete }: EntryRowProps) {
   const batch = normalizeTimelineBatch(entry.batch)
   const start = new Date(entry.startDate)
   const end = entry.endDate ? new Date(entry.endDate) : start
@@ -269,37 +286,41 @@ function EntryRow({ entry, windowStart, windowDuration, onSelect }: EntryRowProp
   const widthPct = Math.max(0.5, (clampedEnd - clampedStart) * 100)
 
   return (
-    <div className="group flex items-center border-t border-[#f8f8f8] hover:bg-[#fafafa]">
-      <div className="w-[180px] shrink-0 truncate border-r border-[#f0f0f0] px-4 py-2 pl-9 text-[11px] font-medium text-[#1b1b1b]">{entry.todo}</div>
-      <div className="relative h-9 flex-1">
-        {isMilestone ? (
-          <button
-            type="button"
-            onClick={onSelect}
-            aria-label={entry.todo}
-            className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${leftPct}%` }}
-          >
-            <span
-              className={cn("block size-4 rotate-45 border-2 border-white shadow-sm transition-transform hover:scale-110", BATCH_BAR_STYLES[batch])}
-            />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onSelect}
-            className={cn(
-              "absolute top-1/2 -translate-y-1/2 rounded-md px-1.5 text-left transition-shadow hover:shadow-md focus:ring-2 focus:ring-[#FF5533]/40 focus:outline-none",
-              BATCH_BAR_STYLES[batch],
-              "text-white"
-            )}
-            style={{ left: `${leftPct}%`, width: `${widthPct}%`, minHeight: "20px" }}
-          >
-            <span className="block truncate text-[10px] font-semibold">{extractCutoffLabel(entry.note)}</span>
-          </button>
-        )}
+    <ScheduleEntryContextMenu entry={entry} onView={() => onSelect()} onEdit={() => onEdit()} onDelete={() => onDelete()}>
+      <div className="group flex items-center border-t border-[#f8f8f8] hover:bg-[#fafafa]">
+        <div className="w-[180px] shrink-0 truncate border-r border-[#f0f0f0] px-4 py-2 pl-9 text-[11px] font-medium text-[#1b1b1b]">
+          {entry.todo}
+        </div>
+        <div className="relative h-9 flex-1">
+          {isMilestone ? (
+            <button
+              type="button"
+              onClick={onSelect}
+              aria-label={entry.todo}
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${leftPct}%` }}
+            >
+              <span
+                className={cn("block size-4 rotate-45 border-2 border-white shadow-sm transition-transform hover:scale-110", BATCH_BAR_STYLES[batch])}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSelect}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 rounded-md px-1.5 text-left transition-shadow hover:shadow-md focus:ring-2 focus:ring-[#FF5533]/40 focus:outline-none",
+                BATCH_BAR_STYLES[batch],
+                "text-white"
+              )}
+              style={{ left: `${leftPct}%`, width: `${widthPct}%`, minHeight: "20px" }}
+            >
+              <span className="block truncate text-[10px] font-semibold">{extractCutoffLabel(entry.note)}</span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </ScheduleEntryContextMenu>
   )
 }
 

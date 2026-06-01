@@ -17,7 +17,14 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Applicant } from "@/lib/types"
-import type { CandidateSortDir, CandidateSortKey, CandidateSortState } from "@/lib/candidates/candidateUrlState"
+import {
+  CANDIDATE_PAGE_SIZE_OPTIONS,
+  type CandidatePageSize,
+  type CandidateSortDir,
+  type CandidateSortKey,
+  type CandidateSortState,
+} from "@/lib/candidates/candidateUrlState"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import DraggableRow from "./DraggableRow"
 
 export interface PaginationInfo {
@@ -26,6 +33,8 @@ export interface PaginationInfo {
   total: number
   currentPage: number
   totalPages: number
+  pageSize?: CandidatePageSize
+  onPageSizeChange?: (value: CandidatePageSize) => void
 }
 
 interface ApplicantTableProps {
@@ -333,7 +342,7 @@ export default function ApplicantTable({
           }}
         >
           <Table
-            containerClassName="max-h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:max-h-[calc(100dvh-15.5rem)]"
+            containerClassName="h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:h-[calc(100dvh-15.5rem)]"
             className="min-w-[1180px]"
           >
             <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
@@ -576,14 +585,36 @@ export default function ApplicantTable({
         </DragOverlay>
       </DndContext>
       {paginationInfo ? (
-        <div className="text-muted-foreground mt-3 flex items-center justify-between px-1 text-xs">
-          <span>
-            <span className="text-foreground font-medium">
-              {paginationInfo.start + 1}–{paginationInfo.end}
+        <div className="text-muted-foreground mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
+          <div className="flex items-center gap-3">
+            <span>
+              <span className="text-foreground font-medium">
+                {paginationInfo.start + 1}–{paginationInfo.end}
+              </span>
+              {" of "}
+              <span className="text-foreground font-medium">{paginationInfo.total}</span>
             </span>
-            {" of "}
-            <span className="text-foreground font-medium">{paginationInfo.total}</span>
-          </span>
+            {paginationInfo.pageSize !== undefined && paginationInfo.onPageSizeChange ? (
+              <div className="flex items-center gap-2">
+                <span>Rows per page</span>
+                <Select
+                  value={String(paginationInfo.pageSize)}
+                  onValueChange={value => paginationInfo.onPageSizeChange?.(Number(value) as CandidatePageSize)}
+                >
+                  <SelectTrigger size="sm" className="h-7 w-[68px] px-2 text-xs" aria-label="Rows per page">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CANDIDATE_PAGE_SIZE_OPTIONS.map(option => (
+                      <SelectItem key={option} value={String(option)}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
           <span>
             {"Page "}
             <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>

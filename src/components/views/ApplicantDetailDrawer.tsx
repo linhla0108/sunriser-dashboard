@@ -1,9 +1,10 @@
 "use client"
 
-import { FileText, Link2 } from "lucide-react"
+import { ExternalLink, FileText, Link2 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { CandidatePreviewDialog } from "@/components/candidates/CandidatePreviewDialog"
+import { PortfolioLinkPopover } from "@/components/candidates/PortfolioLinkPopover"
 import { candidateLinksFromApplicant } from "@/lib/candidates/candidateLinks"
 import type { Applicant } from "@/lib/types"
 
@@ -43,12 +44,7 @@ function LongText({ children }: { children?: string }) {
 
 export function ApplicantDetailDrawer({ applicant, open, onOpenChange, onUpdateApplicant }: ApplicantDetailDrawerProps) {
   const displayed = applicant
-  const portfolioTargets = displayed
-    ? candidateLinksFromApplicant(displayed).map((url, i, links) => ({
-        label: links.length > 1 ? `Portfolio ${i + 1}` : "Portfolio",
-        url,
-      }))
-    : []
+  const portfolioLinks = displayed ? candidateLinksFromApplicant(displayed) : []
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -88,14 +84,42 @@ export function ApplicantDetailDrawer({ applicant, open, onOpenChange, onUpdateA
                     <LongText>{displayed.experienceDesc}</LongText>
                   </DetailRow>
                   <DetailRow label="Portfolio">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <CandidatePreviewDialog
-                        title={`${displayed.name} portfolio`}
-                        targets={portfolioTargets}
-                        triggerLabel={`Preview portfolio for ${displayed.name}`}
-                        icon={Link2}
-                      />
-                      <span className="text-muted-foreground truncate text-xs">{displayed.portfolio || "No detected URL"}</span>
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {portfolioLinks.length > 0 ? (
+                          <div className="flex min-w-0 flex-wrap items-center gap-1">
+                            {portfolioLinks.map((url, linkIndex) => (
+                              <PortfolioLinkPopover
+                                key={`${url}-${linkIndex}`}
+                                url={url}
+                                label={`Open portfolio ${linkIndex + 1} for ${displayed.name}`}
+                                className="text-muted-foreground hover:text-primary rounded-full"
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground inline-flex size-7 items-center justify-center rounded-full">
+                            <Link2 className="size-4" />
+                          </span>
+                        )}
+                        <span className="text-muted-foreground truncate text-xs">{displayed.portfolio || "No detected URL"}</span>
+                      </div>
+                      {portfolioLinks.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {portfolioLinks.map((url, index) => (
+                            <a
+                              key={`${url}-${index}`}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary inline-flex items-center gap-1 truncate text-xs hover:underline"
+                            >
+                              <ExternalLink className="size-3.5 shrink-0" />
+                              <span className="truncate">{url}</span>
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </DetailRow>
                   <DetailRow label="Internship">

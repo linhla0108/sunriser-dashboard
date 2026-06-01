@@ -9,6 +9,7 @@ export default defineConfig({
   globalSetup: "./tests/e2e/global-setup.ts",
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    headless: true,
     storageState: "tests/e2e/.auth-state.json",
     trace: "on-first-retry",
     screenshot: "only-on-failure",

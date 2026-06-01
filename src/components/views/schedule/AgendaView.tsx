@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { BatchChip } from "@/components/schedule/BatchChip"
 import { CutoffChip, EntryTimeLabel } from "@/components/schedule/EntryTimeLabel"
 import { PicChips } from "@/components/schedule/PicChips"
+import { ScheduleEntryContextMenu } from "@/components/schedule/ScheduleEntryContextMenu"
 import type { TimelineEntry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -52,9 +53,11 @@ function formatDayHeader(date: Date): string {
 interface AgendaViewProps {
   entries: TimelineEntry[]
   onSelect: (entry: TimelineEntry) => void
+  onEdit: (entry: TimelineEntry) => void
+  onDelete: (id: string) => void
 }
 
-export function AgendaView({ entries, onSelect }: AgendaViewProps) {
+export function AgendaView({ entries, onSelect, onEdit, onDelete }: AgendaViewProps) {
   const groups = useMemo(() => groupByDay(entries), [entries])
 
   if (groups.length === 0) {
@@ -78,7 +81,13 @@ export function AgendaView({ entries, onSelect }: AgendaViewProps) {
           </header>
           <ul className="flex flex-col gap-2.5">
             {group.entries.map(entry => (
-              <AgendaCard key={entry.id} entry={entry} onSelect={() => onSelect(entry)} />
+              <AgendaCard
+                key={entry.id}
+                entry={entry}
+                onSelect={() => onSelect(entry)}
+                onEdit={() => onEdit(entry)}
+                onDelete={() => onDelete(entry.id)}
+              />
             ))}
           </ul>
         </section>
@@ -90,46 +99,50 @@ export function AgendaView({ entries, onSelect }: AgendaViewProps) {
 interface AgendaCardProps {
   entry: TimelineEntry
   onSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
 }
 
-function AgendaCard({ entry, onSelect }: AgendaCardProps) {
+function AgendaCard({ entry, onSelect, onEdit, onDelete }: AgendaCardProps) {
   const [noteOpen, setNoteOpen] = useState(false)
   const trimmedNote = entry.note.trim()
 
   return (
     <li>
-      <article
-        className="group rounded-3xl border border-[#e8e8e8] bg-white p-4 transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
-        style={{ boxShadow: "rgba(4, 23, 43, 0.03) 0px 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 8px 16px -4px" }}
-      >
-        <button type="button" onClick={onSelect} className="block w-full text-left">
-          <div className="flex flex-wrap items-center gap-2">
-            <BatchChip batch={entry.batch} />
-            <EntryTimeLabel entry={entry} />
-            {trimmedNote ? <CutoffChip note={trimmedNote} /> : null}
-          </div>
-          <h3 className="mt-2 text-sm font-semibold text-[#1b1b1b] group-hover:text-[#FF5533]">{entry.todo}</h3>
-          {entry.pic.trim() ? (
-            <div className="mt-2.5">
-              <PicChips raw={entry.pic} variant="stacked" />
+      <ScheduleEntryContextMenu entry={entry} onView={() => onSelect()} onEdit={() => onEdit()} onDelete={() => onDelete()}>
+        <article
+          className="group rounded-3xl border border-[#e8e8e8] bg-white p-4 transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
+          style={{ boxShadow: "rgba(4, 23, 43, 0.03) 0px 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 8px 16px -4px" }}
+        >
+          <button type="button" onClick={onSelect} className="block w-full text-left">
+            <div className="flex flex-wrap items-center gap-2">
+              <BatchChip batch={entry.batch} />
+              <EntryTimeLabel entry={entry} />
+              {trimmedNote ? <CutoffChip note={trimmedNote} /> : null}
+            </div>
+            <h3 className="mt-2 text-sm font-semibold text-[#1b1b1b] group-hover:text-[#FF5533]">{entry.todo}</h3>
+            {entry.pic.trim() ? (
+              <div className="mt-2.5">
+                <PicChips raw={entry.pic} variant="stacked" />
+              </div>
+            ) : null}
+          </button>
+          {trimmedNote ? (
+            <div className="mt-3 border-t border-[#f0f0f0] pt-2.5">
+              <button
+                type="button"
+                onClick={() => setNoteOpen(v => !v)}
+                className="flex w-full items-center gap-1.5 text-[11px] font-semibold tracking-wide text-[#767676] uppercase transition-colors hover:text-[#1b1b1b]"
+                aria-expanded={noteOpen}
+              >
+                {noteOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                Note
+              </button>
+              {noteOpen ? <p className={cn("mt-2 text-xs leading-relaxed whitespace-pre-line text-[#555555]")}>{trimmedNote}</p> : null}
             </div>
           ) : null}
-        </button>
-        {trimmedNote ? (
-          <div className="mt-3 border-t border-[#f0f0f0] pt-2.5">
-            <button
-              type="button"
-              onClick={() => setNoteOpen(v => !v)}
-              className="flex w-full items-center gap-1.5 text-[11px] font-semibold tracking-wide text-[#767676] uppercase transition-colors hover:text-[#1b1b1b]"
-              aria-expanded={noteOpen}
-            >
-              {noteOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              Note
-            </button>
-            {noteOpen ? <p className={cn("mt-2 text-xs leading-relaxed whitespace-pre-line text-[#555555]")}>{trimmedNote}</p> : null}
-          </div>
-        ) : null}
-      </article>
+        </article>
+      </ScheduleEntryContextMenu>
     </li>
   )
 }

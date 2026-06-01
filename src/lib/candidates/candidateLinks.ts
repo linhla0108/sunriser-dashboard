@@ -1,5 +1,5 @@
 const URL_PATTERN =
-  /(?:https?:\/\/)?(?:www\.)?(?:github\.com|linkedin\.com|behance\.net|dribbble\.com|itch\.io|kaggle\.com|artstation\.com|youtube\.com|youtu\.be|drive\.google\.com|docs\.google\.com|notion\.so|surl\.li|play\.unity\.com|[a-z0-9-]+(?:\.[a-z0-9-]+)+)(?:\/[^\s,;)"]*)?/gi
+  /(?:https?:\/\/)?(?:www\.)?(?:github\.com|linkedin\.com|behance\.net|dribbble\.com|itch\.io|kaggle\.com|artstation\.com|youtube\.com|youtu\.be|drive\.google\.com|docs\.google\.com|notion\.so|surl\.li|play\.unity\.com|[a-z0-9-]{2,}(?:\.[a-z0-9-]+)+)(?:\/[^\s,;)"]*)?/gi
 
 export function normalizeCandidateUrl(value: string) {
   const trimmed = value.trim().replace(/["'.,;]+$/g, "")
@@ -19,10 +19,6 @@ export function candidateLinksFromApplicant(value: { portfolio?: string; portfol
   return extractCandidateUrls(value.portfolio)
 }
 
-export function isImagePreviewUrl(url: string) {
-  return /\.(?:apng|avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(url)
-}
-
-export function isPdfPreviewUrl(url: string) {
-  return /\.pdf(?:[?#].*)?$/i.test(url)
+export function proxiedCandidateFileUrl(url: string) {
+  return `/api/candidates/preview-file?url=${encodeURIComponent(url)}`
 }

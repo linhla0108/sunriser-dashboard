@@ -69,6 +69,12 @@ export default function SchedulePage() {
     setDrawerOpen(true)
   }
 
+  function handleEditEntry(entry: TimelineEntry) {
+    setDrawerEntry(entry)
+    setDrawerMode("edit")
+    setDrawerOpen(true)
+  }
+
   function handleAddEntry() {
     setDrawerEntry(makeEmptyEntry())
     setDrawerMode("create")
@@ -103,13 +109,13 @@ export default function SchedulePage() {
         />
         <div className="hidden sm:block">
           {urlState.view === "gantt" ? (
-            <GanttView entries={filtered} onSelect={handleSelect} />
+            <GanttView entries={filtered} onSelect={handleSelect} onEdit={handleEditEntry} onDelete={handleDelete} />
           ) : (
-            <AgendaView entries={filtered} onSelect={handleSelect} />
+            <AgendaView entries={filtered} onSelect={handleSelect} onEdit={handleEditEntry} onDelete={handleDelete} />
           )}
         </div>
         <div className="sm:hidden">
-          <AgendaView entries={filtered} onSelect={handleSelect} />
+          <AgendaView entries={filtered} onSelect={handleSelect} onEdit={handleEditEntry} onDelete={handleDelete} />
         </div>
       </div>
       <div className="hidden sm:block">

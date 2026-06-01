@@ -19,6 +19,7 @@ import {
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ArrowRight } from "lucide-react"
+import { CandidateCardContextMenu } from "@/components/candidates/CandidateCardContextMenu"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { PinStarButton } from "@/components/pin/PinStarButton"
 import type { CandidatePipelineGroup } from "@/lib/candidates/candidateUrlState"
@@ -31,6 +32,7 @@ interface PipelineViewProps {
   data: Applicant[]
   onReorder?: (items: Applicant[]) => void
   onViewDetail?: (applicant: Applicant) => void
+  onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
   searchQuery?: string
   groupBy?: PipelineGroupBy
   onGroupByChange?: (groupBy: PipelineGroupBy) => void
@@ -72,7 +74,15 @@ function updateItemColumn(item: Applicant, groupBy: PipelineGroupBy, columnKey: 
   return item
 }
 
-export function PipelineView({ data, onReorder, onViewDetail, searchQuery, groupBy: controlledGroupBy, onGroupByChange }: PipelineViewProps) {
+export function PipelineView({
+  data,
+  onReorder,
+  onViewDetail,
+  onUpdateApplicant,
+  searchQuery,
+  groupBy: controlledGroupBy,
+  onGroupByChange,
+}: PipelineViewProps) {
   const [internalGroupBy, setInternalGroupBy] = useState<PipelineGroupBy>("round1")
   const [activeId, setActiveId] = useState<string | null>(null)
   const [overColumnKey, setOverColumnKey] = useState<string | null>(null)
@@ -221,8 +231,8 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
               <PipelineColumn
                 key={column.key}
                 column={column}
-                groupBy={groupBy}
                 onViewDetail={onViewDetail}
+                onUpdateApplicant={onUpdateApplicant}
                 searchQuery={searchQuery}
                 isExternalDragOver={isExternalDragOver}
               />
@@ -237,14 +247,14 @@ export function PipelineView({ data, onReorder, onViewDetail, searchQuery, group
 
 function PipelineColumn({
   column,
-  groupBy,
   onViewDetail,
+  onUpdateApplicant,
   searchQuery,
   isExternalDragOver,
 }: {
   column: ReturnType<typeof groupApplicants>[number]
-  groupBy: PipelineGroupBy
   onViewDetail?: (applicant: Applicant) => void
+  onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
   searchQuery?: string
   isExternalDragOver: boolean
 }) {
@@ -275,7 +285,13 @@ function PipelineColumn({
           )}
           <div className={`flex flex-col gap-2 ${isExternalDragOver ? "pointer-events-none opacity-30" : ""}`}>
             {column.items.slice(0, 120).map(item => (
-              <PipelineCard key={item.id} applicant={item} groupBy={groupBy} onViewDetail={onViewDetail} searchQuery={searchQuery} />
+              <PipelineCard
+                key={item.id}
+                applicant={item}
+                onViewDetail={onViewDetail}
+                onUpdateApplicant={onUpdateApplicant}
+                searchQuery={searchQuery}
+              />
             ))}
             {column.items.length > 120 && (
               <p className="text-muted-foreground px-3 py-2 text-center text-xs">
@@ -296,60 +312,62 @@ function PipelineColumn({
 
 function PipelineCard({
   applicant,
-  groupBy,
   onViewDetail,
+  onUpdateApplicant,
   searchQuery,
 }: {
   applicant: Applicant
-  groupBy: PipelineGroupBy
   onViewDetail?: (applicant: Applicant) => void
+  onUpdateApplicant?: (id: string, patch: Partial<Applicant>) => void
   searchQuery?: string
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: applicant.id })
 
   return (
-    <article
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      onClick={() => onViewDetail?.(applicant)}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      data-v2-card=""
-      className={`border-foreground/10 bg-card/80 cursor-pointer rounded-2xl border p-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-all ${isDragging ? "ring-primary/30 opacity-40 ring-2" : "hover:border-primary/60 hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)]"}`}
-    >
-      <div className="flex items-start gap-2">
-        <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold">
-          {initials(applicant.name)}
+    <CandidateCardContextMenu applicant={applicant} onViewDetail={onViewDetail} onUpdateApplicant={onUpdateApplicant}>
+      <article
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        onClick={() => onViewDetail?.(applicant)}
+        style={{ transform: CSS.Translate.toString(transform), transition }}
+        data-v2-card=""
+        className={`border-foreground/10 bg-card/80 cursor-pointer rounded-2xl border p-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-all ${isDragging ? "ring-primary/30 opacity-40 ring-2" : "hover:border-primary/60 hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)]"}`}
+      >
+        <div className="flex items-start gap-2">
+          <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold">
+            {initials(applicant.name)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-foreground truncate text-sm font-semibold">
+              <SearchHighlight text={applicant.name} query={searchQuery} />
+            </p>
+            <p className="text-muted-foreground truncate text-xs">
+              <SearchHighlight text={shortPosition(applicant.position1)} query={searchQuery} />
+            </p>
+          </div>
+          <PinStarButton id={applicant.id} />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-foreground truncate text-sm font-semibold">
-            <SearchHighlight text={applicant.name} query={searchQuery} />
-          </p>
-          <p className="text-muted-foreground truncate text-xs">
-            <SearchHighlight text={shortPosition(applicant.position1)} query={searchQuery} />
-          </p>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          {applicant.pic ? (
+            <span
+              className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${PIC_CHIP_STYLE[applicant.pic] ?? "bg-muted border-border text-muted-foreground"}`}
+            >
+              {applicant.pic}
+            </span>
+          ) : (
+            <span className="text-muted-foreground/60 text-xs">No PIC</span>
+          )}
+          <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-semibold">
+            <span className="min-w-0 truncate" title={applicant.university}>
+              <SearchHighlight text={applicant.university} query={searchQuery} />
+            </span>
+            <span className="text-foreground/30">·</span>
+            <span className="shrink-0">GPA {applicant.gpa.toFixed(1)}</span>
+          </div>
         </div>
-        <PinStarButton id={applicant.id} />
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        {applicant.pic ? (
-          <span
-            className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${PIC_CHIP_STYLE[applicant.pic] ?? "bg-muted border-border text-muted-foreground"}`}
-          >
-            {applicant.pic}
-          </span>
-        ) : (
-          <span className="text-muted-foreground/60 text-xs">No PIC</span>
-        )}
-        <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-semibold">
-          <span className="min-w-0 truncate" title={applicant.university}>
-            <SearchHighlight text={applicant.university} query={searchQuery} />
-          </span>
-          <span className="text-foreground/30">·</span>
-          <span className="shrink-0">GPA {applicant.gpa.toFixed(1)}</span>
-        </div>
-      </div>
-    </article>
+      </article>
+    </CandidateCardContextMenu>
   )
 }
 

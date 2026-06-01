@@ -2,13 +2,14 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff, FileText, Link2 } from "lucide-react"
+import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff, FileText } from "lucide-react"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { CandidatePreviewDialog, DelayedTextPreview } from "@/components/candidates/CandidatePreviewDialog"
+import { PortfolioLinkPopover } from "@/components/candidates/PortfolioLinkPopover"
 import { candidateLinksFromApplicant } from "@/lib/candidates/candidateLinks"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
@@ -334,7 +335,6 @@ export default function DraggableRow({
     : ""
   const portfolioLinks = candidateLinksFromApplicant(applicant)
   const academicTargets = applicant.academicFile ? [{ label: "Academic file", url: applicant.academicFile }] : []
-  const portfolioTargets = portfolioLinks.map((url, i) => ({ label: portfolioLinks.length > 1 ? `Portfolio ${i + 1}` : "Portfolio", url }))
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
@@ -434,12 +434,20 @@ export default function DraggableRow({
 
         {/* Portfolio — desktop only */}
         <td className="hidden px-3 py-3 text-center lg:table-cell">
-          <CandidatePreviewDialog
-            title={`${applicant.name} portfolio`}
-            targets={portfolioTargets}
-            triggerLabel={`Preview portfolio for ${applicant.name}`}
-            icon={Link2}
-          />
+          {portfolioLinks.length > 0 ? (
+            <div className="inline-flex max-w-[88px] flex-wrap items-center justify-center gap-1">
+              {portfolioLinks.map((url, linkIndex) => (
+                <PortfolioLinkPopover
+                  key={`${url}-${linkIndex}`}
+                  url={url}
+                  label={`Open portfolio ${linkIndex + 1} for ${applicant.name}`}
+                  className="text-muted-foreground hover:text-primary rounded-full"
+                />
+              ))}
+            </div>
+          ) : (
+            <span className="text-muted-foreground text-xs">-</span>
+          )}
         </td>
 
         {/* Message — wide desktop only */}
