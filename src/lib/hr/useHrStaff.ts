@@ -6,7 +6,7 @@ type Action =
   | { type: "CREATE"; payload: HrStaff }
   | { type: "UPDATE"; payload: HrStaff }
   | { type: "DELETE"; id: string }
-  | { type: "TOGGLE_STATUS"; id: string }
+  | { type: "SET_STATUS"; id: string; status: HrStatus }
 
 function reducer(state: HrStaff[], action: Action): HrStaff[] {
   switch (action.type) {
@@ -16,8 +16,8 @@ function reducer(state: HrStaff[], action: Action): HrStaff[] {
       return state.map(s => (s.id === action.payload.id ? action.payload : s))
     case "DELETE":
       return state.filter(s => s.id !== action.id)
-    case "TOGGLE_STATUS":
-      return state.map(s => (s.id === action.id ? { ...s, status: s.status === "active" ? "inactive" : "active" } : s))
+    case "SET_STATUS":
+      return state.map(s => (s.id === action.id ? { ...s, status: action.status } : s))
     default:
       return state
   }
@@ -47,12 +47,12 @@ export function useHrStaff(search = "", roleFilter: HrRole | "all" = "all", stat
     dispatch({ type: "DELETE", id })
   }
 
-  function toggleStatus(id: string) {
-    dispatch({ type: "TOGGLE_STATUS", id })
+  function setStatus(id: string, status: HrStatus) {
+    dispatch({ type: "SET_STATUS", id, status })
   }
 
   const activeCount = staff.filter(s => s.status === "active").length
   const inactiveCount = staff.filter(s => s.status === "inactive").length
 
-  return { staff, filtered, activeCount, inactiveCount, createStaff, updateStaff, deleteStaff, toggleStatus }
+  return { staff, filtered, activeCount, inactiveCount, createStaff, updateStaff, deleteStaff, setStatus }
 }

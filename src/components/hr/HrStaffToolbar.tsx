@@ -1,7 +1,6 @@
 "use client"
 
-import { Search, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { SearchableSelect } from "@/components/ui/select"
 import type { HrRole, HrStatus } from "@/lib/hr/types"
@@ -21,10 +20,9 @@ interface Props {
   onSearch: (v: string) => void
   onRoleChange: (v: HrRole | "all") => void
   onStatusChange: (v: HrStatus | "all") => void
-  onAdd: () => void
 }
 
-export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onRoleChange, onStatusChange, onAdd }: Props) {
+export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onRoleChange, onStatusChange }: Props) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <div className="relative min-w-[160px] flex-1">
@@ -49,11 +47,6 @@ export function HrStaffToolbar({ search, roleFilter, statusFilter, onSearch, onR
         placeholder="Status"
         className="h-9 w-[120px] rounded-full text-sm"
       />
-
-      <Button onClick={onAdd} className="bg-primary text-primary-foreground hover:bg-primary/90 ml-auto h-9 rounded-full px-4 text-sm font-semibold">
-        <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add Staff
-      </Button>
     </div>
   )
 }
