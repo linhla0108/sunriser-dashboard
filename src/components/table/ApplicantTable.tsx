@@ -12,39 +12,19 @@ import {
   DragEndEvent,
   DragStartEvent,
 } from "@dnd-kit/core"
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { ChevronUp, ChevronDown, ChevronsUpDown, Copy, RotateCcw, Search } from "lucide-react"
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { ChevronUp, ChevronDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuGroup,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Applicant } from "@/lib/types"
-import {
-  CANDIDATE_PAGE_SIZE_OPTIONS,
-  type CandidatePageSize,
-  type CandidateSortDir,
-  type CandidateSortKey,
-  type CandidateSortState,
-} from "@/lib/candidates/candidateUrlState"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { type CandidateSortDir, type CandidateSortKey, type CandidateSortState } from "@/lib/candidates/candidateUrlState"
 import DraggableRow from "./DraggableRow"
+import { ApplicantTableHeader } from "./ApplicantTableHeader"
+import { ApplicantTablePagination, type PaginationInfo } from "./ApplicantTablePagination"
+import { reorderApplicantsWithinList, sortApplicants } from "./applicantTableSort"
 
-export interface PaginationInfo {
-  start: number
-  end: number
-  total: number
-  currentPage: number
-  totalPages: number
-  pageSize?: CandidatePageSize
-  onPageSizeChange?: (value: CandidatePageSize) => void
-}
+export type { PaginationInfo } from "./ApplicantTablePagination"
+export { reorderApplicantsWithinList } from "./applicantTableSort"
 
 interface ApplicantTableProps {
   data: Applicant[]
@@ -71,118 +51,8 @@ interface ApplicantTableProps {
 const DEFAULT_SORT_STATE: Exclude<CandidateSortState, null> = { key: "name", dir: "asc" }
 const EMPTY_APPLICANTS: Applicant[] = []
 
-function SortIcon({ col, sortKey, sortDir }: { col: CandidateSortKey; sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }) {
-  if (col !== sortKey) return <ChevronsUpDown className="text-muted-foreground size-3" />
-  return sortDir === "asc" ? <ChevronUp className="text-primary size-3" /> : <ChevronDown className="text-primary size-3" />
-}
-
-function SortableHeader({
-  label,
-  col,
-  sortKey,
-  sortDir,
-  align = "left",
-  onCycleSort,
-  onSetSort,
-  onResetSort,
-}: {
-  label: string
-  col: CandidateSortKey
-  sortKey: CandidateSortKey | null
-  sortDir: CandidateSortDir
-  align?: "left" | "center"
-  onCycleSort: (key: CandidateSortKey) => void
-  onSetSort: (key: CandidateSortKey, dir: CandidateSortDir) => void
-  onResetSort: () => void
-}) {
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger className="contents">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onCycleSort(col)}
-          className={`text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase ${align === "center" ? "mx-auto" : ""}`}
-        >
-          {label}
-          <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
-        </Button>
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-48">
-        <ContextMenuGroup>
-          <ContextMenuLabel>{label}</ContextMenuLabel>
-          <ContextMenuItem onClick={() => onSetSort(col, "asc")}>
-            <ChevronUp />
-            Sort ascending
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => onSetSort(col, "desc")}>
-            <ChevronDown />
-            Sort descending
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => navigator.clipboard.writeText(label)}>
-            <Copy />
-            Copy column name
-          </ContextMenuItem>
-        </ContextMenuGroup>
-        <ContextMenuSeparator />
-        <ContextMenuGroup>
-          <ContextMenuItem onClick={onResetSort}>
-            <RotateCcw />
-            Reset sort
-          </ContextMenuItem>
-        </ContextMenuGroup>
-      </ContextMenuContent>
-    </ContextMenu>
-  )
-}
-
-// undefined optional fields always sort to the bottom regardless of direction
-function optionalStr(val: string | undefined): string {
-  return val == null ? "￿" : val
-}
-
-function sortApplicants(data: Applicant[], sortKey: CandidateSortKey, sortDir: CandidateSortDir) {
-  return [...data].sort((a, b) => {
-    let cmp = 0
-    if (sortKey === "name") cmp = a.name.localeCompare(b.name)
-    else if (sortKey === "position") cmp = a.position1.localeCompare(b.position1)
-    else if (sortKey === "gpa") cmp = a.gpa - b.gpa
-    else if (sortKey === "year") cmp = a.yearOfStudy.localeCompare(b.yearOfStudy)
-    else if (sortKey === "batch") cmp = a.batch - b.batch
-    else if (sortKey === "university") cmp = a.university.localeCompare(b.university)
-    else if (sortKey === "pic") {
-      const av = optionalStr(a.pic),
-        bv = optionalStr(b.pic)
-      // Keep undefined always at the bottom: if sentinel involved, don't flip
-      if (a.pic == null && b.pic == null) return 0
-      if (a.pic == null) return 1
-      if (b.pic == null) return -1
-      cmp = av.localeCompare(bv)
-    } else if (sortKey === "round1") {
-      if (a.round1Result == null && b.round1Result == null) return 0
-      if (a.round1Result == null) return 1
-      if (b.round1Result == null) return -1
-      cmp = a.round1Result.localeCompare(b.round1Result)
-    } else if (sortKey === "round2") {
-      if (a.round2Result == null && b.round2Result == null) return 0
-      if (a.round2Result == null) return 1
-      if (b.round2Result == null) return -1
-      cmp = a.round2Result.localeCompare(b.round2Result)
-    }
-    return sortDir === "asc" ? cmp : -cmp
-  })
-}
-
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-}
-
-export function reorderApplicantsWithinList(data: Applicant[], activeId: string, overId: string) {
-  const oldIdx = data.findIndex(a => a.id === activeId)
-  const newIdx = data.findIndex(a => a.id === overId)
-  if (oldIdx < 0 || newIdx < 0 || oldIdx === newIdx) return data
-  return arrayMove(data, oldIdx, newIdx)
 }
 
 export default function ApplicantTable({
@@ -430,133 +300,7 @@ export default function ApplicantTable({
             containerClassName="h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:h-[calc(100dvh-15.5rem)]"
             className="min-w-[1180px]"
           >
-            <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
-              <TableRow className="border-border bg-white hover:bg-white">
-                <TableHead className="text-muted-foreground w-11 min-w-11 px-0 py-3 text-center text-xs font-semibold tracking-wider uppercase">
-                  #
-                </TableHead>
-                <TableHead className="px-3 py-3 text-left">
-                  <SortableHeader
-                    label="Name"
-                    col="name"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="px-3 py-3 text-left">
-                  <SortableHeader
-                    label="Position"
-                    col="position"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-left lg:table-cell">
-                  <SortableHeader
-                    label="University"
-                    col="university"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <SortableHeader
-                    label="GPA"
-                    col="gpa"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
-                  Academic
-                </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
-                  Description
-                </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
-                  Portfolio
-                </TableHead>
-                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
-                  Message
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <SortableHeader
-                    label="Year"
-                    col="year"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <SortableHeader
-                    label="Batch"
-                    col="batch"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <SortableHeader
-                    label="PIC"
-                    col="pic"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="px-3 py-3 text-center">
-                  <SortableHeader
-                    label="Round 1"
-                    col="round1"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <SortableHeader
-                    label="Round 2"
-                    col="round2"
-                    align="center"
-                    sortKey={sortKey}
-                    sortDir={sortDir}
-                    onCycleSort={handleSort}
-                    onSetSort={setColumnSort}
-                    onResetSort={resetSort}
-                  />
-                </TableHead>
-                <TableHead className="text-muted-foreground w-[116px] px-3 py-3 pr-4 text-xs font-semibold tracking-wider uppercase">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
+            <ApplicantTableHeader sortKey={sortKey} sortDir={sortDir} onCycleSort={handleSort} onSetSort={setColumnSort} onResetSort={resetSort} />
             <SortableContext items={[...selectedItems, ...items].map(a => a.id)} strategy={verticalListSortingStrategy}>
               <TableBody>
                 {hasSelectedSection ? (
@@ -666,45 +410,7 @@ export default function ApplicantTable({
           ) : null}
         </DragOverlay>
       </DndContext>
-      {paginationInfo ? (
-        <div className="text-muted-foreground mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
-          <div className="flex items-center gap-3">
-            <span>
-              <span className="text-foreground font-medium">
-                {paginationInfo.start + 1}–{paginationInfo.end}
-              </span>
-              {" of "}
-              <span className="text-foreground font-medium">{paginationInfo.total}</span>
-            </span>
-            {paginationInfo.pageSize !== undefined && paginationInfo.onPageSizeChange ? (
-              <div className="flex items-center gap-2">
-                <span>Rows per page</span>
-                <Select
-                  value={String(paginationInfo.pageSize)}
-                  onValueChange={value => paginationInfo.onPageSizeChange?.(Number(value) as CandidatePageSize)}
-                >
-                  <SelectTrigger size="sm" className="h-7 w-[68px] px-2 text-xs" aria-label="Rows per page">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CANDIDATE_PAGE_SIZE_OPTIONS.map(option => (
-                      <SelectItem key={option} value={String(option)}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
-          </div>
-          <span>
-            {"Page "}
-            <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>
-            {" / "}
-            <span className="text-foreground font-medium">{paginationInfo.totalPages}</span>
-          </span>
-        </div>
-      ) : null}
+      <ApplicantTablePagination paginationInfo={paginationInfo} />
     </div>
   )
 }

@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx"
 import { extractCandidateUrls } from "@/lib/candidates/candidateLinks"
 import type { Applicant } from "@/lib/types"
 
@@ -31,7 +30,7 @@ export interface UploadAnalysis {
   sampleValues: Record<string, UploadCellValue[]>
 }
 
-const ACCEPTED_EXTENSIONS = [".xlsx", ".xls", ".csv", ".tsv", ".json"]
+const ACCEPTED_EXTENSIONS = [".csv", ".tsv", ".json"]
 
 const CANDIDATE_FIELDS: Array<{ key: keyof Applicant; label: string; aliases: string[]; required?: boolean }> = [
   { key: "name", label: "Name", aliases: ["name", "full name", "candidate name", "họ và tên", "ho ten", "tên", "ten"], required: true },
@@ -214,16 +213,6 @@ export async function parseUploadFile(file: File): Promise<ParsedUploadDataset> 
   if (!ACCEPTED_EXTENSIONS.includes(fileType)) throw new Error(`Unsupported file type: ${fileType}`)
 
   const buffer = await file.arrayBuffer()
-
-  if (fileType === ".xlsx" || fileType === ".xls") {
-    const workbook = XLSX.read(buffer, { cellDates: true, type: "array" })
-    const activeSheetName = workbook.SheetNames[0] ?? null
-    if (!activeSheetName) throw new Error("No sheets detected.")
-    const sheet = workbook.Sheets[activeSheetName]
-    const matrix = XLSX.utils.sheet_to_json(sheet, { blankrows: false, defval: null, header: 1, raw: true }) as unknown[][]
-    const { columns, rows } = rowsFromMatrix(matrix)
-    return makeDataset({ file, fileType, columns, rows, sheetNames: workbook.SheetNames, activeSheetName })
-  }
 
   const text = new TextDecoder().decode(buffer)
   if (fileType === ".csv" || fileType === ".tsv") {

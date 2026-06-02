@@ -11,7 +11,7 @@ For **any** task in this repo (feature, fix, refactor, UI change), invoke the co
 | `tailwind-css-patterns`    | Tailwind v4 utility patterns, responsive layout, design-token usage              | Any styling or layout work                        |
 | `performance-optimization` | Measure-first performance review, Core Web Vitals, render/load risks             | Perf-sensitive UI, charts, tables, large datasets |
 
-**Why:** This repo has a strict design system (Proxima Nova, `#FF5533` primary, Tailwind v4 config-less, shadcn/ui base-nova). Skipping these skills causes inconsistency and overbuilt code.
+**Why:** This repo has a strict design system (Proxima Nova, `#FF5533` primary, Tailwind v4 config-less, shadcn/ui base-nova). Shared shadcn primitives are the default UI language. Skipping these skills causes inconsistency and overbuilt code.
 
 **How to apply:**
 

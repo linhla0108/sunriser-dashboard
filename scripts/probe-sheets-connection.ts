@@ -1,6 +1,6 @@
 // Probe script: verify Sheets API connection using service account credentials.
 // Run with: npx tsx scripts/probe-sheets-connection.ts
-// Requires: npm install googleapis, and .env.local with GOOGLE_* vars set.
+// Requires: .env.local with GOOGLE_* vars set.
 
 import * as dotenv from "dotenv"
 import * as path from "path"

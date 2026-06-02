@@ -7,7 +7,7 @@ import { safeInternalPath } from "@/lib/auth/safePath"
  * Note: matcher below already excludes `_next`, static files, and assets.
  */
 const PUBLIC_PATHS = new Set(["/login", "/signup", "/forgot", "/otp", "/public"])
-const PUBLIC_PREFIXES = ["/auth/", "/public/", "/lab", "/__pin-test", "/pin-test"]
+const PUBLIC_PREFIXES = ["/auth/", "/public/", "/__pin-test", "/pin-test"]
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.has(pathname)) return true

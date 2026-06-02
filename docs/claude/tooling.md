@@ -9,15 +9,27 @@ Config (`.prettierrc`):
 ```json
 {
   "semi": false,
-  "singleQuote": true,
   "trailingComma": "es5",
-  "printWidth": 100,
+  "singleQuote": false,
+  "printWidth": 150,
   "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "jsxSingleQuote": false,
   "plugins": ["prettier-plugin-tailwindcss"]
 }
 ```
 
-Run: `npm run format` — formats all files and sorts Tailwind classes automatically.
+Run:
+
+```bash
+npm run format         # writes formatted files and sorts Tailwind classes
+npx prettier . --check # dry-run check, no writes
+```
+
+Do not use `npm run format -- --check`. The `format` script is `prettier --write .`, so forwarding `--check` still starts from a write-mode script.
 
 ## Scripts
 
@@ -28,7 +40,15 @@ npm run lint      # ESLint
 npm run format    # Prettier (sorts Tailwind classes)
 ```
 
-## No test runner configured.
+## Tests
+
+Vitest is configured for unit tests. Playwright is configured for e2e tests.
+
+```bash
+npm test                         # Vitest run
+npm run test:watch               # Vitest watch mode
+npx playwright test path/to.spec # Targeted e2e spec
+```
 
 ## Error Checking Rules
 
@@ -39,7 +59,7 @@ Use these instead:
 ```bash
 npx tsc --noEmit          # TypeScript type checking (fast, no output files)
 npm run lint              # ESLint for lint errors
-npm run format -- --check # Prettier dry-run to check formatting
+npx prettier . --check    # Prettier dry-run to check formatting
 ```
 
 The build (`npm run build`) is only for final verification before shipping. The dev server (`npm run dev`) is never needed for error checking.

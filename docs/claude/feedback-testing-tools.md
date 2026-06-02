@@ -32,18 +32,18 @@ What changed?
 
 ## By situation
 
-| Situation | Tool |
-|---|---|
-| Fix type, interface, logic | `tsc --noEmit` |
-| Add / change Tailwind class | `tsc --noEmit` |
-| New component — does it render correct text? | `browser_snapshot` |
-| Button click → state change | `browser_snapshot` before + after |
-| Form submit → correct API call? | `browser_network_requests` |
-| Any JS console error? | `browser_console_messages` |
-| Chart / layout suspected broken | `browser_take_screenshot` (once) |
-| Auth flow login / redirect | `browser_snapshot` step by step |
-| Write test for critical path | `tests/e2e/*.spec.ts` (CI) |
-| Full regression before merge | `npm run test:e2e` (CI only) |
+| Situation                                    | Tool                              |
+| -------------------------------------------- | --------------------------------- |
+| Fix type, interface, logic                   | `tsc --noEmit`                    |
+| Add / change Tailwind class                  | `tsc --noEmit`                    |
+| New component — does it render correct text? | `browser_snapshot`                |
+| Button click → state change                  | `browser_snapshot` before + after |
+| Form submit → correct API call?              | `browser_network_requests`        |
+| Any JS console error?                        | `browser_console_messages`        |
+| Chart / layout suspected broken              | `browser_take_screenshot` (once)  |
+| Auth flow login / redirect                   | `browser_snapshot` step by step   |
+| Write test for critical path                 | `tests/e2e/*.spec.ts` (CI)        |
+| Full regression before merge                 | `npm run test:e2e` (CI only)      |
 
 ---
 

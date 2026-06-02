@@ -1,9 +1,7 @@
 import type { Applicant } from "@/lib/types"
+import type { sheets_v4 } from "googleapis"
 
-// Placeholder until googleapis is installed in task 2.2.
-// Will be replaced with: import type { sheets_v4 } from 'googleapis'
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SheetsClient = any
+export type SheetsClient = sheets_v4.Sheets
 
 export interface SheetsSyncResult {
   ok: boolean

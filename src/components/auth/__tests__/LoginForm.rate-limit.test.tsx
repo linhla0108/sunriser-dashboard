@@ -2,7 +2,7 @@
  * Test that LoginForm shows a friendly message when Supabase returns 429.
  * Uses a scoped mock so setup.ts's global mock is fully replaced for this file.
  */
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi, beforeEach } from "vitest"
 import { TooltipProvider } from "@/components/ui/tooltip"

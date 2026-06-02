@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Bell, CalendarClock, LayoutDashboard, Settings, Users, UsersRound } from "lucide-react"
@@ -32,7 +33,7 @@ const NAV_ITEMS = [
 ]
 
 function LogoMark() {
-  return <img src="/logo.svg" alt="SUN Studio" className="h-9 w-auto shrink-0 group-data-[collapsible=icon]:h-8" />
+  return <Image src="/logo.svg" alt="SUN Studio" width={224} height={160} className="h-9 w-auto shrink-0 group-data-[collapsible=icon]:h-8" />
 }
 
 function getInitials(name?: string) {

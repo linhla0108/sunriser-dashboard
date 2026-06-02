@@ -1,19 +1,8 @@
 import { describe, expect, it } from "vitest"
-import * as XLSX from "xlsx"
 import { addColumnsToParsedDataset, analyzeUploadDataset, mapUploadDatasetToApplicants, parseUploadFile } from "../parseUploadFile"
 
 function textFile(name: string, text: string, type = "text/plain") {
   return new File([text], name, { type })
-}
-
-function workbookFile(name: string, rows: unknown[][]) {
-  const workbook = XLSX.utils.book_new()
-  const sheet = XLSX.utils.aoa_to_sheet(rows)
-  XLSX.utils.book_append_sheet(workbook, sheet, "SUN.RISER 2026")
-  const data = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer
-  return new File([data], name, {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  })
 }
 
 describe("parseUploadFile", () => {
@@ -42,19 +31,23 @@ describe("parseUploadFile", () => {
     expect(dataset.rows[0].values.Position).toBe("AI Engineering Intern")
   })
 
-  it("parses XLSX sheets with sheet metadata and row values", async () => {
+  it("parses JSON records", async () => {
     const dataset = await parseUploadFile(
-      workbookFile("sunriser.xlsx", [
-        ["Full name", "Email", "Position 1", "GPA"],
-        ["Pham Thi C", "c@example.com", "Data Analysis Intern", 9.1],
-      ])
+      textFile(
+        "candidates.json",
+        JSON.stringify([{ "Full name": "Pham Thi C", Email: "c@example.com", "Position 1": "Data Analysis Intern", GPA: "9.1" }]),
+        "application/json"
+      )
     )
 
-    expect(dataset.sheetNames).toEqual(["SUN.RISER 2026"])
-    expect(dataset.activeSheetName).toBe("SUN.RISER 2026")
     expect(dataset.columns).toEqual(["Full name", "Email", "Position 1", "GPA"])
     expect(dataset.rows[0].values["Full name"]).toBe("Pham Thi C")
     expect(dataset.rows[0].values.GPA).toBe(9.1)
+  })
+
+  it("rejects spreadsheet formats", async () => {
+    await expect(parseUploadFile(textFile("sunriser.xlsx", "spreadsheet"))).rejects.toThrow("Unsupported file type: .xlsx")
+    await expect(parseUploadFile(textFile("sunriser.xls", "spreadsheet"))).rejects.toThrow("Unsupported file type: .xls")
   })
 
   it("adds missing columns and re-analyzes the candidate field coverage", async () => {
