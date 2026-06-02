@@ -20,6 +20,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **@dnd-kit**, **Recharts**, **lucide-react**, **sonner**, **cmdk**, **animejs**
 - **Vitest** for unit, **Playwright** for e2e
 
+## UI Primitive Rule
+
+- Prefer shared `shadcn/ui` primitives from `src/components/ui/` over raw HTML controls whenever an equivalent exists.
+- Do not introduce raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, or checkbox/radio controls in product UI unless there is no local shadcn primitive yet and the task explicitly keeps that gap temporary.
+- If a needed primitive is missing, add or create the shared `src/components/ui/*` component first, then consume it from feature code.
+
 ## Scripts
 
 ```bash
