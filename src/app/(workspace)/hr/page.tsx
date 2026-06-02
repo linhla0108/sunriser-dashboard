@@ -13,32 +13,18 @@ export default function HrPage() {
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<HrRole | "all">("all")
   const [statusFilter, setStatusFilter] = useState<HrStatus | "all">("all")
-  const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<HrStaff | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<HrStaff | null>(null)
 
-  const { staff, filtered, activeCount, inactiveCount, createStaff, updateStaff, deleteStaff, toggleStatus } = useHrStaff(
-    search,
-    roleFilter,
-    statusFilter
-  )
-
-  function handleAdd() {
-    setEditTarget(null)
-    setFormOpen(true)
-  }
+  const { staff, filtered, activeCount, inactiveCount, updateStaff, deleteStaff, setStatus } = useHrStaff(search, roleFilter, statusFilter)
 
   function handleEdit(s: HrStaff) {
     setEditTarget(s)
-    setFormOpen(true)
   }
 
   function handleSave(data: Omit<HrStaff, "id">) {
-    if (editTarget) {
-      updateStaff({ ...data, id: editTarget.id })
-    } else {
-      createStaff(data)
-    }
+    if (!editTarget) return
+    updateStaff({ ...data, id: editTarget.id })
   }
 
   function handleDeleteConfirm() {
@@ -64,12 +50,11 @@ export default function HrPage() {
         onSearch={setSearch}
         onRoleChange={setRoleFilter}
         onStatusChange={setStatusFilter}
-        onAdd={handleAdd}
       />
 
-      <HrStaffTable staff={filtered} onEdit={handleEdit} onDelete={setDeleteTarget} onToggleStatus={toggleStatus} />
+      <HrStaffTable staff={filtered} onEdit={handleEdit} onDelete={setDeleteTarget} onSetStatus={setStatus} />
 
-      <HrStaffFormDialog open={formOpen} initial={editTarget} onSave={handleSave} onClose={() => setFormOpen(false)} />
+      <HrStaffFormDialog open={Boolean(editTarget)} initial={editTarget} onSave={handleSave} onClose={() => setEditTarget(null)} />
 
       <HrStaffDeleteDialog staff={deleteTarget} onConfirm={handleDeleteConfirm} onClose={() => setDeleteTarget(null)} />
     </div>

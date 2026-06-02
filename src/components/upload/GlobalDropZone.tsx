@@ -1,8 +1,17 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertCircle, CheckCircle2, File, FileSpreadsheet, FileText, Plus, RefreshCw, UploadCloud, X } from "lucide-react"
+import { AlertCircle, CheckCircle2, Copy, File, FileSpreadsheet, FileText, Plus, RefreshCw, UploadCloud, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { UploadSession } from "@/lib/upload/UploadSessionContext"
 import {
   addColumnsToParsedDataset,
@@ -356,185 +365,216 @@ export default function GlobalDropZone({ children, onAnalyze }: GlobalDropZonePr
           )}
 
           {dropState === "popup-open" && dataset && analysis && (
-            <div
-              ref={popupRef}
-              data-cid="drop-zone-popup"
-              className="relative z-10 mx-0 max-h-[86vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[680px] sm:rounded-3xl"
-              style={{
-                animation: "slideUpFade 200ms ease-out",
-                boxShadow: "rgba(4, 23, 43, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 24px 48px -12px",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">
-                  {getFileIcon(dataset.fileType)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-[#1b1b1b]" title={dataset.fileName}>
-                    {dataset.fileName}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#767676]">
-                    {formatSize(dataset.fileSize)} · {dataset.rowCount.toLocaleString()} rows · {dataset.columnCount} columns detected
-                    {dataset.activeSheetName ? ` · ${dataset.activeSheetName}` : ""}
-                  </p>
-                </div>
-                <Button
-                  variant="plain"
-                  size="plain"
-                  onClick={closePopup}
-                  className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]"
-                  aria-label="Close"
+            <ContextMenu>
+              <ContextMenuTrigger className="contents">
+                <div
+                  ref={popupRef}
+                  data-cid="drop-zone-popup"
+                  className="relative z-10 mx-0 max-h-[86vh] w-full space-y-4 overflow-y-auto rounded-t-3xl bg-white p-4 sm:mx-4 sm:w-full sm:max-w-[680px] sm:rounded-3xl"
+                  style={{
+                    animation: "slideUpFade 200ms ease-out",
+                    boxShadow: "rgba(4, 23, 43, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.2) 0px 24px 48px -12px",
+                  }}
                 >
-                  <X size={16} />
-                </Button>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
-                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Matched fields</p>
-                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{matchedCount}</p>
-                </div>
-                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
-                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Missing required</p>
-                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{analysis.missingFields.length}</p>
-                </div>
-                <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
-                  <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Preview rows</p>
-                  <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{previewRows.length}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2.5 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Columns Detected</p>
-                {filteredColumns.length === 0 && filterText && (
-                  <p className="mb-2 text-xs text-[#767676]">No columns match. Re-analyze to add it as a missing column.</p>
-                )}
-                <div className="flex flex-wrap gap-1.5">
-                  {visibleColumns.map(col => {
-                    const isAdded = dataset.addedColumns.includes(col)
-                    return (
-                      <span
-                        key={col}
-                        className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-medium ${
-                          isAdded
-                            ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]"
-                            : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
-                        }`}
-                      >
-                        {col}
-                      </span>
-                    )
-                  })}
-                  {!pillsExpanded && hiddenCount > 0 && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f9f9f9]">
+                      {getFileIcon(dataset.fileType)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-[#1b1b1b]" title={dataset.fileName}>
+                        {dataset.fileName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#767676]">
+                        {formatSize(dataset.fileSize)} · {dataset.rowCount.toLocaleString()} rows · {dataset.columnCount} columns detected
+                        {dataset.activeSheetName ? ` · ${dataset.activeSheetName}` : ""}
+                      </p>
+                    </div>
                     <Button
                       variant="plain"
                       size="plain"
-                      onClick={() => setPillsExpanded(true)}
-                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
+                      onClick={closePopup}
+                      className="flex-shrink-0 text-[#767676] transition-colors hover:text-[#1b1b1b]"
+                      aria-label="Close"
                     >
-                      +{hiddenCount} more
+                      <X size={16} />
                     </Button>
-                  )}
-                  {pillsExpanded && hiddenCount > 0 && (
-                    <Button
-                      variant="plain"
-                      size="plain"
-                      onClick={() => setPillsExpanded(false)}
-                      className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
-                    >
-                      Collapse
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-[#e2e2e2] p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-[#1b1b1b]">Missing fields</p>
-                  <p className="text-xs text-[#767676]">
-                    {analysis.missingFields.length
-                      ? analysis.missingFields.map(field => field.label).join(", ")
-                      : "Required candidate fields are covered."}
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <input
-                    data-cid="drop-zone-col-input"
-                    type="text"
-                    placeholder="Add missing column names, comma separated"
-                    value={filterText}
-                    onChange={e => setFilterText(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") handleReanalyze()
-                    }}
-                    className="h-9 flex-1 rounded-2xl border border-[#e2e2e2] bg-white px-3 text-sm text-[#1b1b1b] transition-colors placeholder:text-[#767676] focus:border-[#FF5533] focus:outline-none"
-                  />
-                  <Button
-                    variant="plain"
-                    size="plain"
-                    onClick={handleReanalyze}
-                    className="flex h-9 items-center gap-2 rounded-full border border-[#e2e2e2] bg-[#f9f9f9] px-3 text-sm font-semibold text-[#555555] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
-                  >
-                    {filterText.trim() ? <Plus size={14} /> : <RefreshCw size={14} />}
-                    Re-analyze
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Value preview</p>
-                <div className="overflow-hidden rounded-2xl border border-[#e2e2e2]">
-                  <div className="grid bg-[#f9f9f9]" style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}>
-                    {previewColumns.map(column => (
-                      <div
-                        key={column}
-                        className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs font-semibold text-[#555555] last:border-r-0"
-                        title={column}
-                      >
-                        {column}
-                      </div>
-                    ))}
                   </div>
-                  {previewRows.map(row => (
-                    <div
-                      key={row.rowNumber}
-                      className="grid border-t border-[#e2e2e2]"
-                      style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}
-                    >
-                      {previewColumns.map(column => (
-                        <div
-                          key={column}
-                          className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs text-[#1b1b1b] last:border-r-0"
-                          title={formatCell(row.values[column])}
+
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                      <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Matched fields</p>
+                      <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{matchedCount}</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                      <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Missing required</p>
+                      <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{analysis.missingFields.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-3">
+                      <p className="text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Preview rows</p>
+                      <p className="mt-1 text-lg font-semibold text-[#1b1b1b]">{previewRows.length}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2.5 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Columns Detected</p>
+                    {filteredColumns.length === 0 && filterText && (
+                      <p className="mb-2 text-xs text-[#767676]">No columns match. Re-analyze to add it as a missing column.</p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {visibleColumns.map(col => {
+                        const isAdded = dataset.addedColumns.includes(col)
+                        return (
+                          <span
+                            key={col}
+                            className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-medium ${
+                              isAdded
+                                ? "border-2 border-dashed border-[#FF5533] bg-[#fff5f3] text-[#FF5533]"
+                                : "border border-[#e2e2e2] bg-[#f9f9f9] text-[#555555]"
+                            }`}
+                          >
+                            {col}
+                          </span>
+                        )
+                      })}
+                      {!pillsExpanded && hiddenCount > 0 && (
+                        <Button
+                          variant="plain"
+                          size="plain"
+                          onClick={() => setPillsExpanded(true)}
+                          className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
                         >
-                          {formatCell(row.values[column])}
+                          +{hiddenCount} more
+                        </Button>
+                      )}
+                      {pillsExpanded && hiddenCount > 0 && (
+                        <Button
+                          variant="plain"
+                          size="plain"
+                          onClick={() => setPillsExpanded(false)}
+                          className="rounded-xl border border-[#e2e2e2] bg-[#f9f9f9] px-2.5 py-1 text-xs text-[#767676] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
+                        >
+                          Collapse
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e2e2e2] p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-[#1b1b1b]">Missing fields</p>
+                      <p className="text-xs text-[#767676]">
+                        {analysis.missingFields.length
+                          ? analysis.missingFields.map(field => field.label).join(", ")
+                          : "Required candidate fields are covered."}
+                      </p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <input
+                        data-cid="drop-zone-col-input"
+                        type="text"
+                        placeholder="Add missing column names, comma separated"
+                        value={filterText}
+                        onChange={e => setFilterText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") handleReanalyze()
+                        }}
+                        className="h-9 flex-1 rounded-2xl border border-[#e2e2e2] bg-white px-3 text-sm text-[#1b1b1b] transition-colors placeholder:text-[#767676] focus:border-[#FF5533] focus:outline-none"
+                      />
+                      <Button
+                        variant="plain"
+                        size="plain"
+                        onClick={handleReanalyze}
+                        className="flex h-9 items-center gap-2 rounded-full border border-[#e2e2e2] bg-[#f9f9f9] px-3 text-sm font-semibold text-[#555555] transition-colors hover:border-[#FF5533] hover:text-[#FF5533]"
+                      >
+                        {filterText.trim() ? <Plus size={14} /> : <RefreshCw size={14} />}
+                        Re-analyze
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[10px] font-semibold tracking-widest text-[#767676] uppercase">Value preview</p>
+                    <div className="overflow-hidden rounded-2xl border border-[#e2e2e2]">
+                      <div
+                        className="grid bg-[#f9f9f9]"
+                        style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}
+                      >
+                        {previewColumns.map(column => (
+                          <div
+                            key={column}
+                            className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs font-semibold text-[#555555] last:border-r-0"
+                            title={column}
+                          >
+                            {column}
+                          </div>
+                        ))}
+                      </div>
+                      {previewRows.map(row => (
+                        <div
+                          key={row.rowNumber}
+                          className="grid border-t border-[#e2e2e2]"
+                          style={{ gridTemplateColumns: `repeat(${Math.max(previewColumns.length, 1)}, minmax(0, 1fr))` }}
+                        >
+                          {previewColumns.map(column => (
+                            <div
+                              key={column}
+                              className="truncate border-r border-[#e2e2e2] px-3 py-2 text-xs text-[#1b1b1b] last:border-r-0"
+                              title={formatCell(row.values[column])}
+                            >
+                              {formatCell(row.values[column])}
+                            </div>
+                          ))}
                         </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="plain"
-                  size="plain"
-                  onClick={handleConfirm}
-                  disabled={dataset.rowCount === 0}
-                  className="h-10 flex-1 rounded-full bg-[#FF5533] text-sm font-semibold text-white transition-colors hover:bg-[#E63D1F] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Confirm upload
-                </Button>
-                <Button
-                  variant="plain"
-                  size="plain"
-                  onClick={closePopup}
-                  className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="plain"
+                      size="plain"
+                      onClick={handleConfirm}
+                      disabled={dataset.rowCount === 0}
+                      className="h-10 flex-1 rounded-full bg-[#FF5533] text-sm font-semibold text-white transition-colors hover:bg-[#E63D1F] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Confirm upload
+                    </Button>
+                    <Button
+                      variant="plain"
+                      size="plain"
+                      onClick={closePopup}
+                      className="h-10 rounded-full border border-[#1b1b1b] px-5 text-sm font-semibold text-[#1b1b1b] transition-colors hover:bg-[#f9f9f9]"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-56">
+                <ContextMenuGroup>
+                  <ContextMenuLabel className="truncate">{dataset.fileName}</ContextMenuLabel>
+                  <ContextMenuItem onClick={() => navigator.clipboard.writeText(dataset.fileName)}>
+                    <Copy />
+                    Copy file name
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={handleReanalyze}>
+                    <RefreshCw />
+                    Re-analyze columns
+                  </ContextMenuItem>
+                  <ContextMenuItem disabled={dataset.rowCount === 0} onClick={handleConfirm}>
+                    <CheckCircle2 />
+                    Analyze in table
+                  </ContextMenuItem>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
+                <ContextMenuGroup>
+                  <ContextMenuItem variant="destructive" onClick={closePopup}>
+                    <X />
+                    Remove upload
+                  </ContextMenuItem>
+                </ContextMenuGroup>
+              </ContextMenuContent>
+            </ContextMenu>
           )}
         </div>
       )}

@@ -5,6 +5,7 @@ import { ExternalLink, Globe2, Minus, Plus, RotateCcw, RotateCw } from "lucide-r
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { DocxPreview } from "@/components/candidates/DocxPreview"
 import { useHoverPopoverInteraction } from "@/components/candidates/useHoverPopoverInteraction"
@@ -60,7 +61,7 @@ function nextRotation(current: Rotation, direction: 1 | -1): Rotation {
   const order: Rotation[] = [0, 90, 180, 270]
   const index = order.indexOf(current)
   const length = order.length
-  const nextIndex = (((index === -1 ? 0 : index) + direction) % length + length) % length
+  const nextIndex = ((((index === -1 ? 0 : index) + direction) % length) + length) % length
   return order[nextIndex]
 }
 
@@ -107,6 +108,33 @@ function PreviewFallback({
   )
 }
 
+function ImagePreviewSkeleton() {
+  return (
+    <div
+      className="border-border bg-muted/30 flex h-full min-h-0 flex-1 flex-col gap-3 rounded-xl border p-4"
+      data-testid="image-preview-skeleton"
+      role="status"
+      aria-live="polite"
+    >
+      <span className="sr-only">Loading image preview...</span>
+      <div className="flex justify-end">
+        <Skeleton className="h-8 w-40 rounded-full" />
+      </div>
+      <div className="border-border/70 bg-background/50 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl border p-4">
+        <div className="flex aspect-[4/3] max-h-full w-full max-w-3xl flex-col gap-3">
+          <Skeleton className="h-3 w-1/3 rounded-full" />
+          <Skeleton className="min-h-0 flex-1 rounded-xl" />
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-3 rounded-full" />
+            <Skeleton className="h-3 rounded-full" />
+            <Skeleton className="h-3 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function readPreviewMetadata(target: CandidatePreviewTarget, response: Response): CandidateFilePreviewMetadata {
   const contentType = normalizePreviewContentType(response.headers.get("content-type"), target.url)
   const contentLength = Number.parseInt(response.headers.get("content-length") ?? "", 10)
@@ -140,7 +168,7 @@ function ZoomControls({
   const showRotation = rotation !== undefined && onRotationChange !== undefined
 
   return (
-    <div className="border-border bg-background/80 flex items-center gap-1 rounded-full border px-2 py-1 text-xs text-muted-foreground shadow-sm">
+    <div className="border-border bg-background/80 text-muted-foreground flex items-center gap-1 rounded-full border px-2 py-1 text-xs shadow-sm">
       <Button
         type="button"
         variant="ghost"
@@ -155,7 +183,7 @@ function ZoomControls({
       <button
         type="button"
         onClick={() => onZoomChange(100)}
-        className="text-foreground min-w-12 rounded-md px-2 py-1 font-medium hover:bg-muted"
+        className="text-foreground hover:bg-muted min-w-12 rounded-md px-2 py-1 font-medium"
         aria-label={`Reset preview zoom to 100 percent (currently ${zoomPercent} percent)`}
         data-cid="preview-zoom-reset"
       >
@@ -232,7 +260,7 @@ function BinaryPreview({ target }: { target: CandidatePreviewTarget }) {
 
   if (status === "loading") {
     return (
-      <div className="border-border bg-muted/30 grid min-h-0 flex-1 place-items-center rounded-xl border text-sm text-muted-foreground">
+      <div className="border-border bg-muted/30 text-muted-foreground grid min-h-0 flex-1 place-items-center rounded-xl border text-sm">
         Loading file preview...
       </div>
     )
@@ -278,20 +306,9 @@ function BinaryPreview({ target }: { target: CandidatePreviewTarget }) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex justify-end">
-          <ZoomControls
-            zoomPercent={zoomPercent}
-            onZoomChange={setZoomPercent}
-            rotation={rotation}
-            onRotationChange={setRotation}
-          />
+          <ZoomControls zoomPercent={zoomPercent} onZoomChange={setZoomPercent} rotation={rotation} onRotationChange={setRotation} />
         </div>
-        <DocxPreview
-          previewUrl={previewUrl}
-          originalUrl={target.url}
-          label={target.label}
-          zoomPercent={zoomPercent}
-          rotation={rotation}
-        />
+        <DocxPreview previewUrl={previewUrl} originalUrl={target.url} label={target.label} zoomPercent={zoomPercent} rotation={rotation} />
       </div>
     )
   }
@@ -323,6 +340,7 @@ function ImagePreview({
 }) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -361,26 +379,22 @@ function ImagePreview({
   }
 
   if (status === "loading" || !objectUrl) {
-    return (
-      <div className="border-border bg-muted/30 grid min-h-0 flex-1 place-items-center rounded-xl border text-sm text-muted-foreground">
-        Loading image preview...
-      </div>
-    )
+    return <ImagePreviewSkeleton />
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex justify-end">
-        <ZoomControls
-          zoomPercent={zoomPercent}
-          onZoomChange={onZoomChange}
-          rotation={rotation}
-          onRotationChange={onRotationChange}
-        />
+        <ZoomControls zoomPercent={zoomPercent} onZoomChange={onZoomChange} rotation={rotation} onRotationChange={onRotationChange} />
       </div>
       <div className="border-border bg-muted/40 relative min-h-0 flex-1 overflow-auto rounded-xl border">
+        {!imageLoaded ? (
+          <div className="absolute inset-0 z-10">
+            <ImagePreviewSkeleton />
+          </div>
+        ) : null}
         <div
-          className="flex min-h-full min-w-full items-start justify-center p-4"
+          className={cn("flex min-h-full min-w-full items-start justify-center p-4", !imageLoaded && "opacity-0")}
           style={{ transform: `scale(${zoomPercent / 100}) rotate(${rotation}deg)`, transformOrigin: "top center" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -389,6 +403,8 @@ function ImagePreview({
             alt={target.label}
             referrerPolicy="no-referrer"
             className="h-auto max-w-none object-contain"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setStatus("error")}
           />
         </div>
       </div>
@@ -460,17 +476,12 @@ function PdfPreview({
 
   return (
     <div className="border-border bg-muted/40 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border">
-      <div className="border-border bg-background/80 flex items-center justify-between gap-3 border-b px-4 py-2 text-xs text-muted-foreground">
+      <div className="border-border bg-background/80 text-muted-foreground flex items-center justify-between gap-3 border-b px-4 py-2 text-xs">
         <div className="flex items-center gap-3">
           <span>PDF preview</span>
           {pageCount > 0 ? <span>{pageCount} pages</span> : null}
         </div>
-        <ZoomControls
-          zoomPercent={zoomPercent}
-          onZoomChange={onZoomChange}
-          rotation={rotation}
-          onRotationChange={onRotationChange}
-        />
+        <ZoomControls zoomPercent={zoomPercent} onZoomChange={onZoomChange} rotation={rotation} onRotationChange={onRotationChange} />
       </div>
       <div ref={containerRef} className="min-h-0 flex-1 overflow-auto p-4">
         {status === "error" ? (
@@ -481,11 +492,11 @@ function PdfPreview({
             actionLabel="Open PDF"
           />
         ) : !pdfModule ? (
-          <div className="grid min-h-full place-items-center text-sm text-muted-foreground">Loading PDF preview...</div>
+          <div className="text-muted-foreground grid min-h-full place-items-center text-sm">Loading PDF preview...</div>
         ) : (
           <pdfModule.Document
             file={previewUrl}
-            loading={<div className="grid min-h-full place-items-center text-sm text-muted-foreground">Loading PDF preview...</div>}
+            loading={<div className="text-muted-foreground grid min-h-full place-items-center text-sm">Loading PDF preview...</div>}
             onLoadSuccess={(payload: PdfLoadSuccessPayload) => {
               setPageCount(payload.numPages)
               setStatus("ready")
@@ -510,15 +521,7 @@ function PdfPreview({
   )
 }
 
-function PreviewTrigger({
-  triggerLabel,
-  onClick,
-  children,
-}: {
-  triggerLabel: string
-  onClick: () => void
-  children: ReactNode
-}) {
+function PreviewTrigger({ triggerLabel, onClick, children }: { triggerLabel: string; onClick: () => void; children: ReactNode }) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
   return (
@@ -535,7 +538,7 @@ function PreviewTrigger({
             }}
             onMouseLeave={event => event.currentTarget.blur()}
             className={cn(
-              "inline-flex size-7 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors outline-none",
+              "text-muted-foreground inline-flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors outline-none",
               "hover:bg-foreground/5 hover:text-primary",
               tooltipOpen && "bg-foreground/5 text-primary"
             )}
@@ -567,7 +570,9 @@ export function CandidatePreviewDialog({ title, description, targets, triggerLab
         <DialogContent className="flex h-[90dvh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-3 p-4 sm:h-[90dvh] sm:w-[90vw] sm:max-w-[90vw] sm:p-5">
           <DialogHeader className="shrink-0 pr-8">
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description ?? "Preview is loaded through a restricted proxy when possible, without sending a referrer."}</DialogDescription>
+            <DialogDescription>
+              {description ?? "Preview is loaded through a restricted proxy when possible, without sending a referrer."}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="text-muted-foreground flex min-w-0 shrink-0 items-center gap-2 text-xs">
@@ -664,7 +669,7 @@ function HoverableTextPreview({ text, className }: { text: string; className?: s
             }}
             tabIndex={0}
             className={cn(
-              "text-foreground block max-w-[240px] cursor-default truncate text-xs outline-none transition-colors",
+              "text-foreground block max-w-[240px] cursor-default truncate text-xs transition-colors outline-none",
               "hover:text-primary",
               open && "text-primary",
               className
@@ -682,7 +687,7 @@ function HoverableTextPreview({ text, className }: { text: string; className?: s
         sideOffset={10}
         onMouseEnter={keepOpen}
         onMouseLeave={() => scheduleClose()}
-        className="max-w-[min(38rem,calc(100vw-1.5rem))] select-text rounded-2xl px-4 py-3 text-base leading-7 shadow-xl"
+        className="max-w-[min(38rem,calc(100vw-1.5rem))] rounded-2xl px-4 py-3 text-base leading-7 shadow-xl select-text"
       >
         <p className="text-foreground whitespace-pre-wrap">{text}</p>
       </PopoverContent>

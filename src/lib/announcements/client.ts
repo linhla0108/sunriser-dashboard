@@ -27,7 +27,7 @@ export async function listVisibleAnnouncements(userId: string): Promise<Announce
   const supabase = createClient()
   const { data, error } = await supabase
     .from("announcements")
-    .select("id, title, body, priority, pinned, due_at, author_user_id, created_at, updated_at, deleted_at")
+    .select("id, title, body, priority, pinned, starts_at, ends_at, author_user_id, created_at, updated_at, deleted_at")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
 
@@ -49,7 +49,7 @@ export async function listManagedAnnouncements(role: AppRole, userId: string): P
   const supabase = createClient()
   let query = supabase
     .from("announcements")
-    .select("id, title, body, priority, pinned, due_at, author_user_id, created_at, updated_at, deleted_at")
+    .select("id, title, body, priority, pinned, starts_at, ends_at, author_user_id, created_at, updated_at, deleted_at")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
 
@@ -95,10 +95,11 @@ export async function createAnnouncement(input: CreateAnnouncementInput, userId:
       body: parsed.body,
       priority: parsed.priority,
       pinned: parsed.pinned ?? false,
-      due_at: parsed.dueAt ?? null,
+      starts_at: parsed.startsAt ?? null,
+      ends_at: parsed.endsAt ?? null,
       author_user_id: userId,
     })
-    .select("id, title, body, priority, pinned, due_at, author_user_id, created_at, updated_at, deleted_at")
+    .select("id, title, body, priority, pinned, starts_at, ends_at, author_user_id, created_at, updated_at, deleted_at")
     .single()
 
   if (error) throw new Error(error.message)
@@ -116,14 +117,15 @@ export async function updateAnnouncement(input: UpdateAnnouncementInput) {
   if (parsed.body !== undefined) patch.body = parsed.body
   if (parsed.priority !== undefined) patch.priority = parsed.priority
   if (parsed.pinned !== undefined) patch.pinned = parsed.pinned
-  if (parsed.dueAt !== undefined) patch.due_at = parsed.dueAt
+  if (parsed.startsAt !== undefined) patch.starts_at = parsed.startsAt
+  if (parsed.endsAt !== undefined) patch.ends_at = parsed.endsAt
   if (parsed.deletedAt !== undefined) patch.deleted_at = parsed.deletedAt
 
   const { data, error } = await supabase
     .from("announcements")
     .update(patch)
     .eq("id", parsed.id)
-    .select("id, title, body, priority, pinned, due_at, author_user_id, created_at, updated_at, deleted_at")
+    .select("id, title, body, priority, pinned, starts_at, ends_at, author_user_id, created_at, updated_at, deleted_at")
     .maybeSingle()
 
   if (error) throw new Error(error.message)

@@ -39,14 +39,7 @@ export function ScheduleEntryDrawer({ entry, mode, open, onOpenChange, onSave, o
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       {entry ? (
-        <DrawerBody
-          key={entry.id}
-          entry={entry}
-          isCreate={mode === "create"}
-          onOpenChange={onOpenChange}
-          onSave={onSave}
-          onDelete={onDelete}
-        />
+        <DrawerBody key={entry.id} entry={entry} isCreate={mode === "create"} onOpenChange={onOpenChange} onSave={onSave} onDelete={onDelete} />
       ) : null}
     </Sheet>
   )
@@ -105,8 +98,7 @@ function DrawerBody({ entry, isCreate, onOpenChange, onSave, onDelete }: DrawerB
     onOpenChange(false)
   }
 
-  const inputClass =
-    "mt-2 rounded-2xl border-[#e2e2e2] focus-visible:border-[#FF5533] focus-visible:ring-2 focus-visible:ring-[#FF5533]/20"
+  const inputClass = "mt-2 rounded-2xl border-[#e2e2e2] focus-visible:border-[#FF5533] focus-visible:ring-2 focus-visible:ring-[#FF5533]/20"
   const textareaClass =
     "mt-2 w-full rounded-2xl border border-[#e2e2e2] bg-white p-3 text-sm transition-colors focus:border-[#FF5533] focus:ring-2 focus:ring-[#FF5533]/20 focus:outline-none"
 
@@ -227,9 +219,7 @@ function DrawerBody({ entry, isCreate, onOpenChange, onSave, onDelete }: DrawerB
               aria-pressed={deleteArmed}
               className={cn(
                 "gap-1.5 rounded-full transition-colors",
-                deleteArmed
-                  ? "bg-red-600 text-white hover:bg-red-700 hover:text-white"
-                  : "text-red-600 hover:bg-red-50 hover:text-red-700"
+                deleteArmed ? "bg-red-600 text-white hover:bg-red-700 hover:text-white" : "text-red-600 hover:bg-red-50 hover:text-red-700"
               )}
             >
               <Trash2 className="size-4" />
@@ -246,9 +236,7 @@ function DrawerBody({ entry, isCreate, onOpenChange, onSave, onDelete }: DrawerB
             disabled={saveState === "saved"}
             className={cn(
               "gap-1.5 rounded-full transition-colors disabled:opacity-100",
-              saveState === "saved"
-                ? "bg-emerald-600 text-white hover:bg-emerald-600"
-                : "bg-[#FF5533] text-white hover:bg-[#E63D1F]"
+              saveState === "saved" ? "bg-emerald-600 text-white hover:bg-emerald-600" : "bg-[#FF5533] text-white hover:bg-[#E63D1F]"
             )}
           >
             {saveState === "saved" ? (

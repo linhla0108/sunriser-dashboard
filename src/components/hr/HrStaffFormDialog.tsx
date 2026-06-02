@@ -138,7 +138,7 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
           disabled={!form.name.trim() || !form.email.trim()}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
         >
-          {initial ? "Save changes" : "Add staff"}
+          Save changes
         </Button>
       </DialogFooter>
     </>
@@ -155,9 +155,9 @@ export function HrStaffFormDialog({ open, initial, onSave, onClose }: Props) {
     >
       <DialogContent className="rounded-3xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit Staff" : "Add Staff"}</DialogTitle>
+          <DialogTitle>Edit Staff</DialogTitle>
         </DialogHeader>
-        <FormBody key={`${open}-${initial?.id ?? "new"}`} initial={initial} onSave={onSave} onClose={onClose} />
+        <FormBody key={`${open}-${initial?.id ?? "edit"}`} initial={initial} onSave={onSave} onClose={onClose} />
       </DialogContent>
     </Dialog>
   )

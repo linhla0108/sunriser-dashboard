@@ -4,10 +4,19 @@ import { useMemo, useState } from "react"
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripHorizontal, Printer, Search, X } from "lucide-react"
+import { Copy, GripHorizontal, PinOff, Printer, Search, X } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { mockApplicants } from "@/lib/mockData"
@@ -253,47 +262,75 @@ function CompareCandidateHeader({ item, searchQuery, onRemove }: { item: Applica
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
   return (
-    <th
-      ref={setNodeRef}
-      className={cn(
-        `${tableHeader} ${tableBorder} min-w-[220px] border-t border-r border-b px-4 py-4 text-left align-top`,
-        isDragging && "opacity-30"
-      )}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-    >
-      <div className="flex items-start gap-2">
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          aria-label={`Reorder ${item.name}`}
-          className="mt-1 shrink-0 cursor-grab rounded-full p-1 text-white/55 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 active:cursor-grabbing"
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <th
+          ref={setNodeRef}
+          className={cn(
+            `${tableHeader} ${tableBorder} min-w-[220px] border-t border-r border-b px-4 py-4 text-left align-top`,
+            isDragging && "opacity-30"
+          )}
+          style={{ transform: CSS.Transform.toString(transform), transition }}
         >
-          <GripHorizontal className="size-3.5" />
-        </button>
-        <span className="bg-primary text-primary-foreground ring-primary/35 flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2">
-          {initials(item.position1)}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-white">
-            <SearchHighlight text={item.name} query={searchQuery} className="rounded-[3px] bg-white/25 px-0.5 py-0 text-white" />
-          </span>
-          <span className={`${tableHeaderMeta} block truncate text-xs`}>
-            <SearchHighlight text={shortPosition(item.position1)} query={searchQuery} className="rounded-[3px] bg-white/20 px-0.5 py-0 text-white" />
-          </span>
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => onRemove(item.id)}
-          aria-label={`Remove ${item.name}`}
-          className="ml-auto rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-        >
-          <X />
-        </Button>
-      </div>
-    </th>
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-label={`Reorder ${item.name}`}
+              className="mt-1 shrink-0 cursor-grab rounded-full p-1 text-white/55 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 active:cursor-grabbing"
+            >
+              <GripHorizontal className="size-3.5" />
+            </button>
+            <span className="bg-primary text-primary-foreground ring-primary/35 flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2">
+              {initials(item.position1)}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-white">
+                <SearchHighlight text={item.name} query={searchQuery} className="rounded-[3px] bg-white/25 px-0.5 py-0 text-white" />
+              </span>
+              <span className={`${tableHeaderMeta} block truncate text-xs`}>
+                <SearchHighlight
+                  text={shortPosition(item.position1)}
+                  query={searchQuery}
+                  className="rounded-[3px] bg-white/20 px-0.5 py-0 text-white"
+                />
+              </span>
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onRemove(item.id)}
+              aria-label={`Remove ${item.name}`}
+              className="ml-auto rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              <X />
+            </Button>
+          </div>
+        </th>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuGroup>
+          <ContextMenuLabel className="truncate">{item.name}</ContextMenuLabel>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText([item.name, item.email, item.position1, item.university].join("\n"))}>
+            <Copy />
+            Copy summary
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(item.email)}>
+            <Copy />
+            Copy email
+          </ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuSeparator />
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={() => onRemove(item.id)}>
+            <PinOff />
+            Unpin from compare
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

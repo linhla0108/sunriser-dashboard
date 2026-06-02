@@ -1,19 +1,32 @@
 "use client"
 
-import { Pencil, Trash2, Power } from "lucide-react"
+import { SquarePen, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import type { HrStaff } from "@/lib/hr/types"
+import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import type { HrStaff, HrStatus } from "@/lib/hr/types"
 
 interface Props {
   staff: HrStaff[]
   onEdit: (s: HrStaff) => void
   onDelete: (s: HrStaff) => void
-  onToggleStatus: (id: string) => void
+  onSetStatus: (id: string, status: HrStatus) => void
 }
 
-export function HrStaffTable({ staff, onEdit, onDelete, onToggleStatus }: Props) {
+function statusTone(status: HrStatus) {
+  return status === "active"
+    ? {
+        tooltip: "Active: can work on accounts",
+        switchClass: "data-checked:bg-primary data-unchecked:bg-zinc-300 dark:data-unchecked:bg-zinc-700",
+      }
+    : {
+        tooltip: "Inactive: temporarily turned off",
+        switchClass: "data-checked:bg-primary data-unchecked:bg-zinc-400 dark:data-unchecked:bg-zinc-700",
+      }
+}
+
+export function HrStaffTable({ staff, onEdit, onDelete, onSetStatus }: Props) {
   if (staff.length === 0) {
     return <div className="border-border bg-card text-muted-foreground rounded-3xl border py-10 text-center text-sm">No staff members found.</div>
   }
@@ -50,29 +63,30 @@ export function HrStaffTable({ staff, onEdit, onDelete, onToggleStatus }: Props)
               <td className="text-muted-foreground hidden px-4 py-3 sm:table-cell">{s.role}</td>
               <td className="text-muted-foreground hidden px-4 py-3 md:table-cell">{s.department}</td>
               <td className="px-4 py-3">
-                <Badge variant={s.status === "active" ? "default" : "secondary"} className="rounded-full text-xs capitalize">
-                  {s.status}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Switch
+                      checked={s.status === "active"}
+                      size="default"
+                      aria-label={`Toggle ${s.name} status`}
+                      className={statusTone(s.status).switchClass}
+                      onCheckedChange={checked => onSetStatus(s.id, checked ? "active" : "inactive")}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{statusTone(s.status).tooltip}</TooltipContent>
+                </Tooltip>
               </td>
               <td className="text-muted-foreground hidden px-4 py-3 lg:table-cell">{s.joinedAt}</td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-xl"
-                    onClick={() => onToggleStatus(s.id)}
-                    title={s.status === "active" ? "Deactivate" : "Activate"}
-                  >
-                    <Power className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl" onClick={() => onEdit(s)}>
-                    <Pencil className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl" aria-label={`Edit ${s.name}`} onClick={() => onEdit(s)}>
+                    <SquarePen className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="text-destructive hover:text-destructive h-7 w-7 rounded-xl"
+                    aria-label={`Delete ${s.name}`}
                     onClick={() => onDelete(s)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />

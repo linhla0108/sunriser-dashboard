@@ -7,7 +7,8 @@ import type { AnnouncementSummary } from "@/lib/announcements/types"
 const baseAnnouncement = {
   body: "Message body",
   priority: "normal",
-  dueAt: null,
+  startsAt: null,
+  endsAt: null,
   authorUserId: "author-1",
   updatedAt: "2026-05-27T08:00:00.000Z",
   deletedAt: null,
@@ -15,6 +16,37 @@ const baseAnnouncement = {
 } satisfies Omit<AnnouncementSummary, "id" | "title" | "pinned" | "createdAt" | "readAt">
 
 describe("AnnouncementInbox", () => {
+  it("keeps the create action visible for publishers when the inbox is empty", () => {
+    render(
+      <AnnouncementInbox
+        announcements={[]}
+        loading={false}
+        error={null}
+        canManageAnnouncements={true}
+        onMarkRead={vi.fn()}
+        onOpenAttachment={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole("link", { name: /create/i })).toHaveAttribute("href", "/admin/announcements")
+    expect(screen.getByText("No announcements yet.")).toBeInTheDocument()
+  })
+
+  it("does not render the create action for non-publishers", () => {
+    render(
+      <AnnouncementInbox
+        announcements={[]}
+        loading={false}
+        error={null}
+        canManageAnnouncements={false}
+        onMarkRead={vi.fn()}
+        onOpenAttachment={vi.fn()}
+      />
+    )
+
+    expect(screen.queryByRole("link", { name: /create/i })).not.toBeInTheDocument()
+  })
+
   it("renders pinned announcements ahead of the inbox list", () => {
     render(
       <AnnouncementInbox

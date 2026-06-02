@@ -18,10 +18,18 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Copy } from "lucide-react"
 import { CandidateCardContextMenu } from "@/components/candidates/CandidateCardContextMenu"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { PinStarButton } from "@/components/pin/PinStarButton"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { CandidatePipelineGroup } from "@/lib/candidates/candidateUrlState"
 import type { Applicant } from "@/lib/types"
 import { PIC_CHIP_STYLE, getColumnTheme, groupApplicants, initials, shortPosition } from "./viewUtils"
@@ -262,51 +270,68 @@ function PipelineColumn({
   const theme = getColumnTheme(column.key)
 
   return (
-    <div className={`flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl border ${theme.colBorder}`}>
-      <div className={`sticky top-0 z-10 flex items-center justify-between border-b px-3 py-2 ${theme.headerBg} ${theme.colBorder}`}>
-        <span className={`text-sm ${theme.headerText}`}>{column.label}</span>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${theme.countBadge}`}>{column.items.length}</span>
-      </div>
-      <SortableContext items={column.items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-        <div
-          ref={setNodeRef}
-          className={`relative flex flex-1 flex-col gap-2 overflow-y-auto p-1.5 ${theme.colBg} ${isExternalDragOver ? "min-h-[500px]" : ""}`}
-          style={{ maxHeight: "calc(100dvh - 280px)" }}
-        >
-          {isExternalDragOver && (
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <div className={`flex w-[280px] shrink-0 flex-col overflow-hidden rounded-2xl border ${theme.colBorder}`}>
+          <div className={`sticky top-0 z-10 flex items-center justify-between border-b px-3 py-2 ${theme.headerBg} ${theme.colBorder}`}>
+            <span className={`text-sm ${theme.headerText}`}>{column.label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${theme.countBadge}`}>{column.items.length}</span>
+          </div>
+          <SortableContext items={column.items.map(item => item.id)} strategy={verticalListSortingStrategy}>
             <div
-              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed backdrop-blur-[2px] ${theme.overlayBg} ${theme.overlayBorder}`}
+              ref={setNodeRef}
+              className={`relative flex flex-1 flex-col gap-2 overflow-y-auto p-1.5 ${theme.colBg} ${isExternalDragOver ? "min-h-[500px]" : ""}`}
+              style={{ maxHeight: "calc(100dvh - 280px)" }}
             >
-              <div className={`flex items-center gap-2 rounded-full px-4 py-2 ring-1 ${theme.badgeBg}`}>
-                <ArrowRight className={`size-4 ${theme.icon}`} />
-                <span className={`text-sm font-semibold ${theme.icon}`}>Change to {column.label}</span>
+              {isExternalDragOver && (
+                <div
+                  className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed backdrop-blur-[2px] ${theme.overlayBg} ${theme.overlayBorder}`}
+                >
+                  <div className={`flex items-center gap-2 rounded-full px-4 py-2 ring-1 ${theme.badgeBg}`}>
+                    <ArrowRight className={`size-4 ${theme.icon}`} />
+                    <span className={`text-sm font-semibold ${theme.icon}`}>Change to {column.label}</span>
+                  </div>
+                </div>
+              )}
+              <div className={`flex flex-col gap-2 ${isExternalDragOver ? "pointer-events-none opacity-30" : ""}`}>
+                {column.items.slice(0, 120).map(item => (
+                  <PipelineCard
+                    key={item.id}
+                    applicant={item}
+                    onViewDetail={onViewDetail}
+                    onUpdateApplicant={onUpdateApplicant}
+                    searchQuery={searchQuery}
+                  />
+                ))}
+                {column.items.length > 120 && (
+                  <p className="text-muted-foreground px-3 py-2 text-center text-xs">
+                    Showing 120 of {column.items.length} — use filters to narrow results
+                  </p>
+                )}
+                {column.items.length === 0 ? (
+                  <div className="border-foreground/15 text-muted-foreground rounded-2xl border border-dashed px-3 py-6 text-center text-sm">
+                    No candidates
+                  </div>
+                ) : null}
               </div>
             </div>
-          )}
-          <div className={`flex flex-col gap-2 ${isExternalDragOver ? "pointer-events-none opacity-30" : ""}`}>
-            {column.items.slice(0, 120).map(item => (
-              <PipelineCard
-                key={item.id}
-                applicant={item}
-                onViewDetail={onViewDetail}
-                onUpdateApplicant={onUpdateApplicant}
-                searchQuery={searchQuery}
-              />
-            ))}
-            {column.items.length > 120 && (
-              <p className="text-muted-foreground px-3 py-2 text-center text-xs">
-                Showing 120 of {column.items.length} — use filters to narrow results
-              </p>
-            )}
-            {column.items.length === 0 ? (
-              <div className="border-foreground/15 text-muted-foreground rounded-2xl border border-dashed px-3 py-6 text-center text-sm">
-                No candidates
-              </div>
-            ) : null}
-          </div>
+          </SortableContext>
         </div>
-      </SortableContext>
-    </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuGroup>
+          <ContextMenuLabel>{column.label}</ContextMenuLabel>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(column.label)}>
+            <Copy />
+            Copy column name
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(`${column.label}: ${column.items.length} candidates`)}>
+            <Copy />
+            Copy candidate count
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

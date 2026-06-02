@@ -29,12 +29,24 @@ describe("announcement validation", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects invalid due date values", () => {
+  it("rejects invalid active window values", () => {
     const result = createAnnouncementInputSchema.safeParse({
       title: "Policy",
       body: "Body",
       priority: "normal",
-      dueAt: "2026-05-27",
+      startsAt: "2026-05-27",
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects end dates before start dates", () => {
+    const result = createAnnouncementInputSchema.safeParse({
+      title: "Policy",
+      body: "Body",
+      priority: "normal",
+      startsAt: "2026-06-01T11:00:00.000Z",
+      endsAt: "2026-06-01T10:00:00.000Z",
     })
 
     expect(result.success).toBe(false)

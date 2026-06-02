@@ -17,7 +17,8 @@ export interface AnnouncementSummary {
   body: string
   priority: AnnouncementPriority
   pinned: boolean
-  dueAt: string | null
+  startsAt: string | null
+  endsAt: string | null
   authorUserId: string
   createdAt: string
   updatedAt: string
@@ -31,7 +32,8 @@ export interface CreateAnnouncementInput {
   body: string
   priority: AnnouncementPriority
   pinned?: boolean
-  dueAt?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
 }
 
 export interface UpdateAnnouncementInput {
@@ -40,7 +42,8 @@ export interface UpdateAnnouncementInput {
   body?: string
   priority?: AnnouncementPriority
   pinned?: boolean
-  dueAt?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
   deletedAt?: string | null
 }
 
