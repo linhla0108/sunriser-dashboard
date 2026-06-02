@@ -1,4 +1,5 @@
 # Backend Execution Plan — Tasks 4 & 6
+
 Tag: auth/feature, auth/fix
 
 This document is the detailed BE companion to `supabase-security-hardening.md` (Task 4) and `user-data-schema.md` (Task 6). It specifies the exact SQL, ordered into phases, with each step tied to a Postgres/Supabase best-practice rule. Run each phase as one transaction unless noted otherwise. Generate the final migration with `supabase db pull` after iterating on a branch DB.
@@ -177,6 +178,7 @@ comment on table public.user_profiles is 'User-owned profile fields. Each user c
 ```
 
 > Notes:
+>
 > - `text` not `varchar(n)` (rule: `schema-data-types`).
 > - `timestamptz` not `timestamp`.
 > - Do **not** store `age` — derive from `birthday`. If you need application-time age, snapshot it on the application/candidate record, not here.
@@ -202,6 +204,7 @@ create index user_access_active_idx on public.user_access (active) where active 
 ```
 
 > Notes:
+>
 > - `user_access_active_idx` is a **partial index** — most users are active, so the index only stores the rare `false` rows. Tiny index, fast "list inactive users" query. (Rule: `query-partial-indexes`.)
 > - `role` index helps admin filtering and is cheap (4-value enum).
 
@@ -224,6 +227,7 @@ comment on table public.user_settings is 'User-owned UI preferences. Each user c
 ```
 
 > Notes:
+>
 > - No GIN index on `settings` yet — add only when a query pattern emerges. Premature indexing on jsonb costs writes. (Rule: `advanced-jsonb-indexing` — apply when query exists.)
 > - `theme` and `mode` are constrained text rather than enums because the frontend may add themes faster than migrations. Trade-off: a CHECK constraint is easier to evolve than an enum.
 
@@ -566,21 +570,21 @@ Expected: no `policy_exists_rls_disabled`, `rls_disabled_in_public`, `anon_secur
 
 Run as the admin user (real JWT, not the postgres role):
 
-| Action | Expected |
-| --- | --- |
-| `select count(*) from user_profiles`            | total user count |
+| Action                                                                       | Expected                                             |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `select count(*) from user_profiles`                                         | total user count                                     |
 | `update user_access set role='member' where ... ` (target = admin's own row) | rows = 1, but UI should block it via self-edit guard |
-| `update user_access set role='admin' where ... ` (target = another user) | rows = 1 |
-| `update user_profiles set notes='x' where user_id = <other>` | rows = 1 (admin can edit profiles) |
+| `update user_access set role='admin' where ... ` (target = another user)     | rows = 1                                             |
+| `update user_profiles set notes='x' where user_id = <other>`                 | rows = 1 (admin can edit profiles)                   |
 
 Run as a non-admin authenticated user:
 
-| Action | Expected |
-| --- | --- |
-| `select * from user_profiles where user_id != <self>` | 0 rows (RLS hides them) |
-| `update user_access set role='admin' where user_id = <self>` | 0 rows affected (silent — by design; UI must not rely on error) |
-| `update user_profiles set full_name='hacker' where user_id = <self>` | rows = 1 |
-| `update user_settings set theme='cool' where user_id = <self>` | rows = 1 |
+| Action                                                               | Expected                                                        |
+| -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `select * from user_profiles where user_id != <self>`                | 0 rows (RLS hides them)                                         |
+| `update user_access set role='admin' where user_id = <self>`         | 0 rows affected (silent — by design; UI must not rely on error) |
+| `update user_profiles set full_name='hacker' where user_id = <self>` | rows = 1                                                        |
+| `update user_settings set theme='cool' where user_id = <self>`       | rows = 1                                                        |
 
 ### 8.3 Trigger smoke
 
@@ -630,9 +634,9 @@ select count(*) from public.user_profiles where user_id = '<new-uuid>';
 
 ## Risks captured for human review (kept in this doc, not in `summary.md`)
 
-| Risk | Mitigation |
-| --- | --- |
-| `is_admin()` reads JWT; JWT is not fresh until token refresh after a role change | Force `supabase.auth.refreshSession()` from the admin UI after writing `user_access.role`. Document this in Task 8. |
-| `handle_new_user` runs as SECURITY DEFINER | Mitigated by `set search_path = ''`, REVOKE from REST roles, and trigger-only invocation path. |
-| RLS UPDATE silently affects 0 rows when policy denies | The admin UI must check `count` of `update().select()` response and surface "permission denied" to the user. |
-| Future tables created in `public` will auto-enable RLS but have no policies, so they will be locked down by default — which is correct, but the developer must remember to write policies before exposing the table to the UI. | Add a checklist in the project README's "Adding a new table" section. |
+| Risk                                                                                                                                                                                                                           | Mitigation                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `is_admin()` reads JWT; JWT is not fresh until token refresh after a role change                                                                                                                                               | Force `supabase.auth.refreshSession()` from the admin UI after writing `user_access.role`. Document this in Task 8. |
+| `handle_new_user` runs as SECURITY DEFINER                                                                                                                                                                                     | Mitigated by `set search_path = ''`, REVOKE from REST roles, and trigger-only invocation path.                      |
+| RLS UPDATE silently affects 0 rows when policy denies                                                                                                                                                                          | The admin UI must check `count` of `update().select()` response and surface "permission denied" to the user.        |
+| Future tables created in `public` will auto-enable RLS but have no policies, so they will be locked down by default — which is correct, but the developer must remember to write policies before exposing the table to the UI. | Add a checklist in the project README's "Adding a new table" section.                                               |

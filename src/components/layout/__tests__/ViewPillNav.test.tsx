@@ -23,9 +23,18 @@ describe("ViewPillNav", () => {
     expect(JSON.parse(localStorage.getItem("v2.view.current")!)).toBe("pipeline")
   })
 
-  it("switches views with keyboard shortcuts 1-3", async () => {
+  it("does not switch views with global number keys", async () => {
     render(<ViewPillNav />, { wrapper: TestProviders })
 
+    await userEvent.keyboard("3")
+
+    expect(screen.getByRole("button", { name: /table view/i })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("switches views with number keys when the view nav has focus", async () => {
+    render(<ViewPillNav />, { wrapper: TestProviders })
+
+    screen.getByRole("button", { name: /table view/i }).focus()
     await userEvent.keyboard("3")
 
     expect(screen.getByRole("button", { name: /chart view/i })).toHaveAttribute("aria-pressed", "true")
@@ -52,19 +61,29 @@ describe("ViewPillNav", () => {
     expect((await screen.findByTestId("v2-view-pill-nav")).parentElement).toBe(document.body)
   })
 
-  it("navigates table pages with arrow shortcuts", async () => {
+  it("does not navigate table pages with global arrow keys", async () => {
     const goPrev = vi.fn()
     const goNext = vi.fn()
 
-    render(
-      <ViewPillNav
-        view="table"
-        onViewChange={vi.fn()}
-        pagination={{ canGoPrev: true, canGoNext: true, goPrev, goNext }}
-      />,
-      { wrapper: TestProviders }
-    )
+    render(<ViewPillNav view="table" onViewChange={vi.fn()} pagination={{ canGoPrev: true, canGoNext: true, goPrev, goNext }} />, {
+      wrapper: TestProviders,
+    })
 
+    await userEvent.keyboard("{ArrowLeft}{ArrowRight}")
+
+    expect(goPrev).not.toHaveBeenCalled()
+    expect(goNext).not.toHaveBeenCalled()
+  })
+
+  it("navigates table pages with arrow keys when the pager has focus", async () => {
+    const goPrev = vi.fn()
+    const goNext = vi.fn()
+
+    render(<ViewPillNav view="table" onViewChange={vi.fn()} pagination={{ canGoPrev: true, canGoNext: true, goPrev, goNext }} />, {
+      wrapper: TestProviders,
+    })
+
+    screen.getByRole("button", { name: /previous page/i }).focus()
     await userEvent.keyboard("{ArrowLeft}{ArrowRight}")
 
     expect(goPrev).toHaveBeenCalledTimes(1)
@@ -113,11 +132,7 @@ describe("ViewPillNav", () => {
     render(
       <>
         <input aria-label="Search candidates" />
-        <ViewPillNav
-          view="table"
-          onViewChange={vi.fn()}
-          pagination={{ canGoPrev: true, canGoNext: true, goPrev, goNext }}
-        />
+        <ViewPillNav view="table" onViewChange={vi.fn()} pagination={{ canGoPrev: true, canGoNext: true, goPrev, goNext }} />
       </>,
       { wrapper: TestProviders }
     )

@@ -100,7 +100,9 @@ export function DrawerShell({ id, title, subtitle, children }: DrawerShellProps)
       data-testid={`v2-${id}-drawer`}
       data-v2-glass-panel="strong"
       data-dock-id={docked ? id : undefined}
-      onPointerDown={() => { if (!docked) registry.setActiveFloat(id) }}
+      onPointerDown={() => {
+        if (!docked) registry.setActiveFloat(id)
+      }}
       className={cn(
         "border-foreground/10 bg-card/80 flex flex-col backdrop-blur-xl",
         docked

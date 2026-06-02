@@ -2,13 +2,14 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import type { Applicant } from "@/lib/types"
-import ApplicantTable from "../ApplicantTable"
+import ApplicantTable, { reorderApplicantsWithinList } from "../ApplicantTable"
 
 vi.mock("@dnd-kit/core", async importOriginal => {
   const actual = await importOriginal<typeof import("@dnd-kit/core")>()
   return {
     ...actual,
     DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    DragOverlay: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   }
 })
 
@@ -91,11 +92,13 @@ const applicants: Applicant[] = [
   },
 ]
 
-function rowOrder() {
-  return screen.getAllByRole("row").slice(1).map(r => r.textContent ?? "")
-}
-
 describe("ApplicantTable — 3-state column sort", () => {
+  it("reorders applicants within a constrained list", () => {
+    const reordered = reorderApplicantsWithinList(applicants, "a1", "a3")
+    expect(reordered.map(a => a.id)).toEqual(["a2", "a3", "a1"])
+    expect(reorderApplicantsWithinList(applicants, "missing", "a3")).toBe(applicants)
+  })
+
   it("renders all 9 sortable column buttons (excluding # and Actions)", () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow = screen.getAllByRole("row")[0]
@@ -111,7 +114,10 @@ describe("ApplicantTable — 3-state column sort", () => {
 
   it("starts with Name sorted asc (default initial state)", () => {
     render(<ApplicantTable data={applicants} />)
-    const names = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const names = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     // Alice < Bob < Charlie alphabetically
     expect(names[0]).toContain("Alice")
     expect(names[1]).toContain("Bob")
@@ -121,17 +127,25 @@ describe("ApplicantTable — 3-state column sort", () => {
   it("cycles Name: asc → desc → default (original order)", async () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow0 = screen.getAllByRole("row")[0]
-    const nameBtn = within(headerRow0).getAllByRole("button").find(b => b.textContent?.trim().startsWith("Name"))!
+    const nameBtn = within(headerRow0)
+      .getAllByRole("button")
+      .find(b => b.textContent?.trim().startsWith("Name"))!
 
     // Currently asc (initial). Click → desc
     await userEvent.click(nameBtn)
-    const namesDesc = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const namesDesc = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(namesDesc[0]).toContain("Charlie")
     expect(namesDesc[2]).toContain("Alice")
 
     // Click → clear (original prop order: Charlie, Alice, Bob)
     await userEvent.click(nameBtn)
-    const namesDefault = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const namesDefault = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(namesDefault[0]).toContain("Charlie")
     expect(namesDefault[1]).toContain("Alice")
     expect(namesDefault[2]).toContain("Bob")
@@ -140,27 +154,38 @@ describe("ApplicantTable — 3-state column sort", () => {
   it("sorts GPA asc → desc → default", async () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow0 = screen.getAllByRole("row")[0]
-    const gpaBtn = within(headerRow0).getAllByRole("button").find(b => b.textContent?.trim().startsWith("GPA"))!
+    const gpaBtn = within(headerRow0)
+      .getAllByRole("button")
+      .find(b => b.textContent?.trim().startsWith("GPA"))!
 
     // Click GPA (new col) → asc: Bob(7.5) Alice(8.0 wrong — Charlie=8.0, Alice=9.0) wait...
     // Bob=7.5, Charlie=8.0, Alice=9.0
     await userEvent.click(gpaBtn)
-    const gpaCells = screen.getAllByRole("row").slice(1).map(r => {
-      const cells = within(r).getAllByRole("cell")
-      return cells[1].textContent?.trim() ?? ""
-    })
+    const gpaCells = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => {
+        const cells = within(r).getAllByRole("cell")
+        return cells[1].textContent?.trim() ?? ""
+      })
     expect(gpaCells[0]).toContain("Bob")
     expect(gpaCells[2]).toContain("Alice")
 
     // Click → desc: Alice, Charlie, Bob
     await userEvent.click(gpaBtn)
-    const gpaDesc = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const gpaDesc = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(gpaDesc[0]).toContain("Alice")
     expect(gpaDesc[2]).toContain("Bob")
 
     // Click → default
     await userEvent.click(gpaBtn)
-    const gpaDefault = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const gpaDefault = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(gpaDefault[0]).toContain("Charlie")
     expect(gpaDefault[1]).toContain("Alice")
     expect(gpaDefault[2]).toContain("Bob")
@@ -170,42 +195,106 @@ describe("ApplicantTable — 3-state column sort", () => {
     render(<ApplicantTable data={applicants} />)
     // Name is asc by default. Click Batch header sort button (new col) → asc
     const headerRow = screen.getAllByRole("row")[0]
-    const batchBtn = within(headerRow).getAllByRole("button").find(b => b.textContent?.trim().startsWith("Batch"))!
+    const batchBtn = within(headerRow)
+      .getAllByRole("button")
+      .find(b => b.textContent?.trim().startsWith("Batch"))!
     await userEvent.click(batchBtn)
     // Batch asc: a2(batch 1)=Alice, a1(batch 2)=Charlie, a3(batch 3)=Bob
-    const names = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const names = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(names[0]).toContain("Alice")
   })
 
   it("undefined round1/round2 values sort to the bottom in both asc and desc", async () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow = screen.getAllByRole("row")[0]
-    const round1Btn = within(headerRow).getAllByRole("button").find(b => b.textContent?.trim().startsWith("Round 1"))!
+    const round1Btn = within(headerRow)
+      .getAllByRole("button")
+      .find(b => b.textContent?.trim().startsWith("Round 1"))!
 
     // asc: Failed, Passed, undefined(Bob)
     await userEvent.click(round1Btn)
-    const r1Names = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const r1Names = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(r1Names[2]).toContain("Bob") // Bob has no round1Result
 
     // desc: Passed, Failed, undefined(Bob)
     await userEvent.click(round1Btn)
-    const r1NamesDesc = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const r1NamesDesc = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(r1NamesDesc[2]).toContain("Bob") // still last
   })
 
   it("undefined pic values sort to the bottom in both asc and desc", async () => {
     render(<ApplicantTable data={applicants} />)
     const headerRow = screen.getAllByRole("row")[0]
-    const picBtn = within(headerRow).getAllByRole("button").find(b => b.textContent?.trim().startsWith("PIC"))!
+    const picBtn = within(headerRow)
+      .getAllByRole("button")
+      .find(b => b.textContent?.trim().startsWith("PIC"))!
 
     // asc: Nhiên(Alice), Quỳnh(Charlie), undefined(Bob)
     await userEvent.click(picBtn)
-    const picNames = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const picNames = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(picNames[2]).toContain("Bob")
 
     // desc: Quỳnh(Charlie), Nhiên(Alice), undefined(Bob)
     await userEvent.click(picBtn)
-    const picNamesDesc = screen.getAllByRole("row").slice(1).map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
+    const picNamesDesc = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map(r => within(r).getAllByRole("cell")[1].textContent?.trim() ?? "")
     expect(picNamesDesc[2]).toContain("Bob")
+  })
+
+  it("renders selected rows in a collapsible section above filtered rows", async () => {
+    render(
+      <ApplicantTable
+        data={[applicants[1]]}
+        selectedData={[applicants[0]]}
+        selectedIds={new Set(["a1"])}
+        selectedSectionOpen={true}
+        onSelectedSectionOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Selected candidates: 1")).toBeInTheDocument()
+    expect(screen.getByText("Filtered results · 1")).toBeInTheDocument()
+
+    const rowTexts = screen.getAllByRole("row").map(row => row.textContent ?? "")
+    const selectedRowIndex = rowTexts.findIndex(text => text.includes("Charlie"))
+    const dividerIndex = rowTexts.findIndex(text => text.includes("Filtered results · 1"))
+    const filteredRowIndex = rowTexts.findIndex(text => text.includes("Alice"))
+
+    expect(selectedRowIndex).toBeGreaterThan(-1)
+    expect(dividerIndex).toBeGreaterThan(selectedRowIndex)
+    expect(filteredRowIndex).toBeGreaterThan(dividerIndex)
+  })
+
+  it("collapses selected rows while keeping the selected section header", async () => {
+    const onSelectedSectionOpenChange = vi.fn()
+    render(
+      <ApplicantTable
+        data={[applicants[1]]}
+        selectedData={[applicants[0]]}
+        selectedIds={new Set(["a1"])}
+        selectedSectionOpen={false}
+        onSelectedSectionOpenChange={onSelectedSectionOpenChange}
+      />
+    )
+
+    expect(screen.getByText("Selected candidates: 1")).toBeInTheDocument()
+    expect(screen.queryByText("Charlie")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /expand selected candidates/i }))
+    expect(onSelectedSectionOpenChange).toHaveBeenCalledWith(true)
   })
 })

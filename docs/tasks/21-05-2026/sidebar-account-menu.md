@@ -38,6 +38,7 @@ Status: Done | Commit: uncommitted
 Moved the account dropdown out of the header and onto the existing sidebar profile icon. The popup keeps the same account summary and sign out action.
 
 Verification:
+
 - Focused tests passed: `npm test -- --fileParallelism=false src/components/layout/__tests__/TopBar.test.tsx src/components/layout/__tests__/Sidebar.test.tsx`
 - Targeted lint passed with one existing sidebar logo warning: `npm run lint -- src/components/layout/TopBar.tsx src/components/layout/Sidebar.tsx src/components/layout/__tests__/TopBar.test.tsx src/components/layout/__tests__/Sidebar.test.tsx`
 - Browser smoke passed on `http://localhost:3000/dashboard`: sidebar profile icon opened the account popup; header account avatar was gone.

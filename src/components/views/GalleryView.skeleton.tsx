@@ -2,7 +2,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function GalleryViewSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" data-cid="gallery-loading-skeleton" data-testid="gallery-loading-skeleton" aria-hidden="true">
+    <div
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      data-cid="gallery-loading-skeleton"
+      data-testid="gallery-loading-skeleton"
+      aria-hidden="true"
+    >
       {Array.from({ length: 9 }, (_, index) => (
         <div key={index} className="border-border bg-card rounded-2xl border p-4">
           <div className="mb-4 flex items-start gap-3">

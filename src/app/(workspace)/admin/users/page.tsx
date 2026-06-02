@@ -1,14 +1,23 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Pencil, Plus, RefreshCcw } from "lucide-react"
+import { CheckCircle2, Copy, Pencil, Plus, RefreshCcw, UserX } from "lucide-react"
 import { toast } from "sonner"
 import { RequireAdmin } from "@/components/auth/RequireAdmin"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { inviteUser, listAdminUsers, type AdminUserRow } from "@/lib/admin/adminApi"
+import { inviteUser, listAdminUsers, updateUserAccess, type AdminUserRow } from "@/lib/admin/adminApi"
 import { useAuth } from "@/lib/auth/useAuth"
 import { UserEditDrawer } from "@/components/admin/UserEditDrawer"
 
@@ -42,18 +51,17 @@ function AdminUsersInner() {
   }, [])
 
   useEffect(() => {
-    void load()
+    const timer = window.setTimeout(() => {
+      void load()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [load])
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase()
     if (!q) return rows
-    return rows.filter(
-      r =>
-        r.full_name.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q) ||
-        r.user_id.toLowerCase().includes(q)
-    )
+    return rows.filter(r => r.full_name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.user_id.toLowerCase().includes(q))
   }, [rows, filter])
 
   async function submitInvite() {
@@ -72,11 +80,21 @@ function AdminUsersInner() {
     }
   }
 
+  async function setUserActive(row: AdminUserRow, active: boolean) {
+    try {
+      await updateUserAccess({ userId: row.user_id, active, role: row.role, permissions: row.permissions })
+      toast.success(`${row.email || row.full_name || "User"} ${active ? "activated" : "deactivated"}`)
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "User update failed")
+    }
+  }
+
   return (
     <div className="space-y-4 p-3 sm:p-4 lg:p-6">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-h1 font-semibold text-foreground">Users</h1>
+          <h1 className="text-h1 text-foreground font-semibold">Users</h1>
           <p className="text-muted-foreground mt-0.5 text-sm">Manage roles, permissions, and profiles.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -92,7 +110,7 @@ function AdminUsersInner() {
         </div>
       </header>
 
-      <div className="overflow-hidden rounded-3xl border border-foreground/10 bg-white">
+      <div className="border-foreground/10 overflow-hidden rounded-3xl border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-foreground/5 text-muted-foreground">
             <tr>
@@ -107,14 +125,14 @@ function AdminUsersInner() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="text-muted-foreground px-4 py-10 text-center">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="text-muted-foreground px-4 py-10 text-center">
                   No users found.
                 </td>
               </tr>
@@ -122,18 +140,53 @@ function AdminUsersInner() {
             {!loading &&
               filtered.map(row => {
                 const isSelf = row.user_id === user?.id
-                return (
-                  <tr key={row.user_id} className="border-t border-foreground/5">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">{row.full_name || "(unnamed)"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.email || `${row.user_id.slice(0, 8)}…`}
-                        {isSelf ? " · you" : ""}
+                const rowMenu = (
+                  <ContextMenu>
+                    <ContextMenuTrigger className="contents">
+                      <div>
+                        <div className="text-foreground font-medium">{row.full_name || "(unnamed)"}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {row.email || `${row.user_id.slice(0, 8)}…`}
+                          {isSelf ? " · you" : ""}
+                        </div>
                       </div>
-                    </td>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-56">
+                      <ContextMenuGroup>
+                        <ContextMenuLabel className="truncate">{row.full_name || row.email || "User"}</ContextMenuLabel>
+                        <ContextMenuItem onClick={() => setEditing(row)}>
+                          <Pencil />
+                          Edit access
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => navigator.clipboard.writeText(row.email || row.user_id)}>
+                          <Copy />
+                          Copy email
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => navigator.clipboard.writeText(row.user_id)}>
+                          <Copy />
+                          Copy user ID
+                        </ContextMenuItem>
+                      </ContextMenuGroup>
+                      <ContextMenuSeparator />
+                      <ContextMenuGroup>
+                        <ContextMenuItem disabled={isSelf || row.active} onClick={() => void setUserActive(row, true)}>
+                          <CheckCircle2 />
+                          Activate user
+                        </ContextMenuItem>
+                        <ContextMenuItem disabled={isSelf || !row.active} variant="destructive" onClick={() => void setUserActive(row, false)}>
+                          <UserX />
+                          Deactivate user
+                        </ContextMenuItem>
+                      </ContextMenuGroup>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
+                return (
+                  <tr key={row.user_id} className="border-foreground/5 border-t">
+                    <td className="px-4 py-3">{rowMenu}</td>
                     <td className="hidden px-4 py-3 sm:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {row.positions.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                        {row.positions.length === 0 && <span className="text-muted-foreground text-xs">—</span>}
                         {row.positions.map(p => (
                           <span key={p} className={`rounded-full px-2 py-0.5 text-xs ${badge("muted")}`}>
                             {p}
@@ -154,7 +207,9 @@ function AdminUsersInner() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${row.active ? badge("ok") : badge("warn")}`}>{row.active ? "active" : "inactive"}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${row.active ? badge("ok") : badge("warn")}`}>
+                        {row.active ? "active" : "inactive"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
@@ -179,7 +234,13 @@ function AdminUsersInner() {
           <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="invite-email">Email</Label>
-              <Input id="invite-email" type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="name@sunriser.com" />
+              <Input
+                id="invite-email"
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="name@sunriser.com"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="invite-name">Full name (optional)</Label>

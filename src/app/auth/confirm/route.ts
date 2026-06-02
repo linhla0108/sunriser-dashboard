@@ -16,13 +16,13 @@ export async function GET(request: NextRequest) {
   redirectTo.searchParams.delete("next")
 
   if (tokenHash && type) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash: tokenHash,
-    })
-
-    if (!error) return NextResponse.redirect(redirectTo)
+    try {
+      const supabase = await createClient()
+      const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
+      if (!error) return NextResponse.redirect(redirectTo)
+    } catch {
+      // Supabase unreachable — fall through to error redirect below
+    }
   }
 
   redirectTo.pathname = "/login"

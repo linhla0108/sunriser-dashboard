@@ -32,12 +32,16 @@ export function UserEditDrawer({ user, selfUserId, onClose, onSaved }: Props) {
 
   useEffect(() => {
     if (!user) return
-    setFullName(user.full_name)
-    setBirthday(user.birthday ?? "")
-    setPositions(user.positions.join(", "))
-    setActive(user.active)
-    setRole(user.role)
-    setPerms(user.permissions)
+    const timer = window.setTimeout(() => {
+      setFullName(user.full_name)
+      setBirthday(user.birthday ?? "")
+      setPositions(user.positions.join(", "))
+      setActive(user.active)
+      setRole(user.role)
+      setPerms(user.permissions)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [user])
 
   const isSelf = user?.user_id === selfUserId
@@ -82,7 +86,7 @@ export function UserEditDrawer({ user, selfUserId, onClose, onSaved }: Props) {
 
   return (
     <Sheet open={Boolean(user)} onOpenChange={open => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Edit user</SheetTitle>
           <SheetDescription>
@@ -94,7 +98,7 @@ export function UserEditDrawer({ user, selfUserId, onClose, onSaved }: Props) {
 
         <div className="space-y-5 px-4">
           <section className="space-y-3">
-            <h3 className="text-label font-semibold tracking-wider text-muted-foreground uppercase">Profile</h3>
+            <h3 className="text-label text-muted-foreground font-semibold tracking-wider uppercase">Profile</h3>
             <div className="space-y-2">
               <Label htmlFor="admin-full-name">Full name</Label>
               <Input id="admin-full-name" value={fullName} onChange={e => setFullName(e.target.value)} />
@@ -109,8 +113,8 @@ export function UserEditDrawer({ user, selfUserId, onClose, onSaved }: Props) {
             </div>
           </section>
 
-          <section className="space-y-3" aria-disabled={isSelf}>
-            <h3 className="text-label font-semibold tracking-wider text-muted-foreground uppercase">Access</h3>
+          <section className="space-y-3">
+            <h3 className="text-label text-muted-foreground font-semibold tracking-wider uppercase">Access</h3>
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={active} onCheckedChange={c => setActive(c === true)} disabled={isSelf} />
               <span>Account active</span>
@@ -122,7 +126,7 @@ export function UserEditDrawer({ user, selfUserId, onClose, onSaved }: Props) {
                 value={role}
                 disabled={isSelf}
                 onChange={e => setRole(e.target.value as AdminUserRow["role"])}
-                className="h-10 w-full rounded-lg border border-foreground/10 bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-foreground/10 bg-background h-10 w-full rounded-lg border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {ROLES.map(r => (
                   <option key={r} value={r}>

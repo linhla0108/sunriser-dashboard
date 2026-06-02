@@ -54,9 +54,7 @@ export async function listAdminUsers(): Promise<AdminUserRow[]> {
   if (profiles.error) throw new Error(profiles.error.message)
   if (access.error) throw new Error(access.error.message)
 
-  const accessById = new Map<string, AccessJoinRow>(
-    (access.data ?? []).map(row => [row.user_id, row as AccessJoinRow])
-  )
+  const accessById = new Map<string, AccessJoinRow>((access.data ?? []).map(row => [row.user_id, row as AccessJoinRow]))
   const profileRows = (profiles.data ?? []) as ProfileJoinRow[]
 
   return profileRows.map(p => {
@@ -81,7 +79,13 @@ export async function refreshUserClaims(userId: string, role: AppAccess["role"])
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ userId, role }),
   })
-  if (!res.ok && res.status !== 503) {
+  if (res.status === 503) {
+    // service_role not configured — DB row was updated but the JWT won't reflect the
+    // new role until the user's token next refreshes naturally. Log so devs notice.
+    console.warn("[refreshUserClaims] service_role not configured — JWT app_metadata not updated")
+    return
+  }
+  if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error ?? "Failed to refresh claims")
   }

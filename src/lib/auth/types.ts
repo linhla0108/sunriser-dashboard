@@ -30,6 +30,11 @@ export interface AppUser {
   profile: AppProfile
   access: AppAccess
   settings: AppSettings
+  /**
+   * Set to true when loadProfileData threw (network/RLS error).
+   * Distinguishes "DB unreachable" from an actual deactivated account.
+   */
+  profileError?: true
 }
 
 export interface AuthContextValue {
@@ -39,5 +44,6 @@ export interface AuthContextValue {
   isAdmin: boolean
   can: (permission: AppPermission) => boolean
   signIn: (email: string, password: string, options?: { remember?: boolean }) => Promise<{ ok: true } | { ok: false; error: string }>
+  signInWithMicrosoft: () => Promise<{ ok: true } | { ok: false; error: string }>
   signOut: () => Promise<void>
 }

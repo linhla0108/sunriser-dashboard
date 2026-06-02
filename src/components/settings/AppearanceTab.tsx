@@ -73,21 +73,21 @@ export function AppearanceTab() {
 
       <section>
         <h2 className="font-heading text-foreground text-sm font-semibold">Custom accent color</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Override the primary accent color across buttons, active states, and focus rings.</p>
+        <p className="text-muted-foreground mt-1 text-xs">Override the primary accent color across buttons, active states, and focus rings.</p>
         <div className="mt-3 flex items-center gap-3">
           <input
             type="color"
             id="custom-color"
             value={customColor ?? "#FF5533"}
             onChange={e => setCustomColor(e.target.value)}
-            className="h-9 w-14 cursor-pointer rounded-2xl border border-border bg-transparent p-1"
+            className="border-border h-9 w-14 cursor-pointer rounded-2xl border bg-transparent p-1"
             title="Pick a custom accent color"
           />
-          <label htmlFor="custom-color" className="text-sm text-foreground font-medium">
+          <label htmlFor="custom-color" className="text-foreground text-sm font-medium">
             {customColor ?? "#FF5533 (default)"}
           </label>
           {customColor && (
-            <Button variant="outline" size="sm" onClick={() => setCustomColor(null)} className="rounded-full text-xs h-7 px-3">
+            <Button variant="outline" size="sm" onClick={() => setCustomColor(null)} className="h-7 rounded-full px-3 text-xs">
               Reset
             </Button>
           )}

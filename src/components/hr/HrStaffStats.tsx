@@ -9,17 +9,17 @@ interface Props {
 export function HrStaffStats({ total, active, inactive }: Props) {
   return (
     <div className="mb-4 grid grid-cols-3 gap-3">
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total Staff</p>
-        <p className="mt-1 text-2xl font-bold text-foreground">{total}</p>
+      <div className="border-border bg-card rounded-2xl border p-4">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Total Staff</p>
+        <p className="text-foreground mt-1 text-2xl font-bold">{total}</p>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active</p>
-        <p className="mt-1 text-2xl font-bold text-primary">{active}</p>
+      <div className="border-border bg-card rounded-2xl border p-4">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Active</p>
+        <p className="text-primary mt-1 text-2xl font-bold">{active}</p>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inactive</p>
-        <p className="mt-1 text-2xl font-bold text-muted-foreground">{inactive}</p>
+      <div className="border-border bg-card rounded-2xl border p-4">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Inactive</p>
+        <p className="text-muted-foreground mt-1 text-2xl font-bold">{inactive}</p>
       </div>
     </div>
   )

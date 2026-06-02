@@ -14,15 +14,7 @@ describe("SearchableSelect", () => {
   it("filters options while keeping the selected value as a muted input hint", async () => {
     const onValueChange = vi.fn()
 
-    render(
-      <SearchableSelect
-        aria-label="Position"
-        value="ai"
-        options={options}
-        onValueChange={onValueChange}
-        placeholder="Select position"
-      />
-    )
+    render(<SearchableSelect aria-label="Position" value="ai" options={options} onValueChange={onValueChange} placeholder="Select position" />)
 
     await userEvent.click(screen.getByRole("button", { name: /ai engineering/i }))
 
@@ -45,14 +37,7 @@ describe("SearchableSelect", () => {
   it("keeps disabled unavailable options visible but unselectable", async () => {
     const onValueChange = vi.fn()
 
-    render(
-      <SearchableSelect
-        aria-label="Position"
-        value="all"
-        options={options}
-        onValueChange={onValueChange}
-      />
-    )
+    render(<SearchableSelect aria-label="Position" value="all" options={options} onValueChange={onValueChange} />)
 
     await userEvent.click(screen.getByRole("button", { name: /all positions/i }))
 
@@ -67,14 +52,7 @@ describe("SearchableSelect", () => {
   it("supports keyboard search and enter selection", async () => {
     const onValueChange = vi.fn()
 
-    render(
-      <SearchableSelect
-        aria-label="Position"
-        value="all"
-        options={options}
-        onValueChange={onValueChange}
-      />
-    )
+    render(<SearchableSelect aria-label="Position" value="all" options={options} onValueChange={onValueChange} />)
 
     await userEvent.click(screen.getByRole("button", { name: /all positions/i }))
     await userEvent.keyboard("data{Enter}")

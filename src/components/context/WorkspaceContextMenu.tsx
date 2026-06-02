@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Download, FileText, Keyboard, BarChart3, FilterX, Link2 } from "lucide-react"
+import { Copy, Keyboard, Link2 } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -15,45 +15,14 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { mockApplicants } from "@/lib/mockData"
-import type { Applicant } from "@/lib/types"
 
 interface WorkspaceContextMenuProps {
   children: React.ReactNode
-  onCreateReport?: () => void
-  onResetFilters?: () => void
 }
 
-function exportCSV(applicants: Applicant[], filename = "applicants.csv") {
-  const headers = ["Name", "Email", "Position", "University", "GPA", "Batch", "PIC", "Round 1", "Round 2"]
-  const rows = applicants.map((a) => [
-    a.name,
-    a.email,
-    a.position1,
-    a.university,
-    a.gpa,
-    a.batch,
-    a.pic ?? "",
-    a.round1Result ?? "",
-    a.round2Result ?? "",
-  ])
-  const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n")
-  const blob = new Blob([csv], { type: "text/csv" })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+const SHORTCUTS = [{ label: "Focus view switcher first, then press 1-3" }, { label: "Focus table pager first, then press arrow keys" }]
 
-const SHORTCUTS = [
-  { label: "Open AI Chat", keys: "⌘J" },
-  { label: "Open Notes", keys: "⌘N" },
-  { label: "Create Report", keys: "⌘R" },
-]
-
-export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters }: WorkspaceContextMenuProps) {
+export function WorkspaceContextMenu({ children }: WorkspaceContextMenuProps) {
   const [copied, setCopied] = useState(false)
 
   const [selectionText, setSelectionText] = useState("")
@@ -74,7 +43,11 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
   }
 
   return (
-    <ContextMenu onOpenChange={(open) => { if (open) handleContextOpen() }}>
+    <ContextMenu
+      onOpenChange={open => {
+        if (open) handleContextOpen()
+      }}
+    >
       <ContextMenuTrigger className="contents select-text">{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuItem onClick={handleCopy} disabled={!selectionText}>
@@ -92,59 +65,15 @@ export function WorkspaceContextMenu({ children, onCreateReport, onResetFilters 
 
         <ContextMenuSub>
           <ContextMenuSubTrigger>
-            <Download />
-            Export data
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
-            <ContextMenuGroup>
-              <ContextMenuLabel>Download as</ContextMenuLabel>
-              <ContextMenuItem onClick={() => exportCSV(mockApplicants, "applicants.csv")}>
-                CSV — all applicants
-              </ContextMenuItem>
-              <ContextMenuItem
-                onClick={() =>
-                  exportCSV(
-                    mockApplicants.filter((a) => a.round1Result === "Passed"),
-                    "passed-applicants.csv"
-                  )
-                }
-              >
-                CSV — passed only
-              </ContextMenuItem>
-            </ContextMenuGroup>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-
-        {onCreateReport && (
-          <ContextMenuItem onClick={onCreateReport}>
-            <FileText />
-            Create report
-            <ContextMenuShortcut>⌘R</ContextMenuShortcut>
-          </ContextMenuItem>
-        )}
-
-        {onResetFilters && (
-          <ContextMenuItem onClick={onResetFilters}>
-            <FilterX />
-            Reset filters
-          </ContextMenuItem>
-        )}
-
-        <ContextMenuSeparator />
-
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
             <Keyboard />
             Keyboard shortcuts
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-52">
             <ContextMenuGroup>
               <ContextMenuLabel>Shortcuts</ContextMenuLabel>
-              {SHORTCUTS.map((s) => (
-                <ContextMenuItem key={s.label} disabled>
-                  <BarChart3 className="opacity-0" />
-                  {s.label}
-                  <ContextMenuShortcut>{s.keys}</ContextMenuShortcut>
+              {SHORTCUTS.map(shortcut => (
+                <ContextMenuItem key={shortcut.label} disabled>
+                  {shortcut.label}
                 </ContextMenuItem>
               ))}
             </ContextMenuGroup>

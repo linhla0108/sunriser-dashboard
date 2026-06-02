@@ -20,8 +20,21 @@ vi.mock("@/components/auth/RequireAuth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
+vi.mock("@/lib/announcements/AnnouncementProvider", () => ({
+  AnnouncementProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAnnouncements: () => ({
+    announcements: [],
+    unreadCount: 0,
+    markRead: vi.fn(),
+  }),
+}))
+
 vi.mock("@/components/pin/PinnedToolbar", () => ({
   PinnedToolbar: () => <div data-testid="pinned-toolbar">Pinned Toolbar</div>,
+}))
+
+vi.mock("@/lib/auth/useAuth", () => ({
+  useAuth: () => ({ can: () => true }),
 }))
 
 Object.defineProperty(window, "matchMedia", {
@@ -67,7 +80,7 @@ describe("WorkspaceShell keyboard shortcuts", () => {
     setupSession()
   })
 
-  it("Ctrl+R opens the report modal", async () => {
+  it("does not intercept Ctrl+R for the report modal", async () => {
     render(
       <WorkspaceShell>
         <div>page</div>
@@ -79,6 +92,22 @@ describe("WorkspaceShell keyboard shortcuts", () => {
     expect(screen.queryByText("Generated report")).not.toBeInTheDocument()
 
     await userEvent.keyboard("{Control>}r{/Control}")
+
+    expect(screen.queryByText("Generated report")).not.toBeInTheDocument()
+  })
+
+  it("opens the report modal from the visible create report button", async () => {
+    render(
+      <WorkspaceShell>
+        <div>page</div>
+      </WorkspaceShell>,
+      { wrapper: Providers }
+    )
+
+    await screen.findByText("page")
+    expect(screen.queryByText("Generated report")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /create report/i }))
 
     await waitFor(() => expect(screen.getByText("Generated report")).toBeInTheDocument())
   })

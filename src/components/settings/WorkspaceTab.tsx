@@ -14,11 +14,9 @@ type SortKey = (typeof SORTS)[number]
 type Lang = (typeof LANGS)[number]
 
 const SHORTCUTS: Array<{ keys: string; action: string }> = [
-  { keys: "Ctrl+\\", action: "Toggle sidebar" },
-  { keys: "Ctrl+J", action: "Open AI drawer" },
-  { keys: "Ctrl+N", action: "Open notes drawer" },
-  { keys: "Ctrl+R", action: "Create report" },
-  { keys: "1 – 3", action: "Switch view (Table / Pipeline / Charts)" },
+  { keys: "None", action: "Global workspace shortcuts" },
+  { keys: "Focus + 1 – 3", action: "Switch view (Table / Pipeline / Charts)" },
+  { keys: "Focus + ← / →", action: "Previous / next table page" },
   { keys: "P", action: "Pin focused candidate" },
 ]
 
@@ -31,7 +29,7 @@ export function WorkspaceTab() {
     <div className="mt-6 space-y-6">
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="default-view" className="text-xs font-semibold text-muted-foreground uppercase">
+          <Label htmlFor="default-view" className="text-muted-foreground text-xs font-semibold uppercase">
             Default view
           </Label>
           <Select value={defaultView} onValueChange={value => setDefaultView((value as ViewKey) ?? "table")}>
@@ -49,7 +47,7 @@ export function WorkspaceTab() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="default-sort" className="text-xs font-semibold text-muted-foreground uppercase">
+          <Label htmlFor="default-sort" className="text-muted-foreground text-xs font-semibold uppercase">
             Default sort
           </Label>
           <Select value={defaultSort} onValueChange={value => setDefaultSort((value as SortKey) ?? "submittedAt")}>
@@ -65,7 +63,7 @@ export function WorkspaceTab() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="lang" className="text-xs font-semibold text-muted-foreground uppercase">
+          <Label htmlFor="lang" className="text-muted-foreground text-xs font-semibold uppercase">
             Language
           </Label>
           <Select value={lang} onValueChange={value => setLang((value as Lang) ?? "en")}>
@@ -80,15 +78,15 @@ export function WorkspaceTab() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-foreground/10 p-4">
-        <h2 className="font-heading text-sm font-semibold text-foreground">Keyboard shortcuts</h2>
+      <section className="border-foreground/10 rounded-2xl border p-4">
+        <h2 className="font-heading text-foreground text-sm font-semibold">Keyboard shortcuts</h2>
         <table className="mt-3 w-full text-sm">
           <tbody>
             {SHORTCUTS.map(shortcut => (
-              <tr key={shortcut.action} className="border-t border-foreground/5 first:border-0">
-                <td className="py-2 text-foreground/85">{shortcut.action}</td>
+              <tr key={shortcut.action} className="border-foreground/5 border-t first:border-0">
+                <td className="text-foreground/85 py-2">{shortcut.action}</td>
                 <td className="py-2 text-right">
-                  <kbd className="rounded-md border border-foreground/15 bg-background px-2 py-0.5 font-mono text-xs text-foreground">
+                  <kbd className="border-foreground/15 bg-background text-foreground rounded-md border px-2 py-0.5 font-mono text-xs">
                     {shortcut.keys}
                   </kbd>
                 </td>

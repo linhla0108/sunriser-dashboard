@@ -58,3 +58,9 @@ C*Usersleanh.sshknown_hosts
 /tests/e2e/.auth/
 /playwright-report/
 /test-results/
+tests/e2e/.auth-state.json
+test-results/
+
+
+# agent memory
+/data

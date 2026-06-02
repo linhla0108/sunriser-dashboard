@@ -23,11 +23,14 @@ export function AppLoadingScreen({ sublabel, variant = "boot", className }: AppL
       role="status"
       aria-live="polite"
       data-cid="app-loading-screen"
-      className={cn("bg-background text-foreground flex min-h-screen items-center justify-center px-6 py-10 motion-safe:animate-[loadingScreenIn_420ms_ease-out_both]", className)}
+      className={cn(
+        "bg-background text-foreground flex min-h-screen items-center justify-center px-6 py-10 motion-safe:animate-[loadingScreenIn_420ms_ease-out_both]",
+        className
+      )}
     >
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <div className="motion-safe:animate-[loadingMark_2.4s_ease-in-out_infinite]" aria-hidden="true">
-          <Image src="/logo-wordmark.png" alt="" width={252} height={64} priority className="h-auto w-[13.5rem] sm:w-[15.75rem]" />
+          <Image src="/logo-wordmark.png" alt="" width={252} height={64} priority className="h-[3.428571rem] w-[13.5rem] sm:h-16 sm:w-[15.75rem]" />
         </div>
 
         <div className="mt-8 w-full">

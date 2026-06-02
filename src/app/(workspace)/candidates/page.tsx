@@ -51,6 +51,61 @@ export default function CandidatesPage() {
   })
   const applicants = editedApplicants.sourceId === sourceId ? editedApplicants.applicants : (uploadSession?.applicants ?? mockApplicants)
   const [detailApplicant, setDetailApplicant] = useState<Applicant | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectedSectionOpen, setSelectedSectionOpen] = useState(true)
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else {
+        if (prev.size === 0) setSelectedSectionOpen(true)
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  function handleClearSelection() {
+    setSelectedIds(new Set())
+    setSelectedSectionOpen(true)
+  }
+
+  function handleBulkBatch(batch: number) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, batch } : a)),
+    }))
+  }
+
+  function handleBulkPic(pic: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, pic } : a)),
+    }))
+  }
+
+  function handleBulkRound1(result: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, round1Result: result } : a)),
+    }))
+  }
+
+  function handleBulkRound2(result: string) {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.map(a => (selectedIds.has(a.id) ? { ...a, round2Result: result } : a)),
+    }))
+  }
+
+  function handleBulkDelete() {
+    setEditedApplicants(prev => ({
+      sourceId: prev.sourceId,
+      applicants: prev.applicants.filter(a => !selectedIds.has(a.id)),
+    }))
+    setSelectedIds(new Set())
+  }
 
   function updateUrlState(patch: Partial<CandidateUrlState>, options: { resetPage?: boolean } = {}) {
     const params = writeCandidateUrlState(new URLSearchParams(searchParams.toString()), {
@@ -85,12 +140,20 @@ export default function CandidatesPage() {
     onClearFilters: () => updateUrlState({ search: "", position: "", batch: "", result: "", page: 1 }),
   })
 
-  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(filtered.length, 15, {
-    page: urlState.page,
-    onPageChange: page => updateUrlState({ page }),
-  })
+  const showSelectedSection = hasFilters && selectedIds.size > 0
+  const selectedData = showSelectedSection ? applicants.filter(applicant => selectedIds.has(applicant.id)) : []
+  const filteredTableData = showSelectedSection ? filtered.filter(applicant => !selectedIds.has(applicant.id)) : filtered
 
-  const pagedData = filtered.slice(startIndex, endIndex)
+  const { currentPage, totalPages, startIndex, endIndex, canGoPrev, canGoNext, goPrev, goNext } = usePagination(
+    filteredTableData.length,
+    urlState.pageSize,
+    {
+      page: urlState.page,
+      onPageChange: page => updateUrlState({ page }),
+    }
+  )
+
+  const pagedData = filteredTableData.slice(startIndex, endIndex)
 
   function handleReorder(reordered: Applicant[]) {
     setEditedApplicants({
@@ -99,14 +162,17 @@ export default function CandidatesPage() {
     })
   }
 
+  function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
+    const nextApplicants = applicants.map(applicant => (applicant.id === id ? { ...applicant, ...patch } : applicant))
+    setEditedApplicants({ sourceId, applicants: nextApplicants })
+    setDetailApplicant(current => (current?.id === id ? { ...current, ...patch } : current))
+  }
+
   return (
     <>
       <div className="p-3 pb-36 sm:p-4 sm:pb-28 lg:p-6 lg:pb-28">
         {uploadSession ? (
-          <div
-            data-cid="uploaded-candidates-banner"
-            className="mb-4 rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-4"
-          >
+          <div data-cid="uploaded-candidates-banner" className="mb-4 rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#1b1b1b]">Using uploaded candidates from {uploadSession.dataset.fileName}</p>
@@ -144,19 +210,44 @@ export default function CandidatesPage() {
           onBatchChange={setBatchFilter}
           onResultChange={setResultFilter}
           onClearAll={clearFilters}
+          selectedCount={urlState.view === "table" ? selectedIds.size : 0}
+          onBulkClear={handleClearSelection}
+          onBulkBatch={handleBulkBatch}
+          onBulkPic={handleBulkPic}
+          onBulkDelete={handleBulkDelete}
         />
         {urlState.view === "table" ? (
-          <TableView
-            key={formatCandidateSort(urlState.sort)}
-            data={pagedData}
-            onDataChange={handleReorder}
-            onViewDetail={setDetailApplicant}
-            indexOffset={startIndex}
-            paginationInfo={{ start: startIndex, end: endIndex, total: filtered.length, currentPage, totalPages }}
-            searchQuery={search}
-            sortState={urlState.sort}
-            onSortChange={sort => updateUrlState({ sort, page: 1 })}
-          />
+          <>
+            <TableView
+              key={formatCandidateSort(urlState.sort)}
+              data={pagedData}
+              selectedData={selectedData}
+              onDataChange={handleReorder}
+              onViewDetail={setDetailApplicant}
+              indexOffset={startIndex}
+              paginationInfo={{
+                start: startIndex,
+                end: endIndex,
+                total: filteredTableData.length,
+                currentPage,
+                totalPages,
+                pageSize: urlState.pageSize,
+                onPageSizeChange: pageSize => updateUrlState({ pageSize, page: 1 }),
+              }}
+              searchQuery={search}
+              sortState={urlState.sort}
+              onSortChange={sort => updateUrlState({ sort, page: 1 })}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+              selectedSectionOpen={selectedSectionOpen}
+              onSelectedSectionOpenChange={setSelectedSectionOpen}
+              onBulkBatch={handleBulkBatch}
+              onBulkPic={handleBulkPic}
+              onBulkRound1={handleBulkRound1}
+              onBulkRound2={handleBulkRound2}
+              onBulkDelete={handleBulkDelete}
+            />
+          </>
         ) : null}
         {urlState.view === "pipeline" ? (
           <ThemedView
@@ -166,6 +257,7 @@ export default function CandidatesPage() {
               data: filtered,
               onReorder: handleReorder,
               onViewDetail: setDetailApplicant,
+              onUpdateApplicant: handleUpdateApplicant,
               searchQuery: search,
               groupBy: urlState.group,
               onGroupByChange: (group: CandidatePipelineGroup) => updateUrlState({ group }),
@@ -178,6 +270,7 @@ export default function CandidatesPage() {
       <ApplicantDetailDrawer
         applicant={detailApplicant}
         open={!!detailApplicant}
+        onUpdateApplicant={handleUpdateApplicant}
         onOpenChange={open => {
           if (!open) setDetailApplicant(null)
         }}

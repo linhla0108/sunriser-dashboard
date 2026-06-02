@@ -1,14 +1,18 @@
 # Supabase Auth Audit
+
 Tag: auth/audit
 
 ## Goal
+
 Audit the current Supabase project and repo auth flow, then define the next RBAC and user profile direction.
 
 ## Scope
+
 - Included: Supabase MCP inventory, repo auth flow review, security gap list, and proposed user profile/RBAC data model.
 - Excluded: applying database migrations, changing auth code, adding admin screens, and creating real user data.
 
 ## Acceptance criteria
+
 - Current Supabase assets are listed with security-relevant notes.
 - Current repo auth behavior is classified as ready, partial, or missing.
 - Required work for user roles, permissions, settings, and extra profile fields is concrete enough to implement next.
@@ -16,11 +20,13 @@ Audit the current Supabase project and repo auth flow, then define the next RBAC
 ---
 
 ## Report
+
 Status: Done
 
 ### Supabase inventory
 
 Project:
+
 - Name: Dashboard HR
 - Ref: kumhwmpfxoyauquevhbz
 - Region: ap-southeast-1
@@ -29,6 +35,7 @@ Project:
 - Project URL: https://kumhwmpfxoyauquevhbz.supabase.co
 
 Current assets:
+
 - Auth users: 1 total, 1 email-confirmed, 1 signed in before.
 - Auth provider in use: email.
 - Sessions: 2 rows.
@@ -41,12 +48,14 @@ Current assets:
 - Repo `.env.local` points to this project and uses a publishable key, not a service role key.
 
 Security advisor findings:
+
 - `public.rls_auto_enable()` is a `SECURITY DEFINER` function executable by `PUBLIC`, `anon`, and `authenticated`.
 - The function is used by event trigger `ensure_rls` to auto-enable RLS after public table creation.
 - Leaked password protection is disabled in Supabase Auth.
 - Performance advisors returned no findings.
 
 Recommended immediate Supabase hardening:
+
 - Revoke public execution from `public.rls_auto_enable()`.
 - Keep the event trigger if desired, but do not expose its function through RPC.
 - Enable leaked password protection in Supabase Auth settings.
@@ -55,6 +64,7 @@ Recommended immediate Supabase hardening:
 ### Repo auth flow review
 
 What is already good:
+
 - The app uses `@supabase/ssr` with browser, server, and proxy clients.
 - `proxy.ts` calls `supabase.auth.getClaims()`, which matches current Supabase SSR guidance for token refresh and JWT validation.
 - Frontend auth reads role from `app_metadata`, not user-editable `user_metadata`.
@@ -62,6 +72,7 @@ What is already good:
 - `.env.local` contains only public Supabase values.
 
 Main gaps:
+
 - Protected workspace routes are guarded in the client by `RequireAuth`, not by server/proxy redirect. This is acceptable for mock data, but it is not a production authorization boundary.
 - There is no database-backed RBAC. `role` is currently only a display/runtime value from `app_metadata`.
 - There is no permission enforcement for read, edit, delete, export, settings, or HR actions.
@@ -73,6 +84,7 @@ Main gaps:
 - The remember-me behavior is local app state layered on top of Supabase cookies. It signs out after app load, but server-side route protection should also understand this policy if strict session length matters.
 
 Auth flow status:
+
 - Login/session basics: partial.
 - Route protection: partial.
 - User profile storage: missing.
@@ -141,6 +153,7 @@ create table public.user_settings (
 ```
 
 Notes:
+
 - Prefer deriving `age` from `birthday` in the app, because stored age becomes stale.
 - If the business needs age at application time, store a snapshot like `application_age` on the application/candidate record, not on the user profile.
 - Keep flexible UI settings in `jsonb`, but keep authorization fields typed and explicit.
@@ -173,11 +186,13 @@ Notes:
    - Keep audit-friendly changes later if needed.
 
 Verification performed:
+
 - Supabase MCP project inventory.
 - Supabase MCP table, function, policy, migration, edge function, and advisor checks.
 - Repo auth source review for Supabase clients, auth provider, route guard, login, signup, forgot password, confirm route, settings account tab, and workspace shell.
 - Current Supabase docs lookup for SSR clients, proxy session refresh, RLS, `auth.jwt()`, and user metadata versus app metadata.
 
 Remaining:
+
 - No migrations or code fixes were applied in this audit.
 - The next step should be a separate implementation task because it changes auth behavior and stores new user data.

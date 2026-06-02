@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { loadProfileData, PROFILE_DEFAULTS } from "./loadProfile"
@@ -11,6 +11,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null)
 const REMEMBER_UNTIL_KEY = "sunriser.auth.rememberUntil"
 const SESSION_ONLY_KEY = "sunriser.auth.sessionOnly"
 const REMEMBER_DURATION_MS = 6 * 24 * 60 * 60 * 1000
+const INITIAL_SESSION_TIMEOUT_MS = 5000
 
 function roleFromAppMetadata(user: User): Exclude<AppRole, "public"> {
   const role = user.app_metadata?.role
@@ -43,12 +44,16 @@ function shouldKeepSession() {
 function setRememberPreference(remember: boolean) {
   if (typeof window === "undefined") return
   if (remember) {
-    window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS))
+    try {
+      window.localStorage.setItem(REMEMBER_UNTIL_KEY, String(Date.now() + REMEMBER_DURATION_MS))
+    } catch {}
     window.sessionStorage.removeItem(SESSION_ONLY_KEY)
     return
   }
   window.localStorage.removeItem(REMEMBER_UNTIL_KEY)
-  window.sessionStorage.setItem(SESSION_ONLY_KEY, "true")
+  try {
+    window.sessionStorage.setItem(SESSION_ONLY_KEY, "true")
+  } catch {}
 }
 
 function clearRememberPreference() {
@@ -57,88 +62,161 @@ function clearRememberPreference() {
   window.sessionStorage.removeItem(SESSION_ONLY_KEY)
 }
 
+/**
+ * Workspace data that is personal to the signed-in user. These keys must be
+ * cleared on sign-out so the next user on the same device does not see them.
+ *
+ * Keys intentionally NOT listed here (device preferences, not user data):
+ * v2.theme, v2.mode, v2.custom-color, v2.density, v2.workspace.*, v2.view.*,
+ * v2.chat.open/mode/dockWidth/floatPos, v2.notes.open/mode/dockWidth/floatPos,
+ * v2.drawer.*
+ */
+const USER_DATA_KEYS = ["v2.notes.items", "v2.pinned", "v2.chat.history", "v2.report.shares"] as const
+
+function clearUserData() {
+  if (typeof window === "undefined") return
+  USER_DATA_KEYS.forEach(key => {
+    try {
+      window.localStorage.removeItem(key)
+    } catch {}
+  })
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
+  const initialSessionResolvedRef = useRef(false)
+  const initialSessionTimedOutRef = useRef(false)
+
+  // undefined = onAuthStateChange hasn't fired yet (auth lock not yet released)
+  // null      = no authenticated session
+  // User      = authenticated session present
+  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined)
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Effect 1: Auth session listener.
+  // CRITICAL: This callback must NEVER await any Supabase API call.
+  // The @supabase/ssr client holds a Web Lock for the duration of the
+  // onAuthStateChange callback. Any Supabase call made while that lock is
+  // held (including database queries that attach auth headers) will try to
+  // re-acquire the same lock and deadlock — keeping the loading screen up
+  // forever after a hard reload.
+  useEffect(() => {
+    let mounted = true
+    const initialSessionTimer = window.setTimeout(() => {
+      if (!mounted || initialSessionResolvedRef.current) return
+      initialSessionResolvedRef.current = true
+      initialSessionTimedOutRef.current = true
+      setAuthUser(null)
+      setUser(null)
+      setLoading(false)
+    }, INITIAL_SESSION_TIMEOUT_MS)
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+
+      if (event === "SIGNED_OUT") {
+        initialSessionResolvedRef.current = true
+        window.clearTimeout(initialSessionTimer)
+        setAuthUser(null)
+        setUser(null)
+        setLoading(false)
+        clearRememberPreference()
+        return
+      }
+
+      // Token events that don't change the user identity — no profile reload needed.
+      if (event === "TOKEN_REFRESHED" || event === "PASSWORD_RECOVERY" || event === "MFA_CHALLENGE_VERIFIED") {
+        return
+      }
+
+      // INITIAL_SESSION | SIGNED_IN | USER_UPDATED
+      initialSessionResolvedRef.current = true
+      window.clearTimeout(initialSessionTimer)
+      if (session?.user) {
+        if (initialSessionTimedOutRef.current) setLoading(true)
+        setAuthUser(session.user)
+        // loading stays true — Effect 2 will resolve it after profile loads
+      } else {
+        // No session on initial load → not authenticated
+        setAuthUser(null)
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      mounted = false
+      window.clearTimeout(initialSessionTimer)
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
   const buildAppUser = useCallback(
-    async (authUser: User): Promise<AppUser> => {
+    async (rawUser: User): Promise<AppUser> => {
       try {
-        const { profile, access, settings } = await loadProfileData(supabase, authUser.id)
+        const { profile, access, settings } = await loadProfileData(supabase, rawUser.id)
         return {
-          id: authUser.id,
-          email: authUser.email ?? "",
-          name: displayNameFromUser(authUser, profile.fullName),
-          role: roleFromAppMetadata(authUser),
+          id: rawUser.id,
+          email: rawUser.email ?? "",
+          name: displayNameFromUser(rawUser, profile.fullName),
+          role: roleFromAppMetadata(rawUser),
           profile,
           access,
           settings,
         }
       } catch {
-        // Network/RLS error: fall back to defaults so the UI can still render.
+        // Network/RLS error: fall back to locked defaults. profileError=true lets
+        // RequireAuth show a "connection problem" message instead of "account inactive".
         return {
-          id: authUser.id,
-          email: authUser.email ?? "",
-          name: displayNameFromUser(authUser),
-          role: roleFromAppMetadata(authUser),
+          id: rawUser.id,
+          email: rawUser.email ?? "",
+          name: displayNameFromUser(rawUser),
+          role: roleFromAppMetadata(rawUser),
           profile: PROFILE_DEFAULTS.profile,
           access: PROFILE_DEFAULTS.access,
           settings: PROFILE_DEFAULTS.settings,
+          profileError: true,
         }
       }
     },
     [supabase]
   )
 
+  // Effect 2: Profile loader — runs outside the auth callback so no lock is held.
+  // Fires when authUser identity changes (new login, reload, account switch).
   useEffect(() => {
-    let mounted = true
+    if (authUser === undefined) return // auth not yet resolved, wait for Effect 1
+    if (authUser === null) return // SIGNED_OUT branch already set loading=false
 
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!mounted) return
-      if (data.user && !shouldKeepSession()) {
-        await supabase.auth.signOut()
-        clearRememberPreference()
+    let cancelled = false
+
+    // Session-only preference check — reads localStorage, no Supabase calls.
+    if (!shouldKeepSession()) {
+      clearRememberPreference()
+      const signOutTimer = window.setTimeout(() => {
+        if (cancelled) return
         setUser(null)
         setLoading(false)
-        return
+        supabase.auth.signOut().catch(() => {})
+      }, 0)
+      return () => {
+        cancelled = true
+        window.clearTimeout(signOutTimer)
       }
-      if (data.user) {
-        const next = await buildAppUser(data.user)
-        if (!mounted) return
-        setUser(next)
-      } else {
-        setUser(null)
-      }
-      setLoading(false)
-    })
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return
-      if (session?.user && !shouldKeepSession()) {
-        void supabase.auth.signOut()
-        clearRememberPreference()
-        setUser(null)
-        setLoading(false)
-        return
-      }
-      if (session?.user) {
-        const next = await buildAppUser(session.user)
-        if (!mounted) return
-        setUser(next)
-      } else {
-        setUser(null)
-      }
+    buildAppUser(authUser).then(next => {
+      if (cancelled) return
+      setUser(next)
       setLoading(false)
     })
 
     return () => {
-      mounted = false
-      subscription.unsubscribe()
+      cancelled = true
     }
-  }, [supabase, buildAppUser])
+  }, [authUser, buildAppUser, supabase])
 
   const signIn = useCallback<AuthContextValue["signIn"]>(
     async (email, password, options) => {
@@ -147,20 +225,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         clearRememberPreference()
-        return { ok: false, error: error.message }
+        const message = error.status === 429 ? "Too many attempts. Please wait a few minutes before trying again." : error.message
+        return { ok: false, error: message }
       }
-      if (data.user) {
-        const next = await buildAppUser(data.user)
-        setUser(next)
-      }
+      // onAuthStateChange fires SIGNED_IN → Effect 2 builds the app user
+      void data
       return { ok: true }
     },
-    [supabase, buildAppUser]
+    [supabase]
   )
 
+  const signInWithMicrosoft = useCallback<AuthContextValue["signInWithMicrosoft"]>(async () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL ?? "")
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        // Redirect to our callback route which handles code exchange.
+        redirectTo: `${origin}/auth/callback`,
+        // openid email profile only — no Microsoft Graph scopes in v1.
+        scopes: "openid email profile",
+      },
+    })
+    if (error) return { ok: false, error: error.message }
+    // Success: browser is redirecting to Microsoft — return ok but no session yet.
+    return { ok: true }
+  }, [supabase])
+
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // Network failure — SDK still clears local session; SIGNED_OUT fires locally.
+    }
     clearRememberPreference()
+    clearUserData()
+    // Optimistic clear: onAuthStateChange SIGNED_OUT also calls setUser(null),
+    // but this fires first so the UI updates without waiting for the event.
     setUser(null)
   }, [supabase])
 
@@ -181,9 +281,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin: user?.role === "admin",
       can,
       signIn,
+      signInWithMicrosoft,
       signOut,
     }),
-    [loading, user, can, signIn, signOut]
+    [loading, user, can, signIn, signInWithMicrosoft, signOut]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

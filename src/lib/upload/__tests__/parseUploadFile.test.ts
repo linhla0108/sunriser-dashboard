@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest"
 import * as XLSX from "xlsx"
-import {
-  addColumnsToParsedDataset,
-  analyzeUploadDataset,
-  mapUploadDatasetToApplicants,
-  parseUploadFile,
-} from "../parseUploadFile"
+import { addColumnsToParsedDataset, analyzeUploadDataset, mapUploadDatasetToApplicants, parseUploadFile } from "../parseUploadFile"
 
 function textFile(name: string, text: string, type = "text/plain") {
   return new File([text], name, { type })
@@ -38,7 +33,9 @@ describe("parseUploadFile", () => {
   })
 
   it("parses TSV headers and values", async () => {
-    const dataset = await parseUploadFile(textFile("candidates.tsv", "Name\tPhone\tPosition\nLe A\t0901\tAI Engineering Intern", "text/tab-separated-values"))
+    const dataset = await parseUploadFile(
+      textFile("candidates.tsv", "Name\tPhone\tPosition\nLe A\t0901\tAI Engineering Intern", "text/tab-separated-values")
+    )
 
     expect(dataset.columns).toEqual(["Name", "Phone", "Position"])
     expect(dataset.rows[0].values.Phone).toBe("0901")

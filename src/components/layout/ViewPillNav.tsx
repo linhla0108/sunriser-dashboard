@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
 import { createPortal } from "react-dom"
 import { BarChart3, ChevronLeft, ChevronRight, Kanban, Table2 } from "lucide-react"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
@@ -36,42 +35,34 @@ export function ViewPillNav({ view: controlledView, onViewChange, pagination }: 
   const setView = onViewChange ?? setStoredView
   const portalNode = typeof document === "undefined" ? null : document.body
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null
-      const tag = target?.tagName
-      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return
-
-      const index = Number(event.key) - 1
-      const nextView = V2_VIEW_KEYS[index]
-      if (nextView) {
-        event.preventDefault()
-        setView(nextView)
-        return
-      }
-
-      if (view !== "table" || !pagination) return
-
-      if (event.key === "ArrowLeft" && pagination.canGoPrev) {
-        event.preventDefault()
-        pagination.goPrev()
-      }
-
-      if (event.key === "ArrowRight" && pagination.canGoNext) {
-        event.preventDefault()
-        pagination.goNext()
-      }
+  function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    const index = Number(event.key) - 1
+    const nextView = V2_VIEW_KEYS[index]
+    if (nextView) {
+      event.preventDefault()
+      setView(nextView)
+      return
     }
 
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [pagination, setView, view])
+    if (view !== "table" || !pagination) return
+
+    if (event.key === "ArrowLeft" && pagination.canGoPrev) {
+      event.preventDefault()
+      pagination.goPrev()
+    }
+
+    if (event.key === "ArrowRight" && pagination.canGoNext) {
+      event.preventDefault()
+      pagination.goNext()
+    }
+  }
 
   const nav = (
     <nav
       aria-label="Candidate view options"
       data-testid="v2-view-pill-nav"
       data-v2-glass-panel="strong"
+      onKeyDown={handleKeyDown}
       className="border-border bg-card/70 text-foreground ring-foreground/5 fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full border p-1.5 shadow-[0_18px_44px_rgba(15,23,42,0.16)] ring-1 backdrop-blur-xl sm:bottom-6"
     >
       {VIEWS.map((item, index) => {

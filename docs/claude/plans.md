@@ -24,10 +24,10 @@ This rule applies to **all agents** (Claude Code, Codex, Copilot). Never create 
 ```markdown
 # Tasks — 19 May 2026
 
-| # | Task | Tag | Status | Note |
-|---|------|-----|--------|------|
-| 1 | DnD Fix + Pipeline Kanban | candidates/fix | Done | |
-| 2 | Editable Chips | candidates/feature | In Progress | chips render, data flow WIP |
+| #   | Task                      | Tag                | Status      | Note                        |
+| --- | ------------------------- | ------------------ | ----------- | --------------------------- |
+| 1   | DnD Fix + Pipeline Kanban | candidates/fix     | Done        |                             |
+| 2   | Editable Chips            | candidates/feature | In Progress | chips render, data flow WIP |
 ```
 
 **Tag format:** `area/type` — e.g. `candidates/fix`, `ui/refactor`, `auth/feature`, `repo/chore`.
@@ -40,22 +40,27 @@ Agents should only drill into a task file when they need goal, scope, or accepta
 
 ```markdown
 # Task Title
+
 Tag: area/type
 
 ## Goal
+
 One sentence describing what this task achieves.
 
 ## Scope
+
 - Included: what is in scope
 - Excluded: what is explicitly out of scope
 
 ## Acceptance criteria
+
 - Criterion one
 - Criterion two
 
 ---
 
 ## Report
+
 Status: Done | Commit: abc1234
 
 Brief description of what changed (behavior, not file list).

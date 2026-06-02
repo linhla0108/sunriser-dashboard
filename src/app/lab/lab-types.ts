@@ -1,4 +1,4 @@
-export type LabView = 'table' | 'kanban' | 'gallery'
+export type LabView = "table" | "kanban" | "gallery"
 
 export interface Scorecard {
   cvQuality: number
@@ -27,17 +27,9 @@ export interface SavedView {
   createdAt: string
 }
 
-export type FilterField =
-  | 'position1'
-  | 'batch'
-  | 'gpa'
-  | 'university'
-  | 'round1Result'
-  | 'hasExperience'
-  | 'fullTime'
-  | 'yearOfStudy'
+export type FilterField = "position1" | "batch" | "gpa" | "university" | "round1Result" | "hasExperience" | "fullTime" | "yearOfStudy"
 
-export type FilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'gte' | 'lte'
+export type FilterOperator = "equals" | "contains" | "gt" | "lt" | "gte" | "lte"
 
 export interface FilterCondition {
   id: string

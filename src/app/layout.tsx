@@ -26,7 +26,7 @@ export default function RootLayout({
         <TooltipProvider delay={300}>
           <AuthProvider>
             <ThemeProvider>
-              <div data-workspace="" className="min-h-screen bg-background font-sans text-foreground">
+              <div data-workspace="" className="bg-background text-foreground min-h-screen font-sans">
                 {children}
               </div>
               <Toaster />

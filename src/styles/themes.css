@@ -76,8 +76,7 @@ html[data-theme="glass-orange"] {
   --v2-app-background:
     radial-gradient(circle at 12% 10%, rgba(239, 195, 133, 0.72), transparent 30%),
     radial-gradient(circle at 84% 16%, rgba(210, 108, 48, 0.38), transparent 28%),
-    radial-gradient(circle at 66% 78%, rgba(111, 91, 255, 0.18), transparent 34%),
-    linear-gradient(135deg, #fcf7ef 0%, #f0c07c 43%, #fbf3e5 100%);
+    radial-gradient(circle at 66% 78%, rgba(111, 91, 255, 0.18), transparent 34%), linear-gradient(135deg, #fcf7ef 0%, #f0c07c 43%, #fbf3e5 100%);
   --glass-surface: rgba(255, 255, 255, 0.54);
   --glass-surface-strong: rgba(255, 255, 255, 0.76);
   --glass-border: rgba(255, 255, 255, 0.58);
@@ -124,8 +123,7 @@ html[data-theme="glass-blue"] {
   --v2-app-background:
     radial-gradient(circle at 14% 12%, rgba(188, 227, 251, 0.78), transparent 32%),
     radial-gradient(circle at 82% 18%, rgba(123, 191, 231, 0.5), transparent 28%),
-    radial-gradient(circle at 68% 80%, rgba(109, 106, 252, 0.2), transparent 35%),
-    linear-gradient(135deg, #e2f3fd 0%, #bce3fb 45%, #d7eefc 100%);
+    radial-gradient(circle at 68% 80%, rgba(109, 106, 252, 0.2), transparent 35%), linear-gradient(135deg, #e2f3fd 0%, #bce3fb 45%, #d7eefc 100%);
   --glass-surface: rgba(255, 255, 255, 0.54);
   --glass-surface-strong: rgba(255, 255, 255, 0.78);
   --glass-border: rgba(255, 255, 255, 0.6);

@@ -51,7 +51,7 @@ Use one step tighter than "comfortable" defaults at every breakpoint:
 
 ```js
 // Standard card shadow — use inline style, not Tailwind
-boxShadow: 'rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px'
+boxShadow: "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px"
 ```
 
 ## Responsive Layout
@@ -61,3 +61,10 @@ boxShadow: 'rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 2
 - Mobile bottom nav: `sm:hidden`, fixed at bottom
 - Floating chat button: `fixed bottom-6 right-6`
 - Table columns: `hidden lg:table-cell` (University, Year, PIC), `hidden sm:table-cell` (GPA, Batch, Round 2)
+
+## Shadcn-First Rule
+
+- Treat `src/components/ui/` as the default primitive layer for product UI.
+- Use shared shadcn components before raw HTML for controls and overlays: `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `Dialog`, `Sheet`, `Tabs`, `Table`, `Tooltip`, and related primitives.
+- Raw HTML controls are allowed only when there is no local shadcn equivalent yet. In that case, add the shared primitive first if the control is part of real product UI.
+- Prefer feature composition with shadcn primitives over one-off styled `div` wrappers. This keeps interaction, accessibility, and visual tokens consistent across the workspace.

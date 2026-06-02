@@ -1,6 +1,7 @@
 "use client"
 
 import { Download, FilePlus2, NotebookPen, Sparkles } from "lucide-react"
+import { AnnouncementCenter } from "@/components/announcements/AnnouncementCenter"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth/useAuth"
@@ -42,7 +43,8 @@ export function TopBar({
 
         <div className="flex items-center gap-2">
           {drawerSlots}
-          <ActionTooltip label="Open AI drawer" shortcut="Ctrl+J">
+          <AnnouncementCenter />
+          <ActionTooltip label="Open AI drawer">
             <Button
               variant="plain"
               size="plain"
@@ -53,7 +55,7 @@ export function TopBar({
               <Sparkles className="size-4" />
             </Button>
           </ActionTooltip>
-          <ActionTooltip label="Open notes" shortcut="Ctrl+N">
+          <ActionTooltip label="Open notes">
             <Button
               variant="plain"
               size="plain"
@@ -64,7 +66,7 @@ export function TopBar({
               <NotebookPen className="size-4" />
             </Button>
           </ActionTooltip>
-          <ActionTooltip label={canEdit ? "Create report" : "You don't have permission to create reports"} shortcut={canEdit ? "Ctrl+R" : undefined}>
+          <ActionTooltip label={canEdit ? "Create report" : "You don't have permission to create reports"}>
             <Button
               variant="plain"
               size="plain"
@@ -72,7 +74,7 @@ export function TopBar({
               onClick={onCreateReport}
               disabled={!canEdit}
               aria-disabled={!canEdit}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 hidden h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition sm:flex"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hidden h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
             >
               <FilePlus2 className="size-4" />
               Create Report
@@ -86,7 +88,7 @@ export function TopBar({
               onClick={onExportData}
               disabled={!canDelete}
               aria-disabled={!canDelete}
-              className="border-foreground/10 text-foreground hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50 hidden h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition sm:flex"
+              className="border-foreground/10 text-foreground hover:bg-foreground/5 hidden h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
             >
               <Download className="size-4" />
               Export Data

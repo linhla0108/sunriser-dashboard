@@ -26,7 +26,7 @@ export function SearchHighlight({ text, query, className }: SearchHighlightProps
         if (!isMatch) return <Fragment key={`${part}-${index}`}>{part}</Fragment>
 
         return (
-          <mark key={`${part}-${index}`} className={className ?? "bg-primary/20 text-foreground rounded-[3px] px-0.5 py-0"}>
+          <mark key={`${part}-${index}`} className={className ?? "bg-primary/20 text-foreground rounded-[3px]"}>
             {part}
           </mark>
         )

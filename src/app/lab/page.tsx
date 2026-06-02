@@ -1,33 +1,34 @@
-'use client'
+"use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { mockApplicants } from '@/lib/mockData'
-import { Applicant } from '@/lib/types'
-import { LabView, Scorecard, Activity, SavedView, FilterCondition } from './lab-types'
-import LabHeader from './components/LabHeader'
-import QuickFilters from './components/QuickFilters'
-import FunnelStats from './components/FunnelStats'
-import LabTableView from './components/LabTableView'
-import KanbanView from './components/KanbanView'
-import GalleryView from './components/GalleryView'
-import ApplicantDrawer from './components/ApplicantDrawer'
-import BulkToolbar from './components/BulkToolbar'
-import CommandPalette from './components/CommandPalette'
-import ExportModal from './components/ExportModal'
-import FilterBuilder from './components/FilterBuilder'
-import SavedViewsPopover from './components/SavedViewsPopover'
-import ComparePanel from './components/ComparePanel'
-import FloatingPillNav from './components/FloatingPillNav'
+import { useCallback, useMemo, useRef, useState } from "react"
+import { type CandidatePicOption, type CandidateRoundResult } from "@/lib/candidates/constants"
+import { mockApplicants } from "@/lib/mockData"
+import { Applicant } from "@/lib/types"
+import { LabView, Scorecard, Activity, SavedView, FilterCondition } from "./lab-types"
+import LabHeader from "./components/LabHeader"
+import QuickFilters from "./components/QuickFilters"
+import FunnelStats from "./components/FunnelStats"
+import LabTableView from "./components/LabTableView"
+import KanbanView from "./components/KanbanView"
+import GalleryView from "./components/GalleryView"
+import ApplicantDrawer from "./components/ApplicantDrawer"
+import BulkToolbar from "./components/BulkToolbar"
+import CommandPalette from "./components/CommandPalette"
+import ExportModal from "./components/ExportModal"
+import FilterBuilder from "./components/FilterBuilder"
+import SavedViewsPopover from "./components/SavedViewsPopover"
+import ComparePanel from "./components/ComparePanel"
+import FloatingPillNav from "./components/FloatingPillNav"
 
 export default function LabPage() {
   // ── View & search ─────────────────────────────────────────────────────────
-  const [activeView, setActiveView] = useState<LabView>('table')
-  const [search, setSearch] = useState('')
+  const [activeView, setActiveView] = useState<LabView>("table")
+  const [search, setSearch] = useState("")
 
   // ── Quick filters ─────────────────────────────────────────────────────────
-  const [positionFilter, setPositionFilter] = useState('')
-  const [batchFilter, setBatchFilter] = useState('')
-  const [round1Filter, setRound1Filter] = useState('')
+  const [positionFilter, setPositionFilter] = useState("")
+  const [batchFilter, setBatchFilter] = useState("")
+  const [round1Filter, setRound1Filter] = useState("")
 
   // ── Advanced filter conditions (Feature 12) ───────────────────────────────
   const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([])
@@ -60,50 +61,33 @@ export default function LabPage() {
 
   const saveViewWrapperRef = useRef<HTMLDivElement>(null)
 
-  // ── Keyboard shortcut: Cmd+K (Feature 13) ────────────────────────────────
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCmdOpen((v) => !v)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
   // ── Filtering (Features 3, 12) ────────────────────────────────────────────
   const filteredApplicants = useMemo(() => {
     let list = applicants
 
     if (search) {
       const q = search.toLowerCase()
-      list = list.filter(
-        (a) =>
-          a.name.toLowerCase().includes(q) ||
-          a.email.toLowerCase().includes(q) ||
-          a.university.toLowerCase().includes(q)
-      )
+      list = list.filter(a => a.name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q) || a.university.toLowerCase().includes(q))
     }
-    if (positionFilter) list = list.filter((a) => a.position1 === positionFilter)
-    if (batchFilter) list = list.filter((a) => String(a.batch) === batchFilter)
-    if (round1Filter) list = list.filter((a) => a.round1Result === round1Filter)
+    if (positionFilter) list = list.filter(a => a.position1 === positionFilter)
+    if (batchFilter) list = list.filter(a => String(a.batch) === batchFilter)
+    if (round1Filter) list = list.filter(a => a.round1Result === round1Filter)
 
     // Advanced conditions (Feature 12)
     for (const cond of filterConditions) {
-      list = list.filter((a) => {
+      list = list.filter(a => {
         const rawVal = a[cond.field as keyof Applicant]
-        const val = String(rawVal ?? '').toLowerCase()
+        const val = String(rawVal ?? "").toLowerCase()
         const cv = cond.value.toLowerCase()
-        if (cond.operator === 'contains') return val.includes(cv)
-        if (cond.operator === 'equals') return val === cv
+        if (cond.operator === "contains") return val.includes(cv)
+        if (cond.operator === "equals") return val === cv
         const num = parseFloat(val)
         const cv2 = parseFloat(cv)
         if (isNaN(num) || isNaN(cv2)) return true
-        if (cond.operator === 'gt') return num > cv2
-        if (cond.operator === 'lt') return num < cv2
-        if (cond.operator === 'gte') return num >= cv2
-        if (cond.operator === 'lte') return num <= cv2
+        if (cond.operator === "gt") return num > cv2
+        if (cond.operator === "lt") return num < cv2
+        if (cond.operator === "gte") return num >= cv2
+        if (cond.operator === "lte") return num <= cv2
         return true
       })
     }
@@ -111,12 +95,11 @@ export default function LabPage() {
     return list
   }, [applicants, search, positionFilter, batchFilter, round1Filter, filterConditions])
 
-  const filterCount =
-    [positionFilter, batchFilter, round1Filter].filter(Boolean).length + filterConditions.length
+  const filterCount = [positionFilter, batchFilter, round1Filter].filter(Boolean).length + filterConditions.length
 
   // ── Bulk helpers ──────────────────────────────────────────────────────────
   const handleToggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
+    setSelectedIds(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -125,69 +108,59 @@ export default function LabPage() {
   }, [])
 
   const handleSelectAll = useCallback(() => {
-    setSelectedIds(new Set(filteredApplicants.map((a) => a.id)))
+    setSelectedIds(new Set(filteredApplicants.map(a => a.id)))
   }, [filteredApplicants])
 
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), [])
 
   // ── Round 1 update ────────────────────────────────────────────────────────
-  const handleUpdateRound1 = useCallback(
-    (id: string, result: 'Passed' | 'Failed' | 'Waiting list' | undefined) => {
-      setApplicants((prev) => prev.map((a) => (a.id === id ? { ...a, round1Result: result } : a)))
-      setActivities((prev) => ({
-        ...prev,
-        [id]: [
-          ...(prev[id] ?? []),
-          {
-            id: Math.random().toString(36).slice(2),
-            timestamp: new Date().toISOString(),
-            action: result ? `Round 1 set to "${result}"` : 'Round 1 result cleared',
-            user: 'You',
-          },
-        ],
-      }))
-      // Update detailApplicant if open
-      setDetailApplicant((prev) => (prev?.id === id ? { ...prev, round1Result: result } : prev))
-    },
-    []
-  )
+  const handleUpdateRound1 = useCallback((id: string, result: CandidateRoundResult | undefined) => {
+    setApplicants(prev => prev.map(a => (a.id === id ? { ...a, round1Result: result } : a)))
+    setActivities(prev => ({
+      ...prev,
+      [id]: [
+        ...(prev[id] ?? []),
+        {
+          id: Math.random().toString(36).slice(2),
+          timestamp: new Date().toISOString(),
+          action: result ? `Round 1 set to "${result}"` : "Round 1 result cleared",
+          user: "You",
+        },
+      ],
+    }))
+    // Update detailApplicant if open
+    setDetailApplicant(prev => (prev?.id === id ? { ...prev, round1Result: result } : prev))
+  }, [])
 
   // ── Notes update ──────────────────────────────────────────────────────────
   const handleUpdateNotes = useCallback((id: string, notes: string) => {
-    setApplicants((prev) => prev.map((a) => (a.id === id ? { ...a, round1Notes: notes } : a)))
+    setApplicants(prev => prev.map(a => (a.id === id ? { ...a, round1Notes: notes } : a)))
   }, [])
 
   // ── Bulk actions ──────────────────────────────────────────────────────────
   const handleBulkRound1 = useCallback(
-    (result: 'Passed' | 'Failed' | 'Waiting list') => {
-      setApplicants((prev) =>
-        prev.map((a) => (selectedIds.has(a.id) ? { ...a, round1Result: result } : a))
-      )
+    (result: CandidateRoundResult) => {
+      setApplicants(prev => prev.map(a => (selectedIds.has(a.id) ? { ...a, round1Result: result } : a)))
       setSelectedIds(new Set())
     },
     [selectedIds]
   )
 
   const handleBulkAssignPic = useCallback(
-    (pic: string) => {
-      setApplicants((prev) => prev.map((a) => (selectedIds.has(a.id) ? { ...a, pic } : a)))
+    (pic: CandidatePicOption) => {
+      setApplicants(prev => prev.map(a => (selectedIds.has(a.id) ? { ...a, pic } : a)))
       setSelectedIds(new Set())
     },
     [selectedIds]
   )
 
   const handleExportSelected = useCallback(() => {
-    const toExport = applicants.filter((a) => selectedIds.has(a.id))
-    const header = 'Name,Email,Position,University,GPA,Batch,Round1'
-    const body = toExport
-      .map(
-        (a) =>
-          `${a.name},${a.email},${a.position1},${a.university},${a.gpa},${a.batch},${a.round1Result ?? ''}`
-      )
-      .join('\n')
-    const blob = new Blob([`${header}\n${body}`], { type: 'text/csv' })
+    const toExport = applicants.filter(a => selectedIds.has(a.id))
+    const header = "Name,Email,Position,University,GPA,Batch,Round1"
+    const body = toExport.map(a => `${a.name},${a.email},${a.position1},${a.university},${a.gpa},${a.batch},${a.round1Result ?? ""}`).join("\n")
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
-    const el = document.createElement('a')
+    const el = document.createElement("a")
     el.href = url
     el.download = `sunriser-selected-${Date.now()}.csv`
     el.click()
@@ -197,12 +170,12 @@ export default function LabPage() {
 
   // ── Scorecard update ──────────────────────────────────────────────────────
   const handleUpdateScorecard = useCallback((id: string, sc: Scorecard) => {
-    setScorecards((prev) => ({ ...prev, [id]: sc }))
+    setScorecards(prev => ({ ...prev, [id]: sc }))
   }, [])
 
   // ── Activity update ───────────────────────────────────────────────────────
-  const handleAddActivity = useCallback((id: string, act: Omit<Activity, 'id'>) => {
-    setActivities((prev) => ({
+  const handleAddActivity = useCallback((id: string, act: Omit<Activity, "id">) => {
+    setActivities(prev => ({
       ...prev,
       [id]: [...(prev[id] ?? []), { ...act, id: Math.random().toString(36).slice(2) }],
     }))
@@ -210,8 +183,8 @@ export default function LabPage() {
 
   // ── Compare ───────────────────────────────────────────────────────────────
   const handleToggleCompare = useCallback((id: string) => {
-    setCompareIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id)
+    setCompareIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id)
       if (prev.length >= 3) return prev
       const next = [...prev, id]
       if (next.length >= 2) setCompareOpen(true)
@@ -232,7 +205,7 @@ export default function LabPage() {
         round1: round1Filter,
         createdAt: new Date().toISOString(),
       }
-      setSavedViews((prev) => [...prev, sv])
+      setSavedViews(prev => [...prev, sv])
     },
     [activeView, search, positionFilter, batchFilter, round1Filter]
   )
@@ -246,14 +219,14 @@ export default function LabPage() {
   }, [])
 
   const handleDeleteSavedView = useCallback((id: string) => {
-    setSavedViews((prev) => prev.filter((v) => v.id !== id))
+    setSavedViews(prev => prev.filter(v => v.id !== id))
   }, [])
 
   const handleClearFilters = useCallback(() => {
-    setSearch('')
-    setPositionFilter('')
-    setBatchFilter('')
-    setRound1Filter('')
+    setSearch("")
+    setPositionFilter("")
+    setBatchFilter("")
+    setRound1Filter("")
     setFilterConditions([])
   }, [])
 
@@ -271,7 +244,7 @@ export default function LabPage() {
             selectedCount={selectedIds.size}
             onCmdOpen={() => setCmdOpen(true)}
             onExport={() => setExportOpen(true)}
-            onSaveView={() => setSavedViewsOpen((v) => !v)}
+            onSaveView={() => setSavedViewsOpen(v => !v)}
             onFilterBuilder={() => setFilterBuilderOpen(true)}
             totalFiltered={filteredApplicants.length}
             totalAll={applicants.length}
@@ -299,14 +272,14 @@ export default function LabPage() {
           onBatch={setBatchFilter}
           onRound1={setRound1Filter}
           extraConditions={filterConditions}
-          onRemoveCondition={(id) => setFilterConditions((prev) => prev.filter((c) => c.id !== id))}
+          onRemoveCondition={id => setFilterConditions(prev => prev.filter(c => c.id !== id))}
         />
 
         {/* Funnel stats (Feature 7) */}
         <FunnelStats applicants={filteredApplicants} />
 
         {/* Main view */}
-        {activeView === 'table' && (
+        {activeView === "table" && (
           <LabTableView
             applicants={filteredApplicants}
             selectedIds={selectedIds}
@@ -319,7 +292,7 @@ export default function LabPage() {
             onToggleCompare={handleToggleCompare}
           />
         )}
-        {activeView === 'kanban' && (
+        {activeView === "kanban" && (
           <KanbanView
             applicants={filteredApplicants}
             onOpenDetail={setDetailApplicant}
@@ -327,7 +300,7 @@ export default function LabPage() {
             onToggleCompare={handleToggleCompare}
           />
         )}
-        {activeView === 'gallery' && (
+        {activeView === "gallery" && (
           <GalleryView
             applicants={filteredApplicants}
             selectedIds={selectedIds}
@@ -375,12 +348,7 @@ export default function LabPage() {
       />
 
       {/* Export modal (Feature 10) */}
-      <ExportModal
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        applicants={filteredApplicants}
-        totalAll={applicants.length}
-      />
+      <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} applicants={filteredApplicants} totalAll={applicants.length} />
 
       {/* Filter builder (Feature 12) */}
       <FilterBuilder
@@ -399,9 +367,9 @@ export default function LabPage() {
           compareIds={compareIds}
           applicants={applicants}
           onClose={() => setCompareOpen(false)}
-          onRemove={(id) => {
-            setCompareIds((prev) => {
-              const next = prev.filter((x) => x !== id)
+          onRemove={id => {
+            setCompareIds(prev => {
+              const next = prev.filter(x => x !== id)
               if (next.length < 2) setCompareOpen(false)
               return next
             })

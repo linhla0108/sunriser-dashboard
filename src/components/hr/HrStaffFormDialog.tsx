@@ -35,7 +35,15 @@ const EMPTY: Omit<HrStaff, "id"> = {
 function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | undefined; onSave: Props["onSave"]; onClose: Props["onClose"] }) {
   const [form, setForm] = useState<Omit<HrStaff, "id">>(
     initial
-      ? { name: initial.name, email: initial.email, role: initial.role, department: initial.department, status: initial.status, joinedAt: initial.joinedAt, avatarInitials: initial.avatarInitials }
+      ? {
+          name: initial.name,
+          email: initial.email,
+          role: initial.role,
+          department: initial.department,
+          status: initial.status,
+          joinedAt: initial.joinedAt,
+          avatarInitials: initial.avatarInitials,
+        }
       : EMPTY
   )
 
@@ -45,7 +53,14 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
 
   function handleSave() {
     if (!form.name.trim() || !form.email.trim()) return
-    const initials = form.avatarInitials.trim() || form.name.split(" ").slice(-2).map(w => w[0]).join("").toUpperCase()
+    const initials =
+      form.avatarInitials.trim() ||
+      form.name
+        .split(" ")
+        .slice(-2)
+        .map(w => w[0])
+        .join("")
+        .toUpperCase()
     onSave({ ...form, avatarInitials: initials })
     onClose()
   }
@@ -54,12 +69,23 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
     <>
       <div className="space-y-4 py-2">
         <div className="space-y-1.5">
-          <Label htmlFor="hr-name" className="text-xs font-medium">Full name</Label>
+          <Label htmlFor="hr-name" className="text-xs font-medium">
+            Full name
+          </Label>
           <Input id="hr-name" value={form.name} onChange={e => set("name", e.target.value)} placeholder="Nguyễn Văn A" className="rounded-2xl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="hr-email" className="text-xs font-medium">Email</Label>
-          <Input id="hr-email" type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="name@sunriser.vn" className="rounded-2xl" />
+          <Label htmlFor="hr-email" className="text-xs font-medium">
+            Email
+          </Label>
+          <Input
+            id="hr-email"
+            type="email"
+            value={form.email}
+            onChange={e => set("email", e.target.value)}
+            placeholder="name@sunriser.vn"
+            className="rounded-2xl"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -84,19 +110,35 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="hr-dept" className="text-xs font-medium">Department</Label>
-          <Input id="hr-dept" value={form.department} onChange={e => set("department", e.target.value)} placeholder="Human Resources" className="rounded-2xl" />
+          <Label htmlFor="hr-dept" className="text-xs font-medium">
+            Department
+          </Label>
+          <Input
+            id="hr-dept"
+            value={form.department}
+            onChange={e => set("department", e.target.value)}
+            placeholder="Human Resources"
+            className="rounded-2xl"
+          />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="hr-joined" className="text-xs font-medium">Joined date</Label>
+          <Label htmlFor="hr-joined" className="text-xs font-medium">
+            Joined date
+          </Label>
           <Input id="hr-joined" type="date" value={form.joinedAt} onChange={e => set("joinedAt", e.target.value)} className="rounded-2xl" />
         </div>
       </div>
 
       <DialogFooter className="gap-2">
-        <Button variant="outline" onClick={onClose} className="rounded-full">Cancel</Button>
-        <Button onClick={handleSave} disabled={!form.name.trim() || !form.email.trim()} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-          {initial ? "Save changes" : "Add staff"}
+        <Button variant="outline" onClick={onClose} className="rounded-full">
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!form.name.trim() || !form.email.trim()}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
+        >
+          Save changes
         </Button>
       </DialogFooter>
     </>
@@ -105,12 +147,17 @@ function FormBody({ initial, onSave, onClose }: { initial: HrStaff | null | unde
 
 export function HrStaffFormDialog({ open, initial, onSave, onClose }: Props) {
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={v => {
+        if (!v) onClose()
+      }}
+    >
       <DialogContent className="rounded-3xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit Staff" : "Add Staff"}</DialogTitle>
+          <DialogTitle>Edit Staff</DialogTitle>
         </DialogHeader>
-        <FormBody key={`${open}-${initial?.id ?? "new"}`} initial={initial} onSave={onSave} onClose={onClose} />
+        <FormBody key={`${open}-${initial?.id ?? "edit"}`} initial={initial} onSave={onSave} onClose={onClose} />
       </DialogContent>
     </Dialog>
   )

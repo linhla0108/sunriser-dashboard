@@ -35,9 +35,9 @@ const DEFAULT_PROFILE: AppProfile = {
 }
 
 const DEFAULT_ACCESS: AppAccess = {
-  active: true,
+  active: false,
   role: "member",
-  permissions: ["read"],
+  permissions: [],
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -51,15 +51,15 @@ const DEFAULT_SETTINGS: AppSettings = {
  * Fetch the three companion rows for a user. Falls back to safe defaults
  * if any row is missing (e.g. trigger didn't fire) so the UI can still render.
  */
-export async function loadProfileData(
-  supabase: SupabaseClient,
-  userId: string
-): Promise<LoadedProfile> {
+export async function loadProfileData(supabase: SupabaseClient, userId: string): Promise<LoadedProfile> {
   const [profileRes, accessRes, settingsRes] = await Promise.all([
     supabase.from("user_profiles").select("full_name, birthday, positions, notes").eq("user_id", userId).maybeSingle(),
     supabase.from("user_access").select("active, role, permissions").eq("user_id", userId).maybeSingle(),
     supabase.from("user_settings").select("theme, mode, settings, notes").eq("user_id", userId).maybeSingle(),
   ])
+
+  const error = profileRes.error ?? accessRes.error ?? settingsRes.error
+  if (error) throw error
 
   const profileRow = (profileRes.data as ProfileRow | null) ?? null
   const accessRow = (accessRes.data as AccessRow | null) ?? null

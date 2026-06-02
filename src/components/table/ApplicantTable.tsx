@@ -1,12 +1,39 @@
 "use client"
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
+import { animate, type JSAnimation } from "animejs"
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from "lucide-react"
+import { ChevronUp, ChevronDown, ChevronsUpDown, Copy, RotateCcw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Applicant } from "@/lib/types"
-import type { CandidateSortDir, CandidateSortKey, CandidateSortState } from "@/lib/candidates/candidateUrlState"
+import {
+  CANDIDATE_PAGE_SIZE_OPTIONS,
+  type CandidatePageSize,
+  type CandidateSortDir,
+  type CandidateSortKey,
+  type CandidateSortState,
+} from "@/lib/candidates/candidateUrlState"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import DraggableRow from "./DraggableRow"
 
 export interface PaginationInfo {
@@ -15,10 +42,13 @@ export interface PaginationInfo {
   total: number
   currentPage: number
   totalPages: number
+  pageSize?: CandidatePageSize
+  onPageSizeChange?: (value: CandidatePageSize) => void
 }
 
 interface ApplicantTableProps {
   data: Applicant[]
+  selectedData?: Applicant[]
   onViewDetail?: (applicant: Applicant) => void
   onDataChange?: (applicants: Applicant[]) => void
   renderPinAction?: (applicant: Applicant) => ReactNode
@@ -27,13 +57,84 @@ interface ApplicantTableProps {
   searchQuery?: string
   sortState?: CandidateSortState
   onSortChange?: (sortState: CandidateSortState) => void
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
+  selectedSectionOpen?: boolean
+  onSelectedSectionOpenChange?: (open: boolean) => void
+  onBulkBatch?: (batch: number) => void
+  onBulkPic?: (pic: string) => void
+  onBulkRound1?: (result: string) => void
+  onBulkRound2?: (result: string) => void
+  onBulkDelete?: () => void
 }
 
 const DEFAULT_SORT_STATE: Exclude<CandidateSortState, null> = { key: "name", dir: "asc" }
+const EMPTY_APPLICANTS: Applicant[] = []
 
 function SortIcon({ col, sortKey, sortDir }: { col: CandidateSortKey; sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }) {
   if (col !== sortKey) return <ChevronsUpDown className="text-muted-foreground size-3" />
   return sortDir === "asc" ? <ChevronUp className="text-primary size-3" /> : <ChevronDown className="text-primary size-3" />
+}
+
+function SortableHeader({
+  label,
+  col,
+  sortKey,
+  sortDir,
+  align = "left",
+  onCycleSort,
+  onSetSort,
+  onResetSort,
+}: {
+  label: string
+  col: CandidateSortKey
+  sortKey: CandidateSortKey | null
+  sortDir: CandidateSortDir
+  align?: "left" | "center"
+  onCycleSort: (key: CandidateSortKey) => void
+  onSetSort: (key: CandidateSortKey, dir: CandidateSortDir) => void
+  onResetSort: () => void
+}) {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onCycleSort(col)}
+          className={`text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase ${align === "center" ? "mx-auto" : ""}`}
+        >
+          {label}
+          <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+        </Button>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuGroup>
+          <ContextMenuLabel>{label}</ContextMenuLabel>
+          <ContextMenuItem onClick={() => onSetSort(col, "asc")}>
+            <ChevronUp />
+            Sort ascending
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => onSetSort(col, "desc")}>
+            <ChevronDown />
+            Sort descending
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(label)}>
+            <Copy />
+            Copy column name
+          </ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuSeparator />
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={onResetSort}>
+            <RotateCcw />
+            Reset sort
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
 }
 
 // undefined optional fields always sort to the bottom regardless of direction
@@ -73,8 +174,20 @@ function sortApplicants(data: Applicant[], sortKey: CandidateSortKey, sortDir: C
   })
 }
 
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+export function reorderApplicantsWithinList(data: Applicant[], activeId: string, overId: string) {
+  const oldIdx = data.findIndex(a => a.id === activeId)
+  const newIdx = data.findIndex(a => a.id === overId)
+  if (oldIdx < 0 || newIdx < 0 || oldIdx === newIdx) return data
+  return arrayMove(data, oldIdx, newIdx)
+}
+
 export default function ApplicantTable({
   data,
+  selectedData = EMPTY_APPLICANTS,
   onViewDetail,
   onDataChange,
   renderPinAction,
@@ -83,18 +196,34 @@ export default function ApplicantTable({
   searchQuery,
   sortState,
   onSortChange,
+  selectedIds,
+  onToggleSelect,
+  selectedSectionOpen = true,
+  onSelectedSectionOpenChange,
+  onBulkBatch,
+  onBulkPic,
+  onBulkRound1,
+  onBulkRound2,
+  onBulkDelete,
 }: ApplicantTableProps) {
-  // TODO: remove default sort and sort name will get the last word in name (e.g. "John Doe" will sort by "Doe"). Need to update sort icon to indicate this as well.
   const initialSort = sortState === undefined ? DEFAULT_SORT_STATE : sortState
   const [items, setItems] = useState<Applicant[]>(() => (initialSort ? sortApplicants(data, initialSort.key, initialSort.dir) : [...data]))
+  const [selectedItems, setSelectedItems] = useState<Applicant[]>(() =>
+    initialSort ? sortApplicants(selectedData, initialSort.key, initialSort.dir) : [...selectedData]
+  )
   const [sortKey, setSortKey] = useState<CandidateSortKey | null>(initialSort?.key ?? null)
   const [sortDir, setSortDir] = useState<CandidateSortDir>(initialSort?.dir ?? "asc")
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [selectedPanelMounted, setSelectedPanelMounted] = useState(selectedSectionOpen && selectedData.length > 0)
+  const selectedPanelRef = useRef<HTMLDivElement>(null)
+  const selectedPanelAnimationRef = useRef<JSAnimation | null>(null)
   const sortStateRef = useRef<{ sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }>({
     sortKey: initialSort?.key ?? null,
     sortDir: initialSort?.dir ?? "asc",
   })
   const originalOrderRef = useRef<Applicant[]>(data)
+  const selectedOriginalOrderRef = useRef<Applicant[]>(selectedData)
+  const hasSelectedSection = selectedItems.length > 0
 
   useEffect(() => {
     sortStateRef.current = { sortKey, sortDir }
@@ -103,13 +232,96 @@ export default function ApplicantTable({
   // Re-sync when incoming pre-filtered data changes, preserving current sort
   useEffect(() => {
     originalOrderRef.current = data
+    selectedOriginalOrderRef.current = selectedData
     const { sortKey: currentSortKey, sortDir: currentSortDir } = sortStateRef.current
     if (currentSortKey) {
       setItems(sortApplicants(data, currentSortKey, currentSortDir))
+      setSelectedItems(sortApplicants(selectedData, currentSortKey, currentSortDir))
     } else {
       setItems([...data])
+      setSelectedItems([...selectedData])
     }
-  }, [data])
+  }, [data, selectedData])
+
+  useEffect(() => {
+    if (!hasSelectedSection) {
+      selectedPanelAnimationRef.current?.cancel()
+      selectedPanelAnimationRef.current = null
+      globalThis.setTimeout(() => setSelectedPanelMounted(false), 0)
+      return
+    }
+
+    if (selectedSectionOpen) {
+      globalThis.setTimeout(() => setSelectedPanelMounted(true), 0)
+    }
+  }, [hasSelectedSection, selectedSectionOpen])
+
+  useEffect(() => {
+    const panel = selectedPanelRef.current
+    if (!hasSelectedSection || !selectedPanelMounted || !panel) return
+
+    selectedPanelAnimationRef.current?.cancel()
+
+    if (prefersReducedMotion()) {
+      panel.style.height = selectedSectionOpen ? "" : "0px"
+      panel.style.opacity = selectedSectionOpen ? "" : "0"
+      panel.style.transform = selectedSectionOpen ? "" : "translateY(-4px)"
+      panel.style.overflow = selectedSectionOpen ? "" : "hidden"
+      panel.style.willChange = ""
+      if (!selectedSectionOpen) globalThis.setTimeout(() => setSelectedPanelMounted(false), 0)
+      return
+    }
+
+    panel.style.overflow = "hidden"
+    panel.style.willChange = "height, opacity, transform"
+
+    if (selectedSectionOpen) {
+      panel.style.height = "0px"
+      panel.style.opacity = "0"
+      panel.style.transform = "translateY(-6px)"
+      const targetHeight = panel.scrollHeight
+
+      selectedPanelAnimationRef.current = animate(panel, {
+        height: [`0px`, `${targetHeight}px`],
+        opacity: [0, 1],
+        translateY: ["-6px", "0px"],
+        duration: 240,
+        ease: "outCubic",
+        onComplete: () => {
+          panel.style.height = ""
+          panel.style.opacity = ""
+          panel.style.transform = ""
+          panel.style.overflow = ""
+          panel.style.willChange = ""
+          selectedPanelAnimationRef.current = null
+        },
+      })
+      return
+    }
+
+    const currentHeight = panel.getBoundingClientRect().height || panel.scrollHeight
+    panel.style.height = `${currentHeight}px`
+    panel.style.opacity = "1"
+    panel.style.transform = "translateY(0px)"
+
+    selectedPanelAnimationRef.current = animate(panel, {
+      height: [`${currentHeight}px`, "0px"],
+      opacity: [1, 0],
+      translateY: ["0px", "-6px"],
+      duration: 240,
+      ease: "inOutQuad",
+      onComplete: () => {
+        panel.style.willChange = ""
+        selectedPanelAnimationRef.current = null
+        setSelectedPanelMounted(false)
+      },
+    })
+
+    return () => {
+      selectedPanelAnimationRef.current?.cancel()
+      selectedPanelAnimationRef.current = null
+    }
+  }, [hasSelectedSection, selectedPanelMounted, selectedSectionOpen])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -124,61 +336,89 @@ export default function ApplicantTable({
       setSortKey(key)
       setSortDir("asc")
       setItems(prev => sortApplicants(prev, key, "asc"))
+      setSelectedItems(prev => sortApplicants(prev, key, "asc"))
     } else if (sortDir === "asc") {
       // Same column, asc → desc
       nextSort = { key, dir: "desc" }
       setSortDir("desc")
       setItems(prev => sortApplicants(prev, key, "desc"))
+      setSelectedItems(prev => sortApplicants(prev, key, "desc"))
     } else {
       // Same column, desc → clear (restore original order)
       nextSort = null
       setSortKey(null)
       setItems([...originalOrderRef.current])
+      setSelectedItems([...selectedOriginalOrderRef.current])
     }
     onSortChange?.(nextSort)
   }
 
-  function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
-    const next = items.map(a => (a.id === id ? { ...a, ...patch } : a))
-    setItems(next)
-    onDataChange?.(next)
+  function setColumnSort(key: CandidateSortKey, dir: CandidateSortDir) {
+    setSortKey(key)
+    setSortDir(dir)
+    setItems(prev => sortApplicants(prev, key, dir))
+    setSelectedItems(prev => sortApplicants(prev, key, dir))
+    onSortChange?.({ key, dir })
   }
 
-  function togglePin(id: string) {
-    setPinnedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-        // Restore to current sort order
-        setItems(cur => (sortKey ? sortApplicants(cur, sortKey, sortDir) : [...originalOrderRef.current]))
-      } else {
-        next.add(id)
-        // Move pinned item to front
-        setItems(cur => {
-          const item = cur.find(a => a.id === id)
-          if (!item) return cur
-          return [item, ...cur.filter(a => a.id !== id)]
-        })
-      }
-      return next
-    })
+  function resetSort() {
+    setSortKey(null)
+    setItems([...originalOrderRef.current])
+    setSelectedItems([...selectedOriginalOrderRef.current])
+    onSortChange?.(null)
+  }
+
+  function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
+    const nextSelected = selectedItems.map(a => (a.id === id ? { ...a, ...patch } : a))
+    const nextItems = items.map(a => (a.id === id ? { ...a, ...patch } : a))
+    setSelectedItems(nextSelected)
+    setItems(nextItems)
+    onDataChange?.([...nextSelected, ...nextItems])
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveDragId(String(event.active.id))
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    setActiveDragId(null)
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const oldIdx = items.findIndex(a => a.id === active.id)
-    const newIdx = items.findIndex(a => a.id === over.id)
-    if (oldIdx < 0 || newIdx < 0) return
-    const next = arrayMove(items, oldIdx, newIdx)
+    const activeId = String(active.id)
+    const overId = String(over.id)
+    const activeIsSelected = selectedItems.some(a => a.id === activeId)
+    const overIsSelected = selectedItems.some(a => a.id === overId)
+
+    if (activeIsSelected) {
+      if (!overIsSelected) return
+      const nextSelected = reorderApplicantsWithinList(selectedItems, activeId, overId)
+      setSelectedItems(nextSelected)
+      onDataChange?.(nextSelected)
+      return
+    }
+
+    if (overIsSelected) return
+    const next = reorderApplicantsWithinList(items, activeId, overId)
     setItems(next)
     onDataChange?.(next)
   }
+
+  function handleDragCancel() {
+    setActiveDragId(null)
+  }
+
+  const activeDragSelected = activeDragId ? selectedItems.some(a => a.id === activeDragId) : false
 
   return (
     <div data-cid="applicant-table">
       {/* Table wrapper */}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <div
           data-v2-card=""
           className="overflow-hidden rounded-3xl bg-white"
@@ -187,127 +427,194 @@ export default function ApplicantTable({
           }}
         >
           <Table
-            containerClassName="max-h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:max-h-[calc(100dvh-15.5rem)]"
-            className="min-w-[600px]"
+            containerClassName="h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:h-[calc(100dvh-15.5rem)]"
+            className="min-w-[1180px]"
           >
             <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
               <TableRow className="border-border bg-white hover:bg-white">
-                <TableHead className="text-muted-foreground w-8 px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase">#</TableHead>
-                <TableHead className="px-3 py-3 text-left">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("name")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Name
-                    <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                <TableHead className="text-muted-foreground w-11 min-w-11 px-0 py-3 text-center text-xs font-semibold tracking-wider uppercase">
+                  #
                 </TableHead>
                 <TableHead className="px-3 py-3 text-left">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("position")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Position
-                    <SortIcon col="position" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Name"
+                    col="name"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
+                </TableHead>
+                <TableHead className="px-3 py-3 text-left">
+                  <SortableHeader
+                    label="Position"
+                    col="position"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-left lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("university")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    University
-                    <SortIcon col="university" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="University"
+                    col="university"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("gpa")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    GPA
-                    <SortIcon col="gpa" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="GPA"
+                    col="gpa"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
+                  Academic
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
+                  Description
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
+                  Portfolio
+                </TableHead>
+                <TableHead className="text-muted-foreground hidden px-3 py-3 text-left text-xs font-semibold tracking-wider uppercase xl:table-cell">
+                  Message
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("year")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Year
-                    <SortIcon col="year" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Year"
+                    col="year"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("batch")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Batch
-                    <SortIcon col="batch" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Batch"
+                    col="batch"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("pic")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    PIC
-                    <SortIcon col="pic" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="PIC"
+                    col="pic"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="px-3 py-3 text-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("round1")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Round 1
-                    <SortIcon col="round1" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Round 1"
+                    col="round1"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("round2")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Round 2
-                    <SortIcon col="round2" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Round 2"
+                    col="round2"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="text-muted-foreground w-[116px] px-3 py-3 pr-4 text-xs font-semibold tracking-wider uppercase">
                   Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <SortableContext items={items.map(a => a.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={[...selectedItems, ...items].map(a => a.id)} strategy={verticalListSortingStrategy}>
               <TableBody>
+                {hasSelectedSection ? (
+                  <>
+                    <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]">
+                      <TableCell colSpan={15} className="p-0">
+                        <Button
+                          type="button"
+                          variant="plain"
+                          size="plain"
+                          onClick={() => onSelectedSectionOpenChange?.(!selectedSectionOpen)}
+                          aria-label={selectedSectionOpen ? "Collapse selected candidates" : "Expand selected candidates"}
+                          className="text-foreground flex w-full justify-start gap-2 rounded-xl p-2 text-xs font-semibold"
+                        >
+                          {selectedSectionOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                          Selected candidates: {selectedItems.length}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {selectedPanelMounted ? (
+                      <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]" data-cid="selected-section-panel">
+                        <TableCell colSpan={15} className="p-0">
+                          <div ref={selectedPanelRef} className="overflow-hidden">
+                            <table className="-ml-px w-[calc(100%+1px)] min-w-[1181px] caption-bottom text-sm">
+                              <tbody>
+                                {selectedItems.map((applicant, i) => (
+                                  <DraggableRow
+                                    key={applicant.id}
+                                    applicant={applicant}
+                                    index={i}
+                                    onViewDetail={onViewDetail}
+                                    pinAction={renderPinAction?.(applicant)}
+                                    onUpdateApplicant={handleUpdateApplicant}
+                                    searchQuery={searchQuery}
+                                    isSelected={true}
+                                    selectionMode={true}
+                                    selectedCount={selectedIds?.size ?? 0}
+                                    onSelect={onToggleSelect ? id => onToggleSelect(id) : undefined}
+                                    onBulkBatch={onBulkBatch}
+                                    onBulkPic={onBulkPic}
+                                    onBulkRound1={onBulkRound1}
+                                    onBulkRound2={onBulkRound2}
+                                    onBulkDelete={onBulkDelete}
+                                  />
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : null}
+                    <TableRow className="border-border bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={15} className="text-muted-foreground px-4 py-2 text-xs font-semibold">
+                        Filtered results · {items.length}
+                      </TableCell>
+                    </TableRow>
+                  </>
+                ) : null}
                 {items.length > 0 ? (
                   items.map((applicant, i) => (
                     <DraggableRow
@@ -317,14 +624,21 @@ export default function ApplicantTable({
                       onViewDetail={onViewDetail}
                       pinAction={renderPinAction?.(applicant)}
                       onUpdateApplicant={handleUpdateApplicant}
-                      isPinned={pinnedIds.has(applicant.id)}
-                      onTogglePin={togglePin}
                       searchQuery={searchQuery}
+                      isSelected={selectedIds?.has(applicant.id)}
+                      selectionMode={(selectedIds?.size ?? 0) > 0}
+                      selectedCount={selectedIds?.size ?? 0}
+                      onSelect={onToggleSelect ? id => onToggleSelect(id) : undefined}
+                      onBulkBatch={onBulkBatch}
+                      onBulkPic={onBulkPic}
+                      onBulkRound1={onBulkRound1}
+                      onBulkRound2={onBulkRound2}
+                      onBulkDelete={onBulkDelete}
                     />
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="px-4 py-10 text-center">
+                    <TableCell colSpan={15} className="px-4 py-10 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="bg-muted flex size-12 items-center justify-center rounded-full">
                           <Search className="text-muted-foreground size-5" />
@@ -338,16 +652,51 @@ export default function ApplicantTable({
             </SortableContext>
           </Table>
         </div>
+        <DragOverlay>
+          {activeDragSelected && selectedItems.length > 1 ? (
+            <div className="border-primary/30 text-foreground rounded-2xl border bg-white/95 px-3 py-2 text-xs font-semibold shadow-xl">
+              <div className="flex items-center gap-2">
+                <span className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[10px]">
+                  {selectedItems.length}
+                </span>
+                {selectedItems.length} selected
+              </div>
+              <div className="mt-1 max-w-[180px] truncate text-[11px] font-medium text-[#555555]">{selectedItems[0]?.name}</div>
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
       {paginationInfo ? (
-        <div className="text-muted-foreground mt-3 flex items-center justify-between px-1 text-xs">
-          <span>
-            <span className="text-foreground font-medium">
-              {paginationInfo.start + 1}–{paginationInfo.end}
+        <div className="text-muted-foreground mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
+          <div className="flex items-center gap-3">
+            <span>
+              <span className="text-foreground font-medium">
+                {paginationInfo.start + 1}–{paginationInfo.end}
+              </span>
+              {" of "}
+              <span className="text-foreground font-medium">{paginationInfo.total}</span>
             </span>
-            {" of "}
-            <span className="text-foreground font-medium">{paginationInfo.total}</span>
-          </span>
+            {paginationInfo.pageSize !== undefined && paginationInfo.onPageSizeChange ? (
+              <div className="flex items-center gap-2">
+                <span>Rows per page</span>
+                <Select
+                  value={String(paginationInfo.pageSize)}
+                  onValueChange={value => paginationInfo.onPageSizeChange?.(Number(value) as CandidatePageSize)}
+                >
+                  <SelectTrigger size="sm" className="h-7 w-[68px] px-2 text-xs" aria-label="Rows per page">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CANDIDATE_PAGE_SIZE_OPTIONS.map(option => (
+                      <SelectItem key={option} value={String(option)}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
           <span>
             {"Page "}
             <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>
