@@ -13,8 +13,17 @@ import {
   DragStartEvent,
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from "lucide-react"
+import { ChevronUp, ChevronDown, ChevronsUpDown, Copy, RotateCcw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Applicant } from "@/lib/types"
 import {
@@ -65,6 +74,67 @@ const EMPTY_APPLICANTS: Applicant[] = []
 function SortIcon({ col, sortKey, sortDir }: { col: CandidateSortKey; sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }) {
   if (col !== sortKey) return <ChevronsUpDown className="text-muted-foreground size-3" />
   return sortDir === "asc" ? <ChevronUp className="text-primary size-3" /> : <ChevronDown className="text-primary size-3" />
+}
+
+function SortableHeader({
+  label,
+  col,
+  sortKey,
+  sortDir,
+  align = "left",
+  onCycleSort,
+  onSetSort,
+  onResetSort,
+}: {
+  label: string
+  col: CandidateSortKey
+  sortKey: CandidateSortKey | null
+  sortDir: CandidateSortDir
+  align?: "left" | "center"
+  onCycleSort: (key: CandidateSortKey) => void
+  onSetSort: (key: CandidateSortKey, dir: CandidateSortDir) => void
+  onResetSort: () => void
+}) {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onCycleSort(col)}
+          className={`text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase ${align === "center" ? "mx-auto" : ""}`}
+        >
+          {label}
+          <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+        </Button>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuGroup>
+          <ContextMenuLabel>{label}</ContextMenuLabel>
+          <ContextMenuItem onClick={() => onSetSort(col, "asc")}>
+            <ChevronUp />
+            Sort ascending
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => onSetSort(col, "desc")}>
+            <ChevronDown />
+            Sort descending
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(label)}>
+            <Copy />
+            Copy column name
+          </ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuSeparator />
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={onResetSort}>
+            <RotateCcw />
+            Reset sort
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
 }
 
 // undefined optional fields always sort to the bottom regardless of direction
@@ -283,6 +353,21 @@ export default function ApplicantTable({
     onSortChange?.(nextSort)
   }
 
+  function setColumnSort(key: CandidateSortKey, dir: CandidateSortDir) {
+    setSortKey(key)
+    setSortDir(dir)
+    setItems(prev => sortApplicants(prev, key, dir))
+    setSelectedItems(prev => sortApplicants(prev, key, dir))
+    onSortChange?.({ key, dir })
+  }
+
+  function resetSort() {
+    setSortKey(null)
+    setItems([...originalOrderRef.current])
+    setSelectedItems([...selectedOriginalOrderRef.current])
+    onSortChange?.(null)
+  }
+
   function handleUpdateApplicant(id: string, patch: Partial<Applicant>) {
     const nextSelected = selectedItems.map(a => (a.id === id ? { ...a, ...patch } : a))
     const nextItems = items.map(a => (a.id === id ? { ...a, ...patch } : a))
@@ -351,52 +436,49 @@ export default function ApplicantTable({
                   #
                 </TableHead>
                 <TableHead className="px-3 py-3 text-left">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("name")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Name
-                    <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Name"
+                    col="name"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="px-3 py-3 text-left">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("position")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Position
-                    <SortIcon col="position" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Position"
+                    col="position"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-left lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("university")}
-                    className="text-muted-foreground hover:text-primary h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    University
-                    <SortIcon col="university" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="University"
+                    col="university"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("gpa")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    GPA
-                    <SortIcon col="gpa" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="GPA"
+                    col="gpa"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="text-muted-foreground hidden px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase lg:table-cell">
                   Academic
@@ -411,64 +493,64 @@ export default function ApplicantTable({
                   Message
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("year")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Year
-                    <SortIcon col="year" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Year"
+                    col="year"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("batch")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Batch
-                    <SortIcon col="batch" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Batch"
+                    col="batch"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center lg:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("pic")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    PIC
-                    <SortIcon col="pic" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="PIC"
+                    col="pic"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="px-3 py-3 text-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("round1")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Round 1
-                    <SortIcon col="round1" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Round 1"
+                    col="round1"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="hidden px-3 py-3 text-center sm:table-cell">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("round2")}
-                    className="text-muted-foreground hover:text-primary mx-auto h-auto rounded-xl px-1 py-0 text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Round 2
-                    <SortIcon col="round2" sortKey={sortKey} sortDir={sortDir} />
-                  </Button>
+                  <SortableHeader
+                    label="Round 2"
+                    col="round2"
+                    align="center"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onCycleSort={handleSort}
+                    onSetSort={setColumnSort}
+                    onResetSort={resetSort}
+                  />
                 </TableHead>
                 <TableHead className="text-muted-foreground w-[116px] px-3 py-3 pr-4 text-xs font-semibold tracking-wider uppercase">
                   Actions

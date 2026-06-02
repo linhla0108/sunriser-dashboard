@@ -3,17 +3,15 @@
 import { useState, useEffect, useRef } from "react"
 import { X, ChevronDown } from "lucide-react"
 import { animate } from "animejs"
+import { CANDIDATE_PIC_OPTIONS, CANDIDATE_ROUND_OPTIONS, type CandidatePicOption, type CandidateRoundResult } from "@/lib/candidates/constants"
 import { prefersReducedMotion } from "../lab-utils"
 import { Button } from "@/components/ui/button"
-
-const ROUND1_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
-const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"]
 
 interface BulkToolbarProps {
   selectedCount: number
   onClear: () => void
-  onSetRound1: (result: "Passed" | "Failed" | "Waiting list") => void
-  onAssignPic: (pic: string) => void
+  onSetRound1: (result: CandidateRoundResult) => void
+  onAssignPic: (pic: CandidatePicOption) => void
   onExportSelected: () => void
 }
 
@@ -65,7 +63,7 @@ export default function BulkToolbar({ selectedCount, onClear, onSetRound1, onAss
             className="absolute bottom-full left-0 mb-2 overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-xl"
             style={{ minWidth: 140 }}
           >
-            {ROUND1_OPTIONS.map(opt => (
+            {CANDIDATE_ROUND_OPTIONS.map(opt => (
               <Button
                 variant="plain"
                 size="plain"
@@ -101,7 +99,7 @@ export default function BulkToolbar({ selectedCount, onClear, onSetRound1, onAss
             className="absolute bottom-full left-0 mb-2 overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-xl"
             style={{ minWidth: 120 }}
           >
-            {PIC_OPTIONS.map(pic => (
+            {CANDIDATE_PIC_OPTIONS.map(pic => (
               <Button
                 variant="plain"
                 size="plain"

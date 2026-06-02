@@ -1,4 +1,5 @@
 import type { Applicant } from "@/lib/types"
+import { CANDIDATE_PIC_CHIP_STYLES } from "@/lib/candidates/constants"
 
 export const ROUND_1_GROUPS = [
   { key: "not-reviewed", label: "Not Reviewed", test: (item: Applicant) => !item.round1Result },
@@ -98,14 +99,7 @@ export function getColumnTheme(columnKey: string) {
   }
 }
 
-export const PIC_CHIP_STYLE: Record<string, string> = {
-  Quỳnh: "bg-rose-50 border-rose-200 text-rose-700",
-  Nhiên: "bg-teal-50 border-teal-200 text-teal-700",
-  Yến: "bg-indigo-50 border-indigo-200 text-indigo-700",
-  Minh: "bg-lime-50 border-lime-200 text-lime-700",
-  Huy: "bg-cyan-50 border-cyan-200 text-cyan-700",
-  Linh: "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700",
-}
+export const PIC_CHIP_STYLE: Record<string, string> = CANDIDATE_PIC_CHIP_STYLES
 
 export function groupApplicants(items: Applicant[], groupBy: "round1" | "round2" | "position" | "batch") {
   if (groupBy === "round1") {

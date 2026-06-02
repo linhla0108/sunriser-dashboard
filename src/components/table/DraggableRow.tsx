@@ -3,13 +3,20 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ChevronDown, Eye, GripVertical, Copy, Download, CheckCircle2, XCircle, Clock, UserCheck, Pin, PinOff, FileText } from "lucide-react"
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
 import { CandidatePreviewDialog, DelayedTextPreview } from "@/components/candidates/CandidatePreviewDialog"
 import { PortfolioLinkPopover } from "@/components/candidates/PortfolioLinkPopover"
+import {
+  CANDIDATE_BATCH_OPTIONS,
+  CANDIDATE_CHIP_STYLES,
+  CANDIDATE_PIC_OPTIONS,
+  CANDIDATE_ROUND_OPTIONS,
+  formatCandidateBatchLabel,
+} from "@/lib/candidates/constants"
 import { candidateLinksFromApplicant } from "@/lib/candidates/candidateLinks"
 import { cn } from "@/lib/utils"
 import { Applicant } from "@/lib/types"
@@ -31,25 +38,6 @@ interface DraggableRowProps {
   onBulkRound1?: (result: string) => void
   onBulkRound2?: (result: string) => void
   onBulkDelete?: () => void
-}
-
-const ROUND_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
-const BATCH_OPTIONS = [1, 2, 3] as const
-const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"] as const
-
-const CHIP_STYLES: Record<string, string> = {
-  Passed: "border-green-300 bg-green-100 text-green-900",
-  Failed: "border-red-300 bg-red-100 text-red-800",
-  "Waiting list": "border-amber-300 bg-amber-100 text-amber-800",
-  "Batch 1": "border-sky-300 bg-sky-50 text-sky-800",
-  "Batch 2": "border-violet-300 bg-violet-50 text-violet-800",
-  "Batch 3": "border-orange-300 bg-orange-50 text-orange-800",
-  Quỳnh: "border-rose-300 bg-rose-50 text-rose-800",
-  Nhiên: "border-teal-300 bg-teal-50 text-teal-800",
-  Yến: "border-indigo-300 bg-indigo-50 text-indigo-800",
-  Minh: "border-lime-300 bg-lime-50 text-lime-800",
-  Huy: "border-cyan-300 bg-cyan-50 text-cyan-800",
-  Linh: "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800",
 }
 
 interface ChipOption<T extends string | number> {
@@ -108,7 +96,9 @@ function SelectChip<T extends string | number>({
         onClick={handleOpen}
         className={cn(
           "flex w-full min-w-0 items-center justify-center gap-1 rounded-full border px-2 py-0.5 text-center text-xs font-medium transition-opacity",
-          styleKey ? (CHIP_STYLES[styleKey] ?? "border-border bg-muted text-muted-foreground") : "border-border bg-muted/60 text-muted-foreground",
+          styleKey
+            ? (CANDIDATE_CHIP_STYLES[styleKey] ?? "border-border bg-muted text-muted-foreground")
+            : "border-border bg-muted/60 text-muted-foreground",
           onChange ? "cursor-pointer hover:opacity-75" : "cursor-default"
         )}
       >
@@ -155,7 +145,7 @@ function SelectChip<T extends string | number>({
                   value === opt.value && "font-semibold"
                 )}
               >
-                <span className={cn("inline-block size-2 rounded-full border", CHIP_STYLES[opt.styleKey ?? opt.label])} />
+                <span className={cn("inline-block size-2 rounded-full border", CANDIDATE_CHIP_STYLES[opt.styleKey ?? opt.label])} />
                 {opt.label}
               </Button>
             ))}
@@ -167,14 +157,18 @@ function SelectChip<T extends string | number>({
 }
 
 function RoundChip({ value, onChange }: { value?: string; onChange?: (v: string | undefined) => void }) {
-  return <SelectChip value={value} options={ROUND_OPTIONS.map(value => ({ value, label: value }))} onChange={onChange} />
+  return <SelectChip value={value} options={CANDIDATE_ROUND_OPTIONS.map(option => ({ value: option, label: option }))} onChange={onChange} />
 }
 
 function BatchChip({ value, onChange }: { value?: number; onChange?: (v: number | undefined) => void }) {
   return (
     <SelectChip
       value={value}
-      options={BATCH_OPTIONS.map(value => ({ value, label: `Batch ${value}`, styleKey: `Batch ${value}` }))}
+      options={CANDIDATE_BATCH_OPTIONS.map(option => ({
+        value: option,
+        label: formatCandidateBatchLabel(option),
+        styleKey: formatCandidateBatchLabel(option),
+      }))}
       onChange={onChange}
       allowUnset={false}
     />
@@ -182,7 +176,7 @@ function BatchChip({ value, onChange }: { value?: number; onChange?: (v: number 
 }
 
 function PicChip({ value, onChange }: { value?: string; onChange?: (v: string | undefined) => void }) {
-  return <SelectChip value={value} options={PIC_OPTIONS.map(value => ({ value, label: value }))} onChange={onChange} />
+  return <SelectChip value={value} options={CANDIDATE_PIC_OPTIONS.map(option => ({ value: option, label: option }))} onChange={onChange} />
 }
 
 function exportRowCSV(applicant: Applicant) {
@@ -232,6 +226,17 @@ function exportRowCSV(applicant: Applicant) {
 
 type SubMenu = "copy" | "pic" | "batch" | "round1" | "round2" | null
 
+const VIEWPORT_MARGIN = 8
+
+function fitMenuPosition(anchorX: number, anchorY: number, menuWidth: number, menuHeight: number) {
+  const x =
+    anchorX + menuWidth + VIEWPORT_MARGIN > window.innerWidth ? Math.max(VIEWPORT_MARGIN, anchorX - menuWidth) : Math.max(VIEWPORT_MARGIN, anchorX)
+  const y =
+    anchorY + menuHeight + VIEWPORT_MARGIN > window.innerHeight ? Math.max(VIEWPORT_MARGIN, anchorY - menuHeight) : Math.max(VIEWPORT_MARGIN, anchorY)
+
+  return { x, y }
+}
+
 function effectiveStatus(a: Applicant): string | undefined {
   return a.round2Result || a.round1Result
 }
@@ -266,6 +271,7 @@ export default function DraggableRow({
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null)
   const [subMenu, setSubMenu] = useState<SubMenu>(null)
   const [subPos, setSubPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const ctxAnchorRef = useRef<{ x: number; y: number } | null>(null)
   const ctxMenuRef = useRef<HTMLDivElement>(null)
   const subMenuRef = useRef<HTMLDivElement>(null)
   const copyBtnRef = useRef<HTMLButtonElement>(null)
@@ -298,12 +304,28 @@ export default function DraggableRow({
     }
   }, [ctxPos, closeAll])
 
+  useLayoutEffect(() => {
+    if (!ctxPos) return
+    const anchor = ctxAnchorRef.current
+    const menu = ctxMenuRef.current
+    if (!anchor || !menu) return
+
+    const rect = menu.getBoundingClientRect()
+    const next = fitMenuPosition(anchor.x, anchor.y, rect.width, rect.height)
+    if (Math.abs(next.x - ctxPos.x) > 1 || Math.abs(next.y - ctxPos.y) > 1) {
+      setCtxPos(next)
+    }
+  }, [ctxPos])
+
   function openSubMenu(which: SubMenu, btnRef: React.RefObject<HTMLButtonElement | null>) {
     const rect = btnRef.current?.getBoundingClientRect()
     if (!rect) return
     const SUB_W = 176
+    const SUB_H = 180
     const x = rect.right + SUB_W > window.innerWidth ? rect.left - SUB_W : rect.right
-    setSubPos({ x, y: rect.top })
+    const y =
+      rect.top + SUB_H + VIEWPORT_MARGIN > window.innerHeight ? Math.max(VIEWPORT_MARGIN, window.innerHeight - SUB_H - VIEWPORT_MARGIN) : rect.top
+    setSubPos({ x, y })
     setSubMenu(which)
   }
 
@@ -339,13 +361,10 @@ export default function DraggableRow({
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    // Overflow guard: flip left if within 220px of right edge,
-    // flip up if within 500px of bottom edge (menu can be ~470px tall with all sections).
     const MENU_W = 220
-    const MENU_H = 500
-    const x = e.clientX + MENU_W > window.innerWidth ? e.clientX - MENU_W : e.clientX
-    const y = e.clientY + MENU_H > window.innerHeight ? e.clientY - MENU_H : e.clientY
-    setCtxPos({ x: Math.max(0, x), y: Math.max(0, y) })
+    const MENU_H_ESTIMATE = useBulkContext ? 280 : 360
+    ctxAnchorRef.current = { x: e.clientX, y: e.clientY }
+    setCtxPos(fitMenuPosition(e.clientX, e.clientY, MENU_W, MENU_H_ESTIMATE))
   }
 
   return (
@@ -729,7 +748,7 @@ export default function DraggableRow({
             style={{ top: subPos.y, left: subPos.x }}
             className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
           >
-            {PIC_OPTIONS.map(pic => (
+            {CANDIDATE_PIC_OPTIONS.map(pic => (
               <button
                 key={pic}
                 type="button"
@@ -765,7 +784,7 @@ export default function DraggableRow({
             style={{ top: subPos.y, left: subPos.x }}
             className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
           >
-            {BATCH_OPTIONS.map(batch => (
+            {CANDIDATE_BATCH_OPTIONS.map(batch => (
               <button
                 key={batch}
                 type="button"
@@ -775,8 +794,8 @@ export default function DraggableRow({
                 }}
                 className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm"
               >
-                <span className={cn("inline-block size-2 rounded-full border", CHIP_STYLES[`Batch ${batch}`])} />
-                Batch {batch}
+                <span className={cn("inline-block size-2 rounded-full border", CANDIDATE_CHIP_STYLES[formatCandidateBatchLabel(batch)])} />
+                {formatCandidateBatchLabel(batch)}
               </button>
             ))}
           </div>,
@@ -791,7 +810,7 @@ export default function DraggableRow({
             style={{ top: subPos.y, left: subPos.x }}
             className="border-border fixed z-[10000] min-w-44 overflow-hidden rounded-xl border bg-white py-1 shadow-xl"
           >
-            {ROUND_OPTIONS.map(result => {
+            {CANDIDATE_ROUND_OPTIONS.map(result => {
               const current = subMenu === "round1" ? applicant.round1Result : applicant.round2Result
               return (
                 <button
