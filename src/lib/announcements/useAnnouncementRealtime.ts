@@ -13,7 +13,8 @@ export interface AnnouncementInsertPayload {
     body: string
     priority: "low" | "normal" | "high" | "urgent"
     pinned: boolean
-    due_at: string | null
+    starts_at: string | null
+    ends_at: string | null
     author_user_id: string
     created_at: string
     updated_at: string

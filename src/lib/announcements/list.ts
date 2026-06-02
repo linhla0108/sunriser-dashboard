@@ -7,7 +7,8 @@ export interface AnnouncementListRow {
   body: string
   priority: AnnouncementSummary["priority"]
   pinned: boolean
-  due_at: string | null
+  starts_at: string | null
+  ends_at: string | null
   author_user_id: string
   created_at: string
   updated_at: string
@@ -75,7 +76,8 @@ export function buildAnnouncementSummaries(
         body: row.body,
         priority: row.priority,
         pinned: row.pinned,
-        dueAt: row.due_at,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
         authorUserId: row.author_user_id,
         createdAt: row.created_at,
         updatedAt: row.updated_at,

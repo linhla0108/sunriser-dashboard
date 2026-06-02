@@ -43,7 +43,8 @@ export const announcementSummarySchema: z.ZodType<AnnouncementSummary> = z.objec
   body: z.preprocess(trimString, z.string().min(1).max(5000)),
   priority: announcementPrioritySchema,
   pinned: z.boolean(),
-  dueAt: isoDateTimeSchema.nullable(),
+  startsAt: isoDateTimeSchema.nullable(),
+  endsAt: isoDateTimeSchema.nullable(),
   authorUserId: z.string().min(1),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
@@ -52,13 +53,27 @@ export const announcementSummarySchema: z.ZodType<AnnouncementSummary> = z.objec
   attachments: z.array(announcementAttachmentSchema),
 })
 
-export const createAnnouncementInputSchema: z.ZodType<CreateAnnouncementInput> = z.object({
-  title: z.preprocess(trimString, z.string().min(1).max(160)),
-  body: z.preprocess(trimString, z.string().min(1).max(5000)),
-  priority: announcementPrioritySchema,
-  pinned: z.boolean().optional().default(false),
-  dueAt: isoDateTimeSchema.nullable().optional(),
-})
+export const createAnnouncementInputSchema: z.ZodType<CreateAnnouncementInput> = z
+  .object({
+    title: z.preprocess(trimString, z.string().min(1).max(160)),
+    body: z.preprocess(trimString, z.string().min(1).max(5000)),
+    priority: announcementPrioritySchema,
+    pinned: z.boolean().optional().default(false),
+    startsAt: isoDateTimeSchema.nullable().optional(),
+    endsAt: isoDateTimeSchema.nullable().optional(),
+  })
+  .refine(
+    value =>
+      value.startsAt === undefined ||
+      value.endsAt === undefined ||
+      value.startsAt === null ||
+      value.endsAt === null ||
+      value.startsAt <= value.endsAt,
+    {
+      message: "Announcement start must be before or equal to the end.",
+      path: ["endsAt"],
+    }
+  )
 
 export const updateAnnouncementInputSchema: z.ZodType<UpdateAnnouncementInput> = z
   .object({
@@ -67,7 +82,8 @@ export const updateAnnouncementInputSchema: z.ZodType<UpdateAnnouncementInput> =
     body: z.preprocess(trimString, z.string().min(1).max(5000)).optional(),
     priority: announcementPrioritySchema.optional(),
     pinned: z.boolean().optional(),
-    dueAt: isoDateTimeSchema.nullable().optional(),
+    startsAt: isoDateTimeSchema.nullable().optional(),
+    endsAt: isoDateTimeSchema.nullable().optional(),
     deletedAt: isoDateTimeSchema.nullable().optional(),
   })
   .refine(
@@ -76,11 +92,24 @@ export const updateAnnouncementInputSchema: z.ZodType<UpdateAnnouncementInput> =
       value.body !== undefined ||
       value.priority !== undefined ||
       value.pinned !== undefined ||
-      value.dueAt !== undefined ||
+      value.startsAt !== undefined ||
+      value.endsAt !== undefined ||
       value.deletedAt !== undefined,
     {
       message: "At least one announcement field must be updated.",
       path: ["id"],
+    }
+  )
+  .refine(
+    value =>
+      value.startsAt === undefined ||
+      value.endsAt === undefined ||
+      value.startsAt === null ||
+      value.endsAt === null ||
+      value.startsAt <= value.endsAt,
+    {
+      message: "Announcement start must be before or equal to the end.",
+      path: ["endsAt"],
     }
   )
 

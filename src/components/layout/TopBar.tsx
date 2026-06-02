@@ -1,11 +1,9 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { Bell, Download, FilePlus2, NotebookPen, Sparkles } from "lucide-react"
+import { Download, FilePlus2, NotebookPen, Sparkles } from "lucide-react"
+import { AnnouncementCenter } from "@/components/announcements/AnnouncementCenter"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAnnouncements } from "@/lib/announcements/AnnouncementProvider"
 import { useAuth } from "@/lib/auth/useAuth"
 
 interface TopBarProps {
@@ -30,8 +28,6 @@ export function TopBar({
   onExportData,
 }: TopBarProps) {
   const { can } = useAuth()
-  const { unreadCount } = useAnnouncements()
-  const router = useRouter()
   const canEdit = can("edit")
   const canDelete = can("delete")
   return (
@@ -47,19 +43,7 @@ export function TopBar({
 
         <div className="flex items-center gap-2">
           {drawerSlots}
-          <ActionTooltip label="Open announcements">
-            <Button
-              variant="plain"
-              size="plain"
-              type="button"
-              onClick={() => router.push("/announcements")}
-              aria-label={unreadCount > 0 ? `Open announcements (${unreadCount} unread)` : "Open announcements"}
-              className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground relative flex size-9 items-center justify-center rounded-lg transition"
-            >
-              <Bell className="size-4" />
-              {unreadCount > 0 ? <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1 text-[10px]">{unreadCount}</Badge> : null}
-            </Button>
-          </ActionTooltip>
+          <AnnouncementCenter />
           <ActionTooltip label="Open AI drawer">
             <Button
               variant="plain"

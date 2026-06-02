@@ -1,9 +1,11 @@
 "use client"
 
-import { Download, Megaphone, PinIcon } from "lucide-react"
+import { Download, Megaphone, PinIcon, Plus } from "lucide-react"
 import Link from "next/link"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatAnnouncementDateRange } from "@/lib/announcements/presentation"
 import type { AnnouncementSummary } from "@/lib/announcements/types"
 import { cn } from "@/lib/utils"
 import { AnnouncementPriorityBadge } from "./AnnouncementPriorityBadge"
@@ -32,18 +34,51 @@ export function AnnouncementInbox({
 }) {
   const pinned = announcements.filter(announcement => announcement.pinned)
   const regular = announcements.filter(announcement => !announcement.pinned)
+  const header = (
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h1 className="text-xl font-semibold">Announcements</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Pinned items stay at the top. Active windows are informational only.</p>
+      </div>
+      {canManageAnnouncements ? (
+        <Link href="/admin/announcements" className={cn(buttonVariants({ variant: "outline" }))}>
+          <Plus className="size-4" />
+          Create
+        </Link>
+      ) : null}
+    </div>
+  )
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-4 lg:px-6">
-        <div className="text-muted-foreground rounded-2xl border px-4 py-10 text-sm">Loading announcements...</div>
+      <div className="px-3 py-6 sm:px-4 lg:px-6">
+        {header}
+        <div className="space-y-3" aria-label="Loading announcements">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-48" />
+                </div>
+                <Skeleton className="h-8 w-24 rounded-full" />
+              </div>
+              <Skeleton className="mt-4 h-4 w-full" />
+              <Skeleton className="mt-2 h-4 w-5/6" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-4 lg:px-6">
+      <div className="px-3 py-6 sm:px-4 lg:px-6">
         <div className="border-destructive/20 bg-destructive/5 text-destructive rounded-2xl border px-4 py-10 text-sm">{error}</div>
       </div>
     )
@@ -51,25 +86,16 @@ export function AnnouncementInbox({
 
   if (announcements.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-4 lg:px-6">
+      <div className="px-3 py-6 sm:px-4 lg:px-6">
+        {header}
         <div className="text-muted-foreground rounded-2xl border px-4 py-10 text-sm">No announcements yet.</div>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-3 py-6 sm:px-4 lg:px-6">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Announcements</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Pinned items stay at the top. Due dates are informational only.</p>
-        </div>
-        {canManageAnnouncements ? (
-          <Link href="/admin/announcements" className={cn(buttonVariants({ variant: "outline" }))}>
-            Manage
-          </Link>
-        ) : null}
-      </div>
+    <div className="px-3 py-6 sm:px-4 lg:px-6">
+      {header}
 
       <div className="space-y-6">
         {pinned.length > 0 ? (
@@ -128,7 +154,7 @@ function AnnouncementCard({
           </div>
           <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
             <span>Published {formatDateTime(announcement.createdAt)}</span>
-            {announcement.dueAt ? <span>Due {formatDateTime(announcement.dueAt)}</span> : null}
+            <span>{formatAnnouncementDateRange(announcement)}</span>
           </div>
         </div>
         {unread ? (
