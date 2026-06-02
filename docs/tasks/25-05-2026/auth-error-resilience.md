@@ -19,12 +19,12 @@ Harden every auth code path against real-world failure modes: network outages, s
 
 ### localStorage / sessionStorage — when do they throw?
 
-| Scenario | Behavior |
-|----------|----------|
-| Safari private mode | `setItem` throws `SecurityError` immediately |
-| Storage quota exceeded | `setItem` throws `QuotaExceededError` |
-| Incognito Chrome/Firefox | Works fine (isolated quota, does not throw) |
-| Server-side (SSR) | Guarded by `typeof window === "undefined"` ✓ |
+| Scenario                 | Behavior                                     |
+| ------------------------ | -------------------------------------------- |
+| Safari private mode      | `setItem` throws `SecurityError` immediately |
+| Storage quota exceeded   | `setItem` throws `QuotaExceededError`        |
+| Incognito Chrome/Firefox | Works fine (isolated quota, does not throw)  |
+| Server-side (SSR)        | Guarded by `typeof window === "undefined"` ✓ |
 
 `getItem` and `removeItem` never throw. Only `setItem` is unsafe.
 
@@ -97,7 +97,7 @@ const signOut = useCallback(async () => {
     // Network failure — SDK still cleared local session; SIGNED_OUT fires locally.
   }
   clearRememberPreference()
-  setUser(null)  // optimistic; SIGNED_OUT handler also does this
+  setUser(null) // optimistic; SIGNED_OUT handler also does this
 }, [supabase])
 ```
 
@@ -130,7 +130,7 @@ Admin route handlers use `guard.ok` check only; adding `status` to the interface
 ```ts
 if (res.status === 503) {
   console.warn("[refreshUserClaims] service_role not configured — JWT not updated")
-  return  // non-fatal; DB row still updated
+  return // non-fatal; DB row still updated
 }
 ```
 
@@ -154,11 +154,11 @@ Status: Done — commit b512f95
 
 All 6 fixes shipped. TypeScript clean. Test suite: 343/343 passing (+7 new tests).
 
-| Fix | What changed |
-|-----|-------------|
-| 1 — proxy.ts 500 | `getClaims()` wrapped in try/catch → JWKS unreachable = redirect to /login |
-| 2 — confirm route 500 | `verifyOtp()` wrapped in try/catch → Supabase unreachable = `/login?error=confirmation_failed` |
-| 3 — Safari storage crash | `setRememberPreference` wraps `setItem` in try/catch; `signOut()` wrapped in try/catch |
-| 4 — 429 UX | `signIn()` and `ForgotForm` map `error.status === 429` → "Too many attempts…" |
-| 5 — 401 vs 403 | `requireAdmin()` returns `status: 401` for unauthenticated, `403` for non-admin; all 3 admin routes use it |
-| 6 — 503 silent swallow | `refreshUserClaims` now logs `console.warn` when 503 instead of silently ignoring |
+| Fix                      | What changed                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 1 — proxy.ts 500         | `getClaims()` wrapped in try/catch → JWKS unreachable = redirect to /login                                 |
+| 2 — confirm route 500    | `verifyOtp()` wrapped in try/catch → Supabase unreachable = `/login?error=confirmation_failed`             |
+| 3 — Safari storage crash | `setRememberPreference` wraps `setItem` in try/catch; `signOut()` wrapped in try/catch                     |
+| 4 — 429 UX               | `signIn()` and `ForgotForm` map `error.status === 429` → "Too many attempts…"                              |
+| 5 — 401 vs 403           | `requireAdmin()` returns `status: 401` for unauthenticated, `403` for non-admin; all 3 admin routes use it |
+| 6 — 503 silent swallow   | `refreshUserClaims` now logs `console.warn` when 503 instead of silently ignoring                          |

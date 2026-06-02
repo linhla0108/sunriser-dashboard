@@ -23,7 +23,10 @@ test.describe("Pipeline view — UI checks", () => {
   })
 
   test("column headers have colored backgrounds (not white)", async ({ page }) => {
-    const passHeader = page.locator("div").filter({ hasText: /^Pass$/ }).first()
+    const passHeader = page
+      .locator("div")
+      .filter({ hasText: /^Pass$/ })
+      .first()
     await expect(passHeader).toBeVisible({ timeout: 5000 })
     const bg = await passHeader.evaluate(el => getComputedStyle(el).backgroundColor)
     expect(bg).not.toBe("rgba(0, 0, 0, 0)")

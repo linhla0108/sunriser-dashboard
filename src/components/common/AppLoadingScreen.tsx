@@ -30,14 +30,7 @@ export function AppLoadingScreen({ sublabel, variant = "boot", className }: AppL
     >
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <div className="motion-safe:animate-[loadingMark_2.4s_ease-in-out_infinite]" aria-hidden="true">
-          <Image
-            src="/logo-wordmark.png"
-            alt=""
-            width={252}
-            height={64}
-            priority
-            className="h-[3.428571rem] w-[13.5rem] sm:h-16 sm:w-[15.75rem]"
-          />
+          <Image src="/logo-wordmark.png" alt="" width={252} height={64} priority className="h-[3.428571rem] w-[13.5rem] sm:h-16 sm:w-[15.75rem]" />
         </div>
 
         <div className="mt-8 w-full">

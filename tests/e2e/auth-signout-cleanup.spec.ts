@@ -7,10 +7,10 @@ const REMEMBER_DURATION_MS = 6 * 24 * 60 * 60 * 1000
 async function goToDashboard(page: Parameters<typeof waitForWorkspace>[0]) {
   await page.goto("/dashboard")
   // Keep remember preference fresh so AuthProvider doesn't sign us out
-  await page.evaluate(
-    ({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)),
-    { key: REMEMBER_UNTIL_KEY, duration: REMEMBER_DURATION_MS }
-  )
+  await page.evaluate(({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)), {
+    key: REMEMBER_UNTIL_KEY,
+    duration: REMEMBER_DURATION_MS,
+  })
   // Ensure we actually land on dashboard (not redirected to login)
   await page.waitForURL(/\/dashboard/, { timeout: 15000 })
   await waitForWorkspace(page)
