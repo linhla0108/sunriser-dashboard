@@ -13,12 +13,9 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { CANDIDATE_BATCH_OPTIONS, CANDIDATE_PIC_OPTIONS, CANDIDATE_ROUND_OPTIONS, formatCandidateBatchLabel } from "@/lib/candidates/constants"
 import { usePinned } from "@/lib/pin/usePinned"
 import type { Applicant } from "@/lib/types"
-
-const ROUND_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
-const BATCH_OPTIONS = [1, 2, 3] as const
-const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"] as const
 
 interface CandidateCardContextMenuProps {
   applicant: Applicant
@@ -78,26 +75,28 @@ export function CandidateCardContextMenu({ applicant, children, onViewDetail, on
     <ContextMenu>
       <ContextMenuTrigger className="contents">{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuLabel className="truncate">{applicant.name}</ContextMenuLabel>
-        {onViewDetail ? (
-          <ContextMenuItem onClick={() => onViewDetail(applicant)}>
-            <Eye />
-            View detail
+        <ContextMenuGroup>
+          <ContextMenuLabel className="truncate">{applicant.name}</ContextMenuLabel>
+          {onViewDetail ? (
+            <ContextMenuItem onClick={() => onViewDetail(applicant)}>
+              <Eye />
+              View detail
+            </ContextMenuItem>
+          ) : null}
+          <ContextMenuItem onClick={() => copyCandidateSummary(applicant)}>
+            <Copy />
+            Copy summary
           </ContextMenuItem>
-        ) : null}
-        <ContextMenuItem onClick={() => copyCandidateSummary(applicant)}>
-          <Copy />
-          Copy summary
-        </ContextMenuItem>
-        <ContextMenuItem
-          onClick={() => {
-            if (pinned) pinRemove(applicant.id)
-            else pinAdd(applicant.id)
-          }}
-        >
-          {pinned ? <PinOff /> : <Pin />}
-          {pinned ? "Unpin from compare" : "Pin to compare"}
-        </ContextMenuItem>
+          <ContextMenuItem
+            onClick={() => {
+              if (pinned) pinRemove(applicant.id)
+              else pinAdd(applicant.id)
+            }}
+          >
+            {pinned ? <PinOff /> : <Pin />}
+            {pinned ? "Unpin from compare" : "Pin to compare"}
+          </ContextMenuItem>
+        </ContextMenuGroup>
 
         <ContextMenuSeparator />
 
@@ -108,7 +107,7 @@ export function CandidateCardContextMenu({ applicant, children, onViewDetail, on
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-44">
             <ContextMenuGroup>
-              {PIC_OPTIONS.map(pic => (
+              {CANDIDATE_PIC_OPTIONS.map(pic => (
                 <ContextMenuItem key={pic} disabled={applicant.pic === pic} onClick={() => update({ pic })}>
                   {applicant.pic === pic ? <CheckCircle2 className="text-green-600" /> : <span className="size-4" />}
                   {pic}
@@ -125,10 +124,10 @@ export function CandidateCardContextMenu({ applicant, children, onViewDetail, on
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-40">
             <ContextMenuGroup>
-              {BATCH_OPTIONS.map(batch => (
+              {CANDIDATE_BATCH_OPTIONS.map(batch => (
                 <ContextMenuItem key={batch} disabled={applicant.batch === batch} onClick={() => update({ batch })}>
                   {applicant.batch === batch ? <CheckCircle2 className="text-green-600" /> : <span className="size-4" />}
-                  Batch {batch}
+                  {formatCandidateBatchLabel(batch)}
                 </ContextMenuItem>
               ))}
             </ContextMenuGroup>
@@ -141,7 +140,7 @@ export function CandidateCardContextMenu({ applicant, children, onViewDetail, on
             Set Round 1
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            {ROUND_OPTIONS.map(result => (
+            {CANDIDATE_ROUND_OPTIONS.map(result => (
               <ContextMenuItem key={result} disabled={applicant.round1Result === result} onClick={() => update({ round1Result: result })}>
                 <RoundIcon result={result} />
                 {result}
@@ -156,7 +155,7 @@ export function CandidateCardContextMenu({ applicant, children, onViewDetail, on
             Set Round 2
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
-            {ROUND_OPTIONS.map(result => (
+            {CANDIDATE_ROUND_OPTIONS.map(result => (
               <ContextMenuItem key={result} disabled={applicant.round2Result === result} onClick={() => update({ round2Result: result })}>
                 <RoundIcon result={result} />
                 {result}

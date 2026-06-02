@@ -6,7 +6,7 @@ const password = process.env.E2E_PASSWORD
 
 test.skip(!email || !password, "Set E2E_EMAIL and E2E_PASSWORD to run authenticated upload flow smoke.")
 
-test("upload review flow parses values, re-analyzes columns, and opens candidates", async ({ page }) => {
+test("global workspace drag and drop does not open upload review", async ({ page }) => {
   await page.goto(`${baseURL}/dashboard`)
 
   const emailInput = page.getByLabel("Email")
@@ -36,19 +36,9 @@ test("upload review flow parses values, re-analyzes columns, and opens candidate
   await page.dispatchEvent("body", "drop", { dataTransfer })
 
   const popup = page.locator('[data-cid="drop-zone-popup"]')
-  await expect(popup).toBeVisible()
-  await expect(popup.getByText("playwright-candidates.csv", { exact: true })).toBeVisible()
-  await expect(popup.getByText("Nguyen, An")).toBeVisible()
-  await expect(popup.getByText("0901")).toBeVisible()
-
-  await page.locator('[data-cid="drop-zone-col-input"]').fill("Round 1 Notes")
-  await page.getByRole("button", { name: /re-analyze/i }).click()
-  await expect(popup.getByText("Round 1 Notes")).toBeVisible()
-
-  await page.getByRole("button", { name: /confirm upload/i }).click()
-  await expect(page).toHaveURL(/\/candidates/, { timeout: 15000 })
-  await expect(page.locator('[data-cid="uploaded-candidates-banner"]')).toContainText("playwright-candidates.csv")
-  await expect(page.getByText("Nguyen, An")).toBeVisible()
+  await expect(popup).toHaveCount(0)
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 })
+  await expect(page.getByText("Total Applicants")).toBeVisible()
 
   await page.screenshot({ path: "test-results/upload-review-flow.png", fullPage: true })
 })

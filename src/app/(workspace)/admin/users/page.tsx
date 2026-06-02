@@ -1,14 +1,23 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Pencil, Plus, RefreshCcw } from "lucide-react"
+import { CheckCircle2, Copy, Pencil, Plus, RefreshCcw, UserX } from "lucide-react"
 import { toast } from "sonner"
 import { RequireAdmin } from "@/components/auth/RequireAdmin"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { inviteUser, listAdminUsers, type AdminUserRow } from "@/lib/admin/adminApi"
+import { inviteUser, listAdminUsers, updateUserAccess, type AdminUserRow } from "@/lib/admin/adminApi"
 import { useAuth } from "@/lib/auth/useAuth"
 import { UserEditDrawer } from "@/components/admin/UserEditDrawer"
 
@@ -71,6 +80,16 @@ function AdminUsersInner() {
     }
   }
 
+  async function setUserActive(row: AdminUserRow, active: boolean) {
+    try {
+      await updateUserAccess({ userId: row.user_id, active, role: row.role, permissions: row.permissions })
+      toast.success(`${row.email || row.full_name || "User"} ${active ? "activated" : "deactivated"}`)
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "User update failed")
+    }
+  }
+
   return (
     <div className="space-y-4 p-3 sm:p-4 lg:p-6">
       <header className="flex items-center justify-between gap-3">
@@ -121,15 +140,50 @@ function AdminUsersInner() {
             {!loading &&
               filtered.map(row => {
                 const isSelf = row.user_id === user?.id
+                const rowMenu = (
+                  <ContextMenu>
+                    <ContextMenuTrigger className="contents">
+                      <div>
+                        <div className="text-foreground font-medium">{row.full_name || "(unnamed)"}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {row.email || `${row.user_id.slice(0, 8)}…`}
+                          {isSelf ? " · you" : ""}
+                        </div>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-56">
+                      <ContextMenuGroup>
+                        <ContextMenuLabel className="truncate">{row.full_name || row.email || "User"}</ContextMenuLabel>
+                        <ContextMenuItem onClick={() => setEditing(row)}>
+                          <Pencil />
+                          Edit access
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => navigator.clipboard.writeText(row.email || row.user_id)}>
+                          <Copy />
+                          Copy email
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => navigator.clipboard.writeText(row.user_id)}>
+                          <Copy />
+                          Copy user ID
+                        </ContextMenuItem>
+                      </ContextMenuGroup>
+                      <ContextMenuSeparator />
+                      <ContextMenuGroup>
+                        <ContextMenuItem disabled={isSelf || row.active} onClick={() => void setUserActive(row, true)}>
+                          <CheckCircle2 />
+                          Activate user
+                        </ContextMenuItem>
+                        <ContextMenuItem disabled={isSelf || !row.active} variant="destructive" onClick={() => void setUserActive(row, false)}>
+                          <UserX />
+                          Deactivate user
+                        </ContextMenuItem>
+                      </ContextMenuGroup>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                )
                 return (
                   <tr key={row.user_id} className="border-foreground/5 border-t">
-                    <td className="px-4 py-3">
-                      <div className="text-foreground font-medium">{row.full_name || "(unnamed)"}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {row.email || `${row.user_id.slice(0, 8)}…`}
-                        {isSelf ? " · you" : ""}
-                      </div>
-                    </td>
+                    <td className="px-4 py-3">{rowMenu}</td>
                     <td className="hidden px-4 py-3 sm:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {row.positions.length === 0 && <span className="text-muted-foreground text-xs">—</span>}

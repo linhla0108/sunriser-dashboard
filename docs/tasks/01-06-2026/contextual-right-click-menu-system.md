@@ -120,13 +120,13 @@ Verification:
 
 Status: Done | Commit: uncommitted
 
-Implemented feature-specific context menus for candidate cards, chart cards, and schedule entries. Pipeline and Gallery candidate cards now expose candidate actions without using the workspace menu. Chart cards expose chart filter and layout actions. Gantt and Agenda schedule entries expose view, edit, copy, and delete actions. The global workspace menu now keeps only generic text/page actions and shortcut help.
+Implemented feature-specific context menus for candidate cards, candidate table headers, pipeline columns, dashboard stats/charts, compare headers, upload review popup, admin user identity cells, chart cards, and schedule entries. Pipeline and Gallery candidate cards now expose candidate actions without using the workspace menu. Chart cards expose chart filter and layout actions. Gantt and Agenda schedule entries expose view, edit, copy, and delete actions. The global workspace menu now keeps only generic text/page actions and shortcut help.
 
 Verification:
 
 - Passed: `npx tsc --noEmit`
-- Passed: `npx eslint src/components/candidates/CandidateCardContextMenu.tsx src/components/views/PipelineView.tsx src/components/views/GalleryView.tsx src/components/views/ChartView.tsx src/components/schedule/ScheduleEntryContextMenu.tsx src/components/views/schedule/GanttView.tsx src/components/views/schedule/AgendaView.tsx 'src/app/(workspace)/schedule/page.tsx' 'src/app/(workspace)/candidates/page.tsx' src/components/context/WorkspaceContextMenu.tsx src/components/layout/WorkspaceShell.tsx`
-- Passed: `npm test -- src/components/views/__tests__/PipelineGallery.test.tsx src/components/views/__tests__/PipelineView.smoke.test.tsx`
+- Passed: `npx eslint src/components/dashboard/StatsCard.tsx src/components/dashboard/OverviewCharts.tsx src/components/pin/ComparePage.tsx 'src/app/(workspace)/admin/users/page.tsx' src/components/upload/GlobalDropZone.tsx src/components/table/ApplicantTable.tsx src/components/views/PipelineView.tsx src/components/schedule/ScheduleEntryContextMenu.tsx src/components/candidates/CandidateCardContextMenu.tsx src/components/views/ChartView.tsx`
+- Passed: `npm test -- src/components/views/__tests__/PipelineGallery.test.tsx src/components/views/__tests__/PipelineView.smoke.test.tsx src/components/table/__tests__/ApplicantTable.sort.test.tsx src/components/pin/__tests__/ComparePage.test.tsx`
 - Passed: `npx prettier --check src/components/candidates/CandidateCardContextMenu.tsx src/components/views/PipelineView.tsx src/components/views/GalleryView.tsx src/components/views/ChartView.tsx src/components/schedule/ScheduleEntryContextMenu.tsx src/components/views/schedule/GanttView.tsx src/components/views/schedule/AgendaView.tsx 'src/app/(workspace)/schedule/page.tsx' 'src/app/(workspace)/candidates/page.tsx' src/components/context/WorkspaceContextMenu.tsx src/components/layout/WorkspaceShell.tsx docs/tasks/01-06-2026/summary.md docs/tasks/01-06-2026/contextual-right-click-menu-system.md`
 
-Remaining: Admin user rows, announcement rows, HR rows, and upload file draft menus are not implemented in this slice.
+Remaining: true table cell-level menus, chart segment-level menus, HR row menus, announcement row menus, and backend-persistent archive/delete flows are not implemented in this slice.

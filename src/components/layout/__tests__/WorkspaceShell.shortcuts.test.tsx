@@ -23,7 +23,9 @@ vi.mock("@/components/auth/RequireAuth", () => ({
 vi.mock("@/lib/announcements/AnnouncementProvider", () => ({
   AnnouncementProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAnnouncements: () => ({
+    announcements: [],
     unreadCount: 0,
+    markRead: vi.fn(),
   }),
 }))
 

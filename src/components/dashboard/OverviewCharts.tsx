@@ -1,6 +1,16 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts"
+import { Copy, ExternalLink, Printer, RefreshCw } from "lucide-react"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { positionBreakdown, discoveryChannelBreakdown } from "@/lib/mockData"
 
 const batchData = [
@@ -36,12 +46,44 @@ const tooltipStyle = {
 
 function ChartCard({ title, dataCid, children }: { title: string; dataCid: string; children: React.ReactNode }) {
   return (
-    <div data-cid={dataCid} data-v2-card="" className="rounded-3xl bg-white p-4" style={cardStyle}>
-      <h3 data-v2-heading="" className="mb-3 font-semibold tracking-widest text-[#1b1b1b] uppercase" style={{ fontSize: "var(--text-label, 11px)" }}>
-        {title}
-      </h3>
-      {children}
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger className="contents">
+        <div data-cid={dataCid} data-v2-card="" className="rounded-3xl bg-white p-4" style={cardStyle}>
+          <h3
+            data-v2-heading=""
+            className="mb-3 font-semibold tracking-widest text-[#1b1b1b] uppercase"
+            style={{ fontSize: "var(--text-label, 11px)" }}
+          >
+            {title}
+          </h3>
+          {children}
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuGroup>
+          <ContextMenuLabel>{title}</ContextMenuLabel>
+          <ContextMenuItem onClick={() => navigator.clipboard.writeText(title)}>
+            <Copy />
+            Copy chart title
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => (window.location.href = "/candidates?view=chart")}>
+            <ExternalLink />
+            Open full chart view
+          </ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuSeparator />
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={() => window.location.reload()}>
+            <RefreshCw />
+            Refresh dashboard
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => window.print()}>
+            <Printer />
+            Export snapshot
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

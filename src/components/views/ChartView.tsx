@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import {
   ContextMenu,
   ContextMenuContent,
+  ContextMenuGroup,
   ContextMenuItem,
   ContextMenuLabel,
   ContextMenuSeparator,
@@ -179,18 +180,22 @@ function ChartCard({
         </article>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
-        <ContextMenuLabel>{title}</ContextMenuLabel>
-        {(["all", "passed", "failed"] as const).map(nextFilter => (
-          <ContextMenuItem key={nextFilter} disabled={activeFilter === nextFilter} onClick={() => onFilterChange(nextFilter)}>
-            {activeFilter === nextFilter ? <CheckCircle2 className="text-green-600" /> : <Filter />}
-            Show {nextFilter === "all" ? "all applicants" : nextFilter}
-          </ContextMenuItem>
-        ))}
+        <ContextMenuGroup>
+          <ContextMenuLabel>{title}</ContextMenuLabel>
+          {(["all", "passed", "failed"] as const).map(nextFilter => (
+            <ContextMenuItem key={nextFilter} disabled={activeFilter === nextFilter} onClick={() => onFilterChange(nextFilter)}>
+              {activeFilter === nextFilter ? <CheckCircle2 className="text-green-600" /> : <Filter />}
+              Show {nextFilter === "all" ? "all applicants" : nextFilter}
+            </ContextMenuItem>
+          ))}
+        </ContextMenuGroup>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={onResetOrder}>
-          <RotateCcw />
-          Reset chart layout
-        </ContextMenuItem>
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={onResetOrder}>
+            <RotateCcw />
+            Reset chart layout
+          </ContextMenuItem>
+        </ContextMenuGroup>
       </ContextMenuContent>
     </ContextMenu>
   )
