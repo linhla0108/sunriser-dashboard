@@ -28,11 +28,7 @@ export function ForgotForm() {
 
     if (resetError) {
       // 429: rate limit — show a friendly message instead of the raw SDK string
-      setError(
-        resetError.status === 429
-          ? "Too many attempts. Please wait a few minutes before trying again."
-          : resetError.message
-      )
+      setError(resetError.status === 429 ? "Too many attempts. Please wait a few minutes before trying again." : resetError.message)
       return
     }
 

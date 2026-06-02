@@ -9,12 +9,7 @@ interface HoverPopoverInteractionOptions {
   reopenSuppressionMs: number
 }
 
-export function useHoverPopoverInteraction({
-  enabled = true,
-  openDelayMs,
-  closeDelayMs,
-  reopenSuppressionMs,
-}: HoverPopoverInteractionOptions) {
+export function useHoverPopoverInteraction({ enabled = true, openDelayMs, closeDelayMs, reopenSuppressionMs }: HoverPopoverInteractionOptions) {
   const [open, setOpen] = useState(false)
   const openTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)

@@ -107,6 +107,7 @@ Ship Microsoft-only OAuth login with domain restriction (enforced server-side, d
 **Owner:** 1 subagent. No parallelism.
 
 **Outputs:**
+
 - `src/lib/sheets/types.ts` — `SheetsSyncResult`, `SheetsClient`, `SheetMapping`, `REQUIRED_SHEET_HEADERS`
 - `src/lib/auth/oauthErrors.ts` skeleton — `OAuthErrorCode`, `oauthErrorMessage`, `supabaseErrorToCode`
 - `.env.example` — new server-only keys (placeholder values)
@@ -124,21 +125,21 @@ Runs **in parallel with Phase 2**.
 
 ### Tasks (parallel, disjoint files)
 
-| ID  | Task                                                               | Owns                                                                                | Depends on |
-| --- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ---------- |
-| 1.1 | SQL migration: `private` schema + `allowed_email_domains` + hook   | `supabase/migrations/20260527120000_allowed_email_domains.sql`                      | Phase 0    |
-| 1.2 | `oauthErrors.ts` full impl + unit test                             | `src/lib/auth/oauthErrors.ts`, `src/lib/auth/__tests__/oauthErrors.test.ts`         | Phase 0    |
-| 1.3 | OAuth callback route                                               | `src/app/auth/callback/route.ts`                                                    | Phase 0    |
-| 1.4 | Seed script template                                               | `scripts/seed-allowed-domain.sql.example`                                           | Phase 0    |
+| ID  | Task                                                             | Owns                                                                        | Depends on |
+| --- | ---------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------- |
+| 1.1 | SQL migration: `private` schema + `allowed_email_domains` + hook | `supabase/migrations/20260527120000_allowed_email_domains.sql`              | Phase 0    |
+| 1.2 | `oauthErrors.ts` full impl + unit test                           | `src/lib/auth/oauthErrors.ts`, `src/lib/auth/__tests__/oauthErrors.test.ts` | Phase 0    |
+| 1.3 | OAuth callback route                                             | `src/app/auth/callback/route.ts`                                            | Phase 0    |
+| 1.4 | Seed script template                                             | `scripts/seed-allowed-domain.sql.example`                                   | Phase 0    |
 
 ### Wire-up (sequential, after 1.1–1.4)
 
-| ID  | Task                                               | Owns                                                    | Depends on |
-| --- | -------------------------------------------------- | ------------------------------------------------------- | ---------- |
-| 1.5 | Add `signInWithMicrosoft()` to `AuthProvider`      | `src/lib/auth/AuthProvider.tsx`                         | 1.3        |
-| 1.6 | Allow `/auth/callback` in proxy public prefixes    | `src/proxy.ts`                                          | 1.3        |
-| 1.7 | "Continue with Microsoft" button on `/login`       | `src/app/login/page.tsx`                                | 1.5        |
-| 1.8 | Append manual ops checklist to OAuth task doc      | `docs/tasks/27-05-2026/microsoft-oauth-login.md`        | 1.1        |
+| ID  | Task                                            | Owns                                             | Depends on |
+| --- | ----------------------------------------------- | ------------------------------------------------ | ---------- |
+| 1.5 | Add `signInWithMicrosoft()` to `AuthProvider`   | `src/lib/auth/AuthProvider.tsx`                  | 1.3        |
+| 1.6 | Allow `/auth/callback` in proxy public prefixes | `src/proxy.ts`                                   | 1.3        |
+| 1.7 | "Continue with Microsoft" button on `/login`    | `src/app/login/page.tsx`                         | 1.5        |
+| 1.8 | Append manual ops checklist to OAuth task doc   | `docs/tasks/27-05-2026/microsoft-oauth-login.md` | 1.1        |
 
 ### Manual ops (operator, not subagent)
 
@@ -164,11 +165,11 @@ Runs **in parallel with Phase 1**.
 
 ### Tasks (parallel, disjoint files)
 
-| ID  | Task                                                       | Owns                                                                          | Depends on |
-| --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------- |
-| 2.1 | SQL migration: `candidates` + `sheets_sync_log` + RLS      | `supabase/migrations/20260527120500_candidates_and_sync_log.sql`              | Phase 0    |
-| 2.2 | `googleapis` install + `sheets/client.ts` + probe          | `package.json`, `src/lib/sheets/client.ts`, `scripts/probe-sheets-connection.ts` | Phase 0    |
-| 2.3 | `sheets/mapping.ts` + unit tests                           | `src/lib/sheets/mapping.ts`, `src/lib/sheets/__tests__/mapping.test.ts`       | Phase 0    |
+| ID  | Task                                                  | Owns                                                                             | Depends on |
+| --- | ----------------------------------------------------- | -------------------------------------------------------------------------------- | ---------- |
+| 2.1 | SQL migration: `candidates` + `sheets_sync_log` + RLS | `supabase/migrations/20260527120500_candidates_and_sync_log.sql`                 | Phase 0    |
+| 2.2 | `googleapis` install + `sheets/client.ts` + probe     | `package.json`, `src/lib/sheets/client.ts`, `scripts/probe-sheets-connection.ts` | Phase 0    |
+| 2.3 | `sheets/mapping.ts` + unit tests                      | `src/lib/sheets/mapping.ts`, `src/lib/sheets/__tests__/mapping.test.ts`          | Phase 0    |
 
 ### Checkpoint B
 
@@ -186,13 +187,13 @@ Depends on Phase 2.
 
 ### Tasks
 
-| ID  | Task                                     | Owns                                                | Depends on    |
-| --- | ---------------------------------------- | --------------------------------------------------- | ------------- |
-| 3.1 | `sheets/pull.ts` orchestrator            | `src/lib/sheets/pull.ts`                            | 2.1, 2.2, 2.3 |
-| 3.2 | Pull API route                           | `src/app/api/sheets/pull/route.ts`                  | 3.1           |
-| 3.3 | Status API route                         | `src/app/api/sheets/status/route.ts`                | 2.1           |
-| 3.4 | `SheetsSyncBar` component (Pull + Push)  | `src/components/candidates/SheetsSyncBar.tsx`       | 3.2, 3.3      |
-| 3.5 | Mount `SheetsSyncBar` in `CandidateFiltersBar` | `src/components/candidates/CandidateFiltersBar.tsx` | 3.4      |
+| ID  | Task                                           | Owns                                                | Depends on    |
+| --- | ---------------------------------------------- | --------------------------------------------------- | ------------- |
+| 3.1 | `sheets/pull.ts` orchestrator                  | `src/lib/sheets/pull.ts`                            | 2.1, 2.2, 2.3 |
+| 3.2 | Pull API route                                 | `src/app/api/sheets/pull/route.ts`                  | 3.1           |
+| 3.3 | Status API route                               | `src/app/api/sheets/status/route.ts`                | 2.1           |
+| 3.4 | `SheetsSyncBar` component (Pull + Push)        | `src/components/candidates/SheetsSyncBar.tsx`       | 3.2, 3.3      |
+| 3.5 | Mount `SheetsSyncBar` in `CandidateFiltersBar` | `src/components/candidates/CandidateFiltersBar.tsx` | 3.4           |
 
 ### Checkpoint C
 
@@ -208,10 +209,10 @@ Depends on Phase 2. Can overlap with Phase 3.
 
 ### Tasks
 
-| ID  | Task                                    | Owns                                                                          | Depends on |
-| --- | --------------------------------------- | ----------------------------------------------------------------------------- | ---------- |
-| 4.1 | `sheets/push.ts` + unit tests           | `src/lib/sheets/push.ts`, `src/lib/sheets/__tests__/push.test.ts`             | 2.2, 2.3   |
-| 4.2 | Push API route                          | `src/app/api/sheets/push/route.ts`                                            | 4.1        |
+| ID  | Task                          | Owns                                                              | Depends on |
+| --- | ----------------------------- | ----------------------------------------------------------------- | ---------- |
+| 4.1 | `sheets/push.ts` + unit tests | `src/lib/sheets/push.ts`, `src/lib/sheets/__tests__/push.test.ts` | 2.2, 2.3   |
+| 4.2 | Push API route                | `src/app/api/sheets/push/route.ts`                                | 4.1        |
 
 ### Checkpoint D
 
@@ -223,13 +224,13 @@ Depends on Phase 2. Can overlap with Phase 3.
 
 ## 7. Risk register
 
-| Risk                                                          | Phase | Mitigation                                                                                              |
-| ------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------- |
-| `googleapis` bundle too large for Vercel function             | 2     | Checkpoint B checks size. Pivot to `google-auth-library` + raw `fetch` if over 5 MB.                   |
-| Before-User-Created hook unavailable in Supabase project tier | 1     | Verify hook UI exists during manual ops. Fallback: BEFORE INSERT trigger on `auth.users`.               |
-| Service account key rotation invalidates env vars             | 2–4   | Connection probe catches this early. Document rotation in pull task report.                             |
-| Microsoft guest accounts bypass single-tenant restriction     | 1     | Hook domain check is second line of defense — rejects guests with non-allowlisted emails.               |
-| Playwright cannot drive real Microsoft consent                | 1     | Phase 1 e2e uses mocked redirect only. Real login verified via `browser_snapshot`.                     |
+| Risk                                                          | Phase | Mitigation                                                                                |
+| ------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------- |
+| `googleapis` bundle too large for Vercel function             | 2     | Checkpoint B checks size. Pivot to `google-auth-library` + raw `fetch` if over 5 MB.      |
+| Before-User-Created hook unavailable in Supabase project tier | 1     | Verify hook UI exists during manual ops. Fallback: BEFORE INSERT trigger on `auth.users`. |
+| Service account key rotation invalidates env vars             | 2–4   | Connection probe catches this early. Document rotation in pull task report.               |
+| Microsoft guest accounts bypass single-tenant restriction     | 1     | Hook domain check is second line of defense — rejects guests with non-allowlisted emails. |
+| Playwright cannot drive real Microsoft consent                | 1     | Phase 1 e2e uses mocked redirect only. Real login verified via `browser_snapshot`.        |
 
 ---
 
@@ -249,6 +250,7 @@ Depends on Phase 2. Can overlap with Phase 3.
 Status: In Progress
 
 Code for all phases (0–4) is written and type-checks clean. Blocked on operator manual steps:
+
 - `npm install googleapis` (network required — `client.ts` runs as runtime-stub until then)
 - DB migrations not yet applied to Supabase
 - Azure app not yet registered

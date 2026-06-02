@@ -1,3 +1,5 @@
+import { CANDIDATE_ROUND_BADGE_STYLES } from "@/lib/candidates/constants"
+
 export const POS_COLORS: Record<string, { bg: string; text: string; light: string }> = {
   "AI Engineering Intern": { bg: "#55DB9C", text: "#1b1b1b", light: "#e6faf2" },
   "Data Analysis Intern": { bg: "#F76969", text: "#fff", light: "#fef0f0" },
@@ -37,11 +39,7 @@ export function getPosShort(pos: string) {
   return POS_SHORT[pos] ?? pos
 }
 
-export const ROUND1_BADGE: Record<string, { bg: string; text: string; border: string }> = {
-  Passed: { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
-  Failed: { bg: "#fef2f2", text: "#dc2626", border: "#fecaca" },
-  "Waiting list": { bg: "#fffbeb", text: "#d97706", border: "#fde68a" },
-}
+export const ROUND1_BADGE: Record<string, { bg: string; text: string; border: string }> = CANDIDATE_ROUND_BADGE_STYLES
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("vi-VN", {

@@ -40,16 +40,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
             }}
           >
-            <h1 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#1b1b1b", margin: "0 0 0.75rem" }}>
-              Something went wrong
-            </h1>
+            <h1 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#1b1b1b", margin: "0 0 0.75rem" }}>Something went wrong</h1>
             <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: "0 0 1.5rem" }}>
               A critical error occurred. Please refresh the page.
             </p>
             {error.digest ? (
-              <p style={{ fontSize: "0.75rem", color: "#888", fontFamily: "monospace", marginBottom: "1rem" }}>
-                ref: {error.digest}
-              </p>
+              <p style={{ fontSize: "0.75rem", color: "#888", fontFamily: "monospace", marginBottom: "1rem" }}>ref: {error.digest}</p>
             ) : null}
             <button
               onClick={reset}

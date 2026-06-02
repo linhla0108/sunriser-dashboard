@@ -6,7 +6,7 @@
 | 2   | Announcement Empty Create Action         | announcements/fix      | Done        | Publisher create action remains visible in empty inbox                                    |
 | 3   | Candidate Image Preview Skeleton Loading | candidates/fix         | Done        | Image previews show a skeleton while loading                                              |
 | 4   | Shadcn-First Announcements               | announcements/refactor | Done        | Replace native controls and codify shadcn-first UI rule                                   |
-| 5   | Candidate Option Constants               | candidates/refactor    | In Progress | Unify shared round, batch, and PIC options                                                |
+| 5   | Candidate Option Constants               | candidates/refactor    | Done        | Unify shared round, batch, and PIC options                                                |
 | 6   | Disable Global Dropzone                  | workspace/fix          | Done        | Workspace no longer mounts the global drag and drop overlay                               |
 | 7   | HR Team Account Status Management        | auth/feature           | Done        | Mock HR page removes Add Staff, adds inline status segmented control, and swaps edit icon |
 | 8   | Announcements Composer Redesign          | announcements/feature  | Done        | Range, mentions, priority polish, and attachment queue shipped                            |

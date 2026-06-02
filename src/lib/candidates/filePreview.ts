@@ -1,6 +1,5 @@
 const IMAGE_CONTENT_TYPE_PATTERN = /^image\//i
-const GENERIC_BINARY_CONTENT_TYPE_PATTERN =
-  /^(?:application\/octet-stream|binary\/octet-stream|application\/binary)$/i
+const GENERIC_BINARY_CONTENT_TYPE_PATTERN = /^(?:application\/octet-stream|binary\/octet-stream|application\/binary)$/i
 
 const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
   apng: "image/apng",
@@ -25,12 +24,7 @@ const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
   zip: "application/zip",
 }
 
-export type CandidateBinaryPreviewMode =
-  | "pdf"
-  | "image"
-  | "docx"
-  | "unsupported"
-  | "unknown"
+export type CandidateBinaryPreviewMode = "pdf" | "image" | "docx" | "unsupported" | "unknown"
 
 export interface CandidateFilePreviewMetadata {
   contentType: string | null

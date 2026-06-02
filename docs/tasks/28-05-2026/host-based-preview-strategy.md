@@ -106,12 +106,7 @@ docs/tasks/28-05-2026/                   Task spec and follow-up report
 Prefer explicit policy code over permissive heuristics. The classification should read like a table of product decisions, not a set of accidental fallthroughs.
 
 ```ts
-const EXTERNAL_CARD_HOSTS = new Set([
-  "drive.google.com",
-  "docs.google.com",
-  "notion.so",
-  "www.notion.so",
-])
+const EXTERNAL_CARD_HOSTS = new Set(["drive.google.com", "docs.google.com", "notion.so", "www.notion.so"])
 
 export function getCandidatePreviewPolicy(url: string): CandidatePreviewPolicy {
   if (isPdfPreviewUrl(url)) return { mode: "inline-binary", reason: "pdf" }
@@ -431,11 +426,11 @@ Preview policy rules in candidateLinks.ts
 
 ### Risks and mitigations
 
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Existing code still depends on `getCandidatePreviewKind` semantics | Medium | Keep old helper during migration and convert dialog first |
-| Some hosts currently rely on timeout fallback for usable OG cards | Medium | Route those hosts directly to `external-card` instead of waiting on iframe |
-| Test expectations may encode old iframe-first behavior | Low | Update helper tests before dialog tests so policy changes are intentional |
+| Risk                                                               | Impact | Mitigation                                                                 |
+| ------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------- |
+| Existing code still depends on `getCandidatePreviewKind` semantics | Medium | Keep old helper during migration and convert dialog first                  |
+| Some hosts currently rely on timeout fallback for usable OG cards  | Medium | Route those hosts directly to `external-card` instead of waiting on iframe |
+| Test expectations may encode old iframe-first behavior             | Low    | Update helper tests before dialog tests so policy changes are intentional  |
 
 ### Open questions
 

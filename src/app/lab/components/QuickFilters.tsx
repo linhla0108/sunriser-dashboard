@@ -1,33 +1,25 @@
 "use client"
 
 import { X } from "lucide-react"
+import { CANDIDATE_BATCH_OPTIONS, CANDIDATE_ROUND_OPTIONS, type CandidateRoundResult } from "@/lib/candidates/constants"
 import { FilterCondition } from "../lab-types"
 import { ALL_POSITIONS, getPosColor, getPosShort } from "../lab-utils"
 import { Button } from "@/components/ui/button"
 
-const ROUND1_OPTIONS = [
-  {
-    value: "Passed",
-    color: {
-      active: "bg-[#22c55e] text-white",
-      inactive: "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]",
-    },
+const ROUND1_OPTION_COLORS: Record<CandidateRoundResult, { active: string; inactive: string }> = {
+  Passed: {
+    active: "bg-[#22c55e] text-white",
+    inactive: "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]",
   },
-  {
-    value: "Failed",
-    color: {
-      active: "bg-[#ef4444] text-white",
-      inactive: "bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]",
-    },
+  Failed: {
+    active: "bg-[#ef4444] text-white",
+    inactive: "bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]",
   },
-  {
-    value: "Waiting list",
-    color: {
-      active: "bg-[#f59e0b] text-white",
-      inactive: "bg-[#fffbeb] text-[#d97706] border border-[#fde68a]",
-    },
+  "Waiting list": {
+    active: "bg-[#f59e0b] text-white",
+    inactive: "bg-[#fffbeb] text-[#d97706] border border-[#fde68a]",
   },
-]
+}
 
 interface QuickFiltersProps {
   position: string
@@ -55,32 +47,38 @@ export default function QuickFilters({
   return (
     <div className="mb-3 flex flex-wrap items-center gap-1.5">
       {/* Batch */}
-      {["1", "2", "3"].map(b => (
-        <Button
-          variant="plain"
-          size="plain"
-          key={b}
-          onClick={() => onBatch(batch === b ? "" : b)}
-          className={`h-6 rounded-full px-2.5 text-xs font-semibold transition-all ${batch === b ? "bg-[#1b1b1b] text-white" : "bg-[#f9f9f9] text-[#555555] hover:bg-[#f0f0f0]"}`}
-        >
-          Batch {b}
-        </Button>
-      ))}
+      {CANDIDATE_BATCH_OPTIONS.map(batchValue => {
+        const b = String(batchValue)
+        return (
+          <Button
+            variant="plain"
+            size="plain"
+            key={b}
+            onClick={() => onBatch(batch === b ? "" : b)}
+            className={`h-6 rounded-full px-2.5 text-xs font-semibold transition-all ${batch === b ? "bg-[#1b1b1b] text-white" : "bg-[#f9f9f9] text-[#555555] hover:bg-[#f0f0f0]"}`}
+          >
+            Batch {b}
+          </Button>
+        )
+      })}
 
       <div className="h-4 w-px bg-[#e8e8e8]" />
 
       {/* Round 1 result */}
-      {ROUND1_OPTIONS.map(({ value, color }) => (
-        <Button
-          variant="plain"
-          size="plain"
-          key={value}
-          onClick={() => onRound1(round1 === value ? "" : value)}
-          className={`h-6 rounded-full px-2.5 text-xs font-semibold transition-all ${round1 === value ? color.active : color.inactive}`}
-        >
-          {value}
-        </Button>
-      ))}
+      {CANDIDATE_ROUND_OPTIONS.map(value => {
+        const color = ROUND1_OPTION_COLORS[value]
+        return (
+          <Button
+            variant="plain"
+            size="plain"
+            key={value}
+            onClick={() => onRound1(round1 === value ? "" : value)}
+            className={`h-6 rounded-full px-2.5 text-xs font-semibold transition-all ${round1 === value ? color.active : color.inactive}`}
+          >
+            {value}
+          </Button>
+        )
+      })}
 
       <div className="h-4 w-px bg-[#e8e8e8]" />
 

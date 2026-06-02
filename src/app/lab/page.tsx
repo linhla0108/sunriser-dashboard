@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useRef, useState } from "react"
+import { type CandidatePicOption, type CandidateRoundResult } from "@/lib/candidates/constants"
 import { mockApplicants } from "@/lib/mockData"
 import { Applicant } from "@/lib/types"
 import { LabView, Scorecard, Activity, SavedView, FilterCondition } from "./lab-types"
@@ -113,7 +114,7 @@ export default function LabPage() {
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), [])
 
   // ── Round 1 update ────────────────────────────────────────────────────────
-  const handleUpdateRound1 = useCallback((id: string, result: "Passed" | "Failed" | "Waiting list" | undefined) => {
+  const handleUpdateRound1 = useCallback((id: string, result: CandidateRoundResult | undefined) => {
     setApplicants(prev => prev.map(a => (a.id === id ? { ...a, round1Result: result } : a)))
     setActivities(prev => ({
       ...prev,
@@ -138,7 +139,7 @@ export default function LabPage() {
 
   // ── Bulk actions ──────────────────────────────────────────────────────────
   const handleBulkRound1 = useCallback(
-    (result: "Passed" | "Failed" | "Waiting list") => {
+    (result: CandidateRoundResult) => {
       setApplicants(prev => prev.map(a => (selectedIds.has(a.id) ? { ...a, round1Result: result } : a)))
       setSelectedIds(new Set())
     },
@@ -146,7 +147,7 @@ export default function LabPage() {
   )
 
   const handleBulkAssignPic = useCallback(
-    (pic: string) => {
+    (pic: CandidatePicOption) => {
       setApplicants(prev => prev.map(a => (selectedIds.has(a.id) ? { ...a, pic } : a)))
       setSelectedIds(new Set())
     },

@@ -181,6 +181,7 @@ Implemented the shortcut redesign in three slices.
 The shared shortcut hook now distinguishes `mod`, `ctrl`, and `meta`, ignores editable targets by default, and refuses browser-reserved combos before calling `preventDefault()`. Workspace-level `Ctrl/Cmd+J`, `Ctrl/Cmd+N`, `Ctrl/Cmd+R`, sidebar `Ctrl/Cmd+B`, and lab `Ctrl/Cmd+K` global bindings were removed. Top bar, context menu, sidebar tooltip, and settings copy no longer advertise unsafe global shortcuts. Candidate view switching and table pagination are now scoped to the focused view navigation region instead of the whole window.
 
 Verification:
+
 - Passed: `npm run test -- src/lib/keyboard/__tests__/useShortcut.test.tsx`
 - Passed: `npm run test -- src/components/layout/__tests__/WorkspaceShell.shortcuts.test.tsx`
 - Passed: `npm run test -- src/components/layout/__tests__/ViewPillNav.test.tsx`

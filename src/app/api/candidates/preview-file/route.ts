@@ -5,11 +5,7 @@ import { getCandidateFileName, normalizePreviewContentType } from "@/lib/candida
 
 const MAX_PREVIEW_BYTES = 20 * 1024 * 1024
 
-const BLOCKED_HOST_PATTERNS = [
-  /^localhost$/i,
-  /\.local$/i,
-  /\.internal$/i,
-]
+const BLOCKED_HOST_PATTERNS = [/^localhost$/i, /\.local$/i, /\.internal$/i]
 
 function isBlockedIpv4(address: string) {
   const octets = address.split(".").map(part => Number.parseInt(part, 10))

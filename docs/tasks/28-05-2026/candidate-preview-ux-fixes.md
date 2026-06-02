@@ -38,6 +38,7 @@ Second follow-up fix: Typeform academic files now load through `/api/candidates/
 The compact text preview now uses a hoverable popover with an arrow, delayed close, and larger body text. Preview icon buttons also show action-specific tooltips.
 
 Verification:
+
 - `npx tsc --noEmit`
 - `npm run lint -- src/components/candidates/CandidatePreviewDialog.tsx src/components/candidates/__tests__/CandidatePreviewDialog.test.tsx src/components/ui/popover.tsx src/lib/candidates/candidateLinks.ts`
 - `npm test -- src/components/candidates/__tests__/CandidatePreviewDialog.test.tsx`

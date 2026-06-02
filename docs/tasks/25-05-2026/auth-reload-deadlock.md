@@ -38,6 +38,7 @@ Status: Done — committed with auth hardening changes on branch `codex/v2-works
 - `shouldKeepSession() === false` path: sets loading/user immediately, then schedules `supabase.auth.signOut()` via `setTimeout(..., 0)` to avoid re-entering the auth system from within the effect.
 
 **Tests added:**
+
 - `waitForWorkspace()` helper exported from `tests/e2e/helpers.ts` (was imported but missing)
 - Hard-reload regression test in `tests/e2e/auth.spec.ts`: login → hard reload `/candidates?view=table` → loading screen must resolve → table visible
 - Console error check: no auth/lock/session errors after reload

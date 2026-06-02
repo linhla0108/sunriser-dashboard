@@ -39,10 +39,10 @@ test.describe("Auth — hard reload with active session", () => {
   test("loading screen resolves after hard reload on /candidates", async ({ page }) => {
     // Refresh remember preference so AuthProvider doesn't sign us out
     await page.goto("/dashboard")
-    await page.evaluate(
-      ({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)),
-      { key: REMEMBER_UNTIL_KEY, duration: REMEMBER_DURATION_MS }
-    )
+    await page.evaluate(({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)), {
+      key: REMEMBER_UNTIL_KEY,
+      duration: REMEMBER_DURATION_MS,
+    })
     await page.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Hard reload — this is the scenario that was stuck on the loading screen
@@ -62,17 +62,15 @@ test.describe("Auth — hard reload with active session", () => {
 
     // Already authenticated via storageState — navigate directly (middleware redirects /login away)
     await page.goto("/dashboard")
-    await page.evaluate(
-      ({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)),
-      { key: REMEMBER_UNTIL_KEY, duration: REMEMBER_DURATION_MS }
-    )
+    await page.evaluate(({ key, duration }) => localStorage.setItem(key, String(Date.now() + duration)), {
+      key: REMEMBER_UNTIL_KEY,
+      duration: REMEMBER_DURATION_MS,
+    })
     await page.waitForURL(/\/dashboard/, { timeout: 15000 })
     await waitForWorkspace(page)
 
     // Filter out expected network noise; flag anything auth-related
-    const authErrors = consoleErrors.filter(
-      e => /auth|lock|deadlock|supabase|session/i.test(e)
-    )
+    const authErrors = consoleErrors.filter(e => /auth|lock|deadlock|supabase|session/i.test(e))
     expect(authErrors).toHaveLength(0)
   })
 })

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { X, ExternalLink, Star, GitCompare, Mail, Phone, GraduationCap, Calendar, Briefcase, Globe } from "lucide-react"
 import { animate } from "animejs"
 import { RatingGroup } from "@skeletonlabs/skeleton-react"
+import { CANDIDATE_ROUND_OPTIONS, type CandidateRoundResult } from "@/lib/candidates/constants"
 import { Applicant } from "@/lib/types"
 import { Scorecard, Activity } from "../lab-types"
 import { getPosColor, getPosShort, ROUND1_BADGE, formatDate, prefersReducedMotion } from "../lab-utils"
@@ -25,7 +26,7 @@ interface ApplicantDrawerProps {
   onAddActivity: (id: string, act: Omit<Activity, "id">) => void
   isInCompare: boolean
   onToggleCompare: (id: string) => void
-  onUpdateRound1: (id: string, result: "Passed" | "Failed" | "Waiting list" | undefined) => void
+  onUpdateRound1: (id: string, result: CandidateRoundResult | undefined) => void
   onUpdateNotes: (id: string, notes: string) => void
   readOnly?: boolean
 }
@@ -228,7 +229,7 @@ function ProfileTab({
   safePortfolio,
 }: {
   applicant: Applicant
-  onUpdateRound1: (id: string, r: "Passed" | "Failed" | "Waiting list" | undefined) => void
+  onUpdateRound1: (id: string, r: CandidateRoundResult | undefined) => void
   onUpdateNotes: (id: string, n: string) => void
   safePortfolio: string | undefined
 }) {
@@ -277,7 +278,7 @@ function ProfileTab({
       {/* Round 1 */}
       <Section title="Round 1 Result">
         <div className="flex flex-wrap gap-2">
-          {[undefined, "Passed", "Failed", "Waiting list"].map(opt => {
+          {([undefined, ...CANDIDATE_ROUND_OPTIONS] as const).map(opt => {
             const isActive = a.round1Result === opt
             const badge = opt ? ROUND1_BADGE[opt] : null
             return (
@@ -285,7 +286,7 @@ function ProfileTab({
                 variant="plain"
                 size="plain"
                 key={opt ?? "none"}
-                onClick={() => onUpdateRound1(a.id, opt as "Passed" | "Failed" | "Waiting list" | undefined)}
+                onClick={() => onUpdateRound1(a.id, opt)}
                 className="h-7 cursor-pointer rounded-full border px-3 text-xs font-semibold transition-colors duration-150"
                 style={
                   isActive && badge

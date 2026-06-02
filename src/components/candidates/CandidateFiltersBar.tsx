@@ -6,16 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/select"
+import {
+  CANDIDATE_BATCH_DOT_STYLES,
+  CANDIDATE_BATCH_OPTIONS,
+  CANDIDATE_PIC_OPTIONS,
+  CANDIDATE_ROUND_OPTIONS,
+  formatCandidateBatchLabel,
+} from "@/lib/candidates/constants"
 import type { Applicant } from "@/lib/types"
-
-const BATCH_OPTIONS = [1, 2, 3] as const
-const PIC_OPTIONS = ["Quỳnh", "Nhiên", "Yến", "Minh", "Huy", "Linh"] as const
-
-const BATCH_DOT: Record<number, string> = {
-  1: "border-sky-300 bg-sky-100",
-  2: "border-violet-300 bg-violet-100",
-  3: "border-orange-300 bg-orange-100",
-}
 
 type BulkStep = "menu" | "batch" | "pic" | "delete"
 
@@ -28,8 +26,6 @@ const POSITIONS = [
   "Human Resources Intern",
   "Game Quality Assurance Intern",
 ]
-
-const RESULTS = ["Passed", "Failed", "Waiting list"]
 
 interface CandidateFiltersBarProps {
   search: string
@@ -158,9 +154,9 @@ export function CandidateFiltersBar({
   const batchOptions = useMemo<SearchableSelectOption[]>(() => {
     return [
       { value: "all", label: "All Batches", searchText: "all batches" },
-      ...[1, 2, 3].map(batch => ({
+      ...CANDIDATE_BATCH_OPTIONS.map(batch => ({
         value: String(batch),
-        label: `Batch ${batch}`,
+        label: formatCandidateBatchLabel(batch),
         disabled:
           applicants.length > 0 &&
           !applicants.some(
@@ -177,7 +173,7 @@ export function CandidateFiltersBar({
   const resultOptions = useMemo<SearchableSelectOption[]>(() => {
     return [
       { value: "all", label: "All Results", searchText: "all results" },
-      ...RESULTS.map(result => ({
+      ...CANDIDATE_ROUND_OPTIONS.map(result => ({
         value: result,
         label: result,
         disabled:
@@ -210,11 +206,7 @@ export function CandidateFiltersBar({
                   Assign PIC
                 </button>
                 <div className="bg-border my-1 h-px" />
-                <button
-                  type="button"
-                  onClick={clearBulkSelection}
-                  className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm"
-                >
+                <button type="button" onClick={clearBulkSelection} className="hover:bg-muted w-full rounded-xl px-3 py-1.5 text-left text-sm">
                   Clear selection
                 </button>
                 <button
@@ -230,15 +222,15 @@ export function CandidateFiltersBar({
               <div className="space-y-2">
                 <p className="px-1 text-xs font-semibold text-[#555555]">Set batch for {selectedCount} candidates</p>
                 <div className="space-y-0.5">
-                  {BATCH_OPTIONS.map(b => (
+                  {CANDIDATE_BATCH_OPTIONS.map(b => (
                     <button
                       key={b}
                       type="button"
                       onClick={() => setPendingBatch(b)}
                       className={`hover:bg-muted flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-sm ${pendingBatch === b ? "bg-muted font-semibold" : ""}`}
                     >
-                      <span className={`inline-block size-2 rounded-full border ${BATCH_DOT[b]}`} />
-                      Batch {b}
+                      <span className={`inline-block size-2 rounded-full border ${CANDIDATE_BATCH_DOT_STYLES[b]}`} />
+                      {formatCandidateBatchLabel(b)}
                     </button>
                   ))}
                 </div>
@@ -269,7 +261,7 @@ export function CandidateFiltersBar({
               <div className="space-y-2">
                 <p className="px-1 text-xs font-semibold text-[#555555]">Assign PIC for {selectedCount} candidates</p>
                 <div className="space-y-0.5">
-                  {PIC_OPTIONS.map(pic => (
+                  {CANDIDATE_PIC_OPTIONS.map(pic => (
                     <button
                       key={pic}
                       type="button"

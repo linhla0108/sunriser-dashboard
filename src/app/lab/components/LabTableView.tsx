@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { Eye, ChevronUp, ChevronDown, ChevronsUpDown, Plus, GitCompare } from "lucide-react"
 import { Pagination } from "@skeletonlabs/skeleton-react"
+import { CANDIDATE_ROUND_OPTIONS, type CandidateRoundResult } from "@/lib/candidates/constants"
 import { Applicant } from "@/lib/types"
 import { getPosColor, getPosShort, ROUND1_BADGE } from "../lab-utils"
 import { Button } from "@/components/ui/button"
 
-const ROUND1_OPTIONS = ["Passed", "Failed", "Waiting list"] as const
 const PAGE_SIZE = 50
 
 interface LabTableViewProps {
@@ -17,7 +17,7 @@ interface LabTableViewProps {
   onSelectAll: () => void
   onClearAll: () => void
   onOpenDetail: (a: Applicant) => void
-  onUpdateRound1: (id: string, result: "Passed" | "Failed" | "Waiting list" | undefined) => void
+  onUpdateRound1: (id: string, result: CandidateRoundResult | undefined) => void
   compareIds: string[]
   onToggleCompare: (id: string) => void
 }
@@ -244,7 +244,7 @@ export default function LabTableView({
                         >
                           — No result
                         </Button>
-                        {ROUND1_OPTIONS.map(opt => {
+                        {CANDIDATE_ROUND_OPTIONS.map(opt => {
                           const b = ROUND1_BADGE[opt]
                           return (
                             <Button

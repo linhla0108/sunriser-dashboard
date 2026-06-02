@@ -27,21 +27,21 @@ export default function WorkspaceError({ error, reset }: WorkspaceErrorProps) {
         </div>
         <h1 className="text-h1 text-foreground font-semibold">Something went wrong</h1>
         <p className="text-muted-foreground text-sm leading-6">
-          An unexpected error occurred in the workspace. Try refreshing — if the issue continues,
-          sign out and back in.
+          An unexpected error occurred in the workspace. Try refreshing — if the issue continues, sign out and back in.
         </p>
-        {error.digest ? (
-          <p className="text-muted-foreground font-mono text-xs">ref: {error.digest}</p>
-        ) : null}
+        {error.digest ? <p className="text-muted-foreground font-mono text-xs">ref: {error.digest}</p> : null}
         <div className="flex flex-col gap-2">
-          <Button
-            onClick={reset}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg"
-          >
+          <Button onClick={reset} className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg">
             <RefreshCw className="size-4" />
             Try again
           </Button>
-          <Button onClick={() => { window.location.href = "/login" }} variant="outline" className="h-11 w-full rounded-lg">
+          <Button
+            onClick={() => {
+              window.location.href = "/login"
+            }}
+            variant="outline"
+            className="h-11 w-full rounded-lg"
+          >
             <LogOut className="size-4" />
             Sign out
           </Button>

@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  getCandidateBinaryPreviewMode,
-  getCandidateFileName,
-  normalizePreviewContentType,
-} from "@/lib/candidates/filePreview"
+import { getCandidateBinaryPreviewMode, getCandidateFileName, normalizePreviewContentType } from "@/lib/candidates/filePreview"
 
 describe("file preview helpers", () => {
   it("normalizes generic binary responses from URL extensions", () => {

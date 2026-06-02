@@ -8,16 +8,16 @@ Drawer `ScheduleEntryDrawer` hiện tại có animation nhưng quá subtle (tran
 
 ## Diagnosis
 
-| Vấn đề                                                                                                       | Vị trí                                              |
-| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| Slide distance chỉ `translate-x-[2.5rem]` (40px) cho drawer rộng ~384px → ~10% width, cảm giác chỉ fade        | [src/components/ui/sheet.tsx](src/components/ui/sheet.tsx) class line 56 |
-| Duration `200ms ease-in-out` quá nhanh + easing đối xứng → robotic                                            | sheet.tsx line 56                                   |
-| Backdrop fade `200ms` opacity-0 → cùng tốc độ panel, không có depth                                           | sheet.tsx line 31                                   |
-| View ↔ Edit mode switch **không có transition** — toàn bộ content nhảy đổi                                   | ScheduleEntryDrawer.tsx                             |
-| Save button không có feedback (click → drawer đóng instant, không biết save thành công)                       | ScheduleEntryDrawer.tsx handleSave                  |
-| Delete không có confirm — click 1 phát mất luôn entry, dễ sai                                                 | ScheduleEntryDrawer.tsx handleDelete                |
-| Padding inconsistent: `space-y-4` ở edit form, `space-y-5` ở view body, `px-4` ở body nhưng header `p-4`     | ScheduleEntryDrawer.tsx                             |
-| Content open thiếu micro-motion (header/body/footer cùng appear nhanh, không có stagger)                     | ScheduleEntryDrawer.tsx                             |
+| Vấn đề                                                                                                   | Vị trí                                                                   |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Slide distance chỉ `translate-x-[2.5rem]` (40px) cho drawer rộng ~384px → ~10% width, cảm giác chỉ fade  | [src/components/ui/sheet.tsx](src/components/ui/sheet.tsx) class line 56 |
+| Duration `200ms ease-in-out` quá nhanh + easing đối xứng → robotic                                       | sheet.tsx line 56                                                        |
+| Backdrop fade `200ms` opacity-0 → cùng tốc độ panel, không có depth                                      | sheet.tsx line 31                                                        |
+| View ↔ Edit mode switch **không có transition** — toàn bộ content nhảy đổi                               | ScheduleEntryDrawer.tsx                                                  |
+| Save button không có feedback (click → drawer đóng instant, không biết save thành công)                  | ScheduleEntryDrawer.tsx handleSave                                       |
+| Delete không có confirm — click 1 phát mất luôn entry, dễ sai                                            | ScheduleEntryDrawer.tsx handleDelete                                     |
+| Padding inconsistent: `space-y-4` ở edit form, `space-y-5` ở view body, `px-4` ở body nhưng header `p-4` | ScheduleEntryDrawer.tsx                                                  |
+| Content open thiếu micro-motion (header/body/footer cùng appear nhanh, không có stagger)                 | ScheduleEntryDrawer.tsx                                                  |
 
 ## Scope
 
