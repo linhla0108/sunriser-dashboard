@@ -35,6 +35,7 @@ The preview proxy now accepts public HTTPS files beyond Typeform, blocks local/p
 Follow-up UX change: academic image, PDF, and DOCX previews now expose zoom controls with `75% / 100% / 125% / 150% / 200%` steps and a one-click reset to `100%`.
 
 Browser verification summary after the fixes:
+
 - 40 academic preview cases: `28 PDF`, `9 image`, `1 DOCX`, `2 explicit fallback` (`.rar/.zip`)
 - 10 portfolio preview cases: `5 OG-card`, `3 GitHub API previews`, `1 direct iframe/embed`, `1 fallback`
 - 3 live zoom checks passed: image, PDF, and DOCX each moved `100% -> 125% -> 100%`

@@ -150,7 +150,7 @@ export function PortfolioLinkPopover({ url, label, className }: PortfolioLinkPop
             }}
             onClick={() => openExternal(url)}
             className={cn(
-              "inline-flex size-7 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors",
+              "text-muted-foreground inline-flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors",
               "hover:bg-foreground/5 hover:text-primary",
               open && "bg-foreground/5 text-primary",
               className

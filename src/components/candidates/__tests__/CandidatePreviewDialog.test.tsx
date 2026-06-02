@@ -7,9 +7,21 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 
 vi.mock("react-pdf", () => ({
   pdfjs: { GlobalWorkerOptions: {} },
-  Document: ({ children, file, onLoadSuccess }: { children: React.ReactNode; file: string; onLoadSuccess?: (payload: { numPages: number }) => void }) => {
+  Document: ({
+    children,
+    file,
+    onLoadSuccess,
+  }: {
+    children: React.ReactNode
+    file: string
+    onLoadSuccess?: (payload: { numPages: number }) => void
+  }) => {
     queueMicrotask(() => onLoadSuccess?.({ numPages: 2 }))
-    return <div data-testid="pdf-document" data-file={file}>{children}</div>
+    return (
+      <div data-testid="pdf-document" data-file={file}>
+        {children}
+      </div>
+    )
   },
   Page: ({ pageNumber }: { pageNumber: number }) => <div>PDF page {pageNumber}</div>,
 }))
@@ -27,10 +39,13 @@ describe("CandidatePreviewDialog", () => {
 
   beforeEach(() => {
     vi.stubGlobal("open", openSpy)
-    vi.stubGlobal("ResizeObserver", class {
-      observe() {}
-      disconnect() {}
-    })
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
     Object.defineProperty(URL, "createObjectURL", {
       configurable: true,
       writable: true,
@@ -83,6 +98,56 @@ describe("CandidatePreviewDialog", () => {
     const image = await screen.findByRole("img", { name: /academic file/i })
     expect(image.getAttribute("src")).toBe("blob:preview-image")
     await waitFor(() => expect(screen.queryByText("Loading file preview...")).not.toBeInTheDocument())
+  })
+
+  it("shows a skeleton while image previews load", async () => {
+    let resolveImageFetch: (response: Response) => void = () => {}
+    const imageFetch = new Promise<Response>(resolve => {
+      resolveImageFetch = resolve
+    })
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(null, {
+          headers: {
+            "content-length": "3",
+            "content-type": "image/jpeg",
+          },
+        })
+      )
+      .mockReturnValueOnce(imageFetch)
+
+    vi.stubGlobal("fetch", fetchSpy)
+
+    render(
+      <CandidatePreviewDialog
+        title="Academic file"
+        triggerLabel="Preview academic file"
+        icon={FileText}
+        targets={[
+          {
+            label: "Academic file",
+            url: "https://api.typeform.com/responses/files/example/transcript.jpg",
+          },
+        ]}
+      />,
+      { wrapper: Providers }
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /preview academic file/i }))
+
+    expect(await screen.findByTestId("image-preview-skeleton")).toBeInTheDocument()
+    expect(screen.getByText("Loading image preview...")).toHaveClass("sr-only")
+
+    resolveImageFetch(new Response(new Blob(["img"], { type: "image/jpeg" })))
+
+    const image = await screen.findByRole("img", { name: /academic file/i })
+    expect(image).toHaveAttribute("src", "blob:preview-image")
+    expect(screen.getByTestId("image-preview-skeleton")).toBeInTheDocument()
+
+    fireEvent.load(image)
+
+    await waitFor(() => expect(screen.queryByTestId("image-preview-skeleton")).not.toBeInTheDocument())
   })
 
   it("supports zoom controls for image previews", async () => {
@@ -250,21 +315,20 @@ describe("CandidatePreviewDialog", () => {
 
     expect(await screen.findByText("This academic file cannot be previewed inline")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: /open or download file/i }))
-    expect(openSpy).toHaveBeenCalledWith(
-      "https://api.typeform.com/responses/files/example/transcript.zip",
-      "_blank",
-      "noopener,noreferrer"
-    )
+    expect(openSpy).toHaveBeenCalledWith("https://api.typeform.com/responses/files/example/transcript.zip", "_blank", "noopener,noreferrer")
   })
 })
 
 describe("DelayedTextPreview", () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.stubGlobal("ResizeObserver", class {
-      observe() {}
-      disconnect() {}
-    })
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
     // jsdom reports 0 for layout; simulate text overflow so the popover branch renders.
     Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
       configurable: true,
@@ -295,8 +359,7 @@ describe("DelayedTextPreview", () => {
   })
 
   it("opens after delay and stays open while the popup is hovered", () => {
-    const text =
-      "A much longer preview body that should stay available while the pointer moves into the popup so text can be selected."
+    const text = "A much longer preview body that should stay available while the pointer moves into the popup so text can be selected."
 
     render(<DelayedTextPreview text={text} />, {
       wrapper: Providers,

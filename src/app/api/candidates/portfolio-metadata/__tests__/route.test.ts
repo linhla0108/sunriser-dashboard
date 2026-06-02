@@ -41,9 +41,10 @@ describe("/api/candidates/portfolio-metadata", () => {
   it("returns parsed metadata for public html pages", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          `
+      vi.fn(
+        async () =>
+          new Response(
+            `
             <html>
               <head>
                 <title>Fallback title</title>
@@ -53,10 +54,10 @@ describe("/api/candidates/portfolio-metadata", () => {
               </head>
             </html>
           `,
-          {
-            headers: { "content-type": "text/html; charset=utf-8" },
-          }
-        )
+            {
+              headers: { "content-type": "text/html; charset=utf-8" },
+            }
+          )
       )
     )
 

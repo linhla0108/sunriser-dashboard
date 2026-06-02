@@ -172,11 +172,11 @@ This change restores only the small slice of metadata functionality needed for p
 
 ## Risks and mitigations
 
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Candidate table hover churn causes too many requests | Medium | Use hover delay and one-request-per-URL cache |
-| Some sites return little or no metadata | Low | Show host + fallback copy, keep click behavior primary |
-| Route can be abused for SSRF | High | Reuse blocked-host/IP logic from preview-file route and require HTTPS |
+| Risk                                                 | Impact | Mitigation                                                            |
+| ---------------------------------------------------- | ------ | --------------------------------------------------------------------- |
+| Candidate table hover churn causes too many requests | Medium | Use hover delay and one-request-per-URL cache                         |
+| Some sites return little or no metadata              | Low    | Show host + fallback copy, keep click behavior primary                |
+| Route can be abused for SSRF                         | High   | Reuse blocked-host/IP logic from preview-file route and require HTTPS |
 
 ## Verification
 
