@@ -1,5 +1,9 @@
 # Design System Reference
 
+Root `DESIGN.md` and `.impeccable/design.json` are the current source of truth for product UI design. Use this file as a quick implementation summary only.
+
+The legacy `material/` design files are archival references and should not drive new UI decisions unless a task explicitly asks to migrate or compare against them.
+
 ## Colors
 
 | Token         | Hex       | Usage                                   |
@@ -26,7 +30,7 @@
 --text-mono: 0.75rem; /* mono/code */
 ```
 
-Font: `Proxima Nova` (loaded via Cloudinary CDN in `globals.css`).
+Font: `Geist` via `next/font/google` in `src/app/layout.tsx`, exposed through `--font-sans`.
 
 ## Spacing — Compact Preference
 

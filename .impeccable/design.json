@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-03T15:03:53+07:00",
+  "title": "Design System: SUN.RISER Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Operational Canvas",
+        "canonical": "#FCFCFC",
+        "tonalRamp": [
+          "oklch(0.16 0 0)",
+          "oklch(0.28 0 0)",
+          "oklch(0.42 0 0)",
+          "oklch(0.58 0 0)",
+          "oklch(0.74 0 0)",
+          "oklch(0.88 0 0)",
+          "oklch(0.96 0 0)",
+          "#FCFCFC"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(0.16 0 0)",
+          "oklch(0.30 0 0)",
+          "oklch(0.46 0 0)",
+          "oklch(0.62 0 0)",
+          "oklch(0.78 0 0)",
+          "oklch(0.90 0 0)",
+          "oklch(0.97 0 0)",
+          "#FFFFFF"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1B1B1B",
+        "tonalRamp": [
+          "#1B1B1B",
+          "oklch(0.24 0 0)",
+          "oklch(0.36 0 0)",
+          "oklch(0.50 0 0)",
+          "oklch(0.66 0 0)",
+          "oklch(0.80 0 0)",
+          "oklch(0.90 0 0)",
+          "oklch(0.96 0 0)"
+        ]
+      },
+      "primary-orange": {
+        "role": "primary",
+        "displayName": "SUN Action Orange",
+        "canonical": "#FF5533",
+        "tonalRamp": [
+          "oklch(0.22 0.09 31)",
+          "oklch(0.34 0.13 31)",
+          "oklch(0.46 0.17 31)",
+          "oklch(0.58 0.20 31)",
+          "#FF5533",
+          "oklch(0.78 0.14 31)",
+          "oklch(0.88 0.08 31)",
+          "oklch(0.95 0.04 31)"
+        ]
+      },
+      "warm-mist": {
+        "role": "primary",
+        "displayName": "Warm Mist",
+        "canonical": "#FFDAD3",
+        "tonalRamp": [
+          "oklch(0.24 0.06 31)",
+          "oklch(0.38 0.08 31)",
+          "oklch(0.52 0.09 31)",
+          "oklch(0.66 0.08 31)",
+          "oklch(0.78 0.06 31)",
+          "#FFDAD3",
+          "oklch(0.94 0.03 31)",
+          "oklch(0.98 0.015 31)"
+        ]
+      },
+      "border-warm": {
+        "role": "neutral",
+        "displayName": "Warm Border",
+        "canonical": "#ECE7E4",
+        "tonalRamp": [
+          "oklch(0.22 0.01 40)",
+          "oklch(0.34 0.01 40)",
+          "oklch(0.48 0.01 40)",
+          "oklch(0.62 0.01 40)",
+          "oklch(0.76 0.01 40)",
+          "#ECE7E4",
+          "oklch(0.94 0.005 40)",
+          "oklch(0.98 0.003 40)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Dashboard stat values and only the largest numeric summaries."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Route titles, modal titles, and public report headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, compact panel headings, and drawer sections."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Primary UI copy, table rows, descriptions, and form copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Compact metadata, form labels, badges, and short status labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px",
+        "purpose": "Elevated dashboard metric cards and rare summary surfaces."
+      },
+      {
+        "name": "glass-panel",
+        "value": "0 24px 64px rgba(4, 23, 43, 0.12)",
+        "purpose": "Optional glass theme panels."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent)",
+        "purpose": "Keyboard focus across interactive controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-standard",
+        "value": "150ms to 250ms, cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Product state changes, drawers, selected panels, and route handoff."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "instant or crossfade",
+        "purpose": "Required fallback for non-essential animation."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary command for product actions such as create report, publish announcement, or save.",
+      "html": "<button class=\"ds-btn-primary\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span>Create report</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-lg, 0.625rem); background: var(--primary, #ff5533); color: var(--primary-foreground, #ffffff); font: 600 14px/1.2 var(--font-sans, Geist, system-ui, sans-serif); transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; } .ds-btn-primary svg { width: 16px; height: 16px; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary, #ff5533) 90%, #000 10%); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #ff5533) 45%, transparent); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Neutral secondary command for export, cancel, filter, and non-primary actions.",
+      "html": "<button class=\"ds-btn-outline\"><span>Export data</span></button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--border, #ece7e4); border-radius: var(--radius-lg, 0.625rem); background: var(--background, #ffffff); color: var(--foreground, #1b1b1b); font: 500 14px/1.2 var(--font-sans, Geist, system-ui, sans-serif); transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; } .ds-btn-outline:hover { background: var(--muted, #f9f9f9); color: var(--foreground, #1b1b1b); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #ff5533) 45%, transparent); }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Compact form and filter input used across auth, settings, candidates, and announcements.",
+      "html": "<label class=\"ds-field\"><span>Email</span><input class=\"ds-input\" placeholder=\"name@sunriser.com\" /></label>",
+      "css": ".ds-field { display: grid; gap: 8px; color: var(--foreground, #1b1b1b); font: 500 14px/1.2 var(--font-sans, Geist, system-ui, sans-serif); } .ds-input { height: 32px; min-width: 0; border: 1px solid var(--input, #ece7e4); border-radius: var(--radius-lg, 0.625rem); background: transparent; color: var(--foreground, #1b1b1b); padding: 4px 10px; font: 400 14px/1.4 var(--font-sans, Geist, system-ui, sans-serif); transition: border-color 160ms ease, box-shadow 160ms ease; } .ds-input::placeholder { color: var(--muted-foreground, #767676); } .ds-input:focus-visible { outline: none; border-color: var(--ring, #ff5533); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #ff5533) 45%, transparent); }"
+    },
+    {
+      "name": "Metric Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Elevated summary card for dashboard metrics and high-level status only.",
+      "html": "<article class=\"ds-metric-card\"><span class=\"ds-metric-label\">Total applicants</span><strong class=\"ds-metric-value\">646</strong><span class=\"ds-metric-note\">Across 3 batches</span></article>",
+      "css": ".ds-metric-card { display: flex; flex-direction: column; gap: 12px; border-radius: var(--radius-3xl, 1.375rem); background: var(--card, #ffffff); color: var(--card-foreground, #1b1b1b); padding: 12px; box-shadow: rgba(4, 23, 43, 0.05) 0 0 0 1px, rgba(0, 0, 0, 0.1) 0 20px 25px -5px, rgba(0, 0, 0, 0.1) 0 8px 10px -6px; } .ds-metric-label { color: #6b5549; font: 700 11px/1.2 var(--font-sans, Geist, system-ui, sans-serif); letter-spacing: 0.08em; text-transform: uppercase; } .ds-metric-value { color: var(--foreground, #1b1b1b); font: 700 36px/1 var(--font-sans, Geist, system-ui, sans-serif); } .ds-metric-note { color: #6b5549; font: 400 12px/1.4 var(--font-sans, Geist, system-ui, sans-serif); }"
+    },
+    {
+      "name": "Primary Badge",
+      "kind": "chip",
+      "refersTo": "badge-primary",
+      "description": "Compact pill for counts, roles, statuses, and unread markers.",
+      "html": "<span class=\"ds-badge-primary\">3 selected</span>",
+      "css": ".ds-badge-primary { display: inline-flex; align-items: center; justify-content: center; height: 20px; width: fit-content; padding: 2px 8px; border-radius: 9999px; background: var(--primary, #ff5533); color: var(--primary-foreground, #ffffff); font: 600 12px/1 var(--font-sans, Geist, system-ui, sans-serif); white-space: nowrap; }"
+    },
+    {
+      "name": "Sidebar Menu Item",
+      "kind": "nav",
+      "refersTo": "sidebar-menu-active",
+      "description": "Compact left navigation item with icon, label, hover, and active state.",
+      "html": "<a class=\"ds-sidebar-item ds-sidebar-item-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 5h16M4 12h16M4 19h16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span>Candidates</span></a>",
+      "css": ".ds-sidebar-item { display: flex; align-items: center; gap: 12px; height: 32px; width: 100%; padding: 8px; border-radius: var(--radius-md, 0.5rem); color: var(--sidebar-foreground, #1b1b1b); background: transparent; text-decoration: none; font: 500 14px/1.2 var(--font-sans, Geist, system-ui, sans-serif); transition: background-color 160ms ease, color 160ms ease; } .ds-sidebar-item svg { width: 18px; height: 18px; flex: none; } .ds-sidebar-item:hover, .ds-sidebar-item-active { background: var(--sidebar-accent, #fff1ed); color: var(--sidebar-accent-foreground, #8d1600); } .ds-sidebar-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--sidebar-ring, #ff5533); }"
+    },
+    {
+      "name": "Segmented Tabs",
+      "kind": "custom",
+      "refersTo": "tabs-active",
+      "description": "Compact segmented control for settings sections, filters, and view modes.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab ds-tab-active\" role=\"tab\">Unread</button><button class=\"ds-tab\" role=\"tab\">Pinned</button><button class=\"ds-tab\" role=\"tab\">All</button></div>",
+      "css": ".ds-tabs { display: inline-flex; align-items: center; justify-content: center; height: 32px; width: fit-content; padding: 3px; border-radius: var(--radius-lg, 0.625rem); background: var(--muted, #f9f9f9); color: var(--muted-foreground, #555555); } .ds-tab { height: 26px; border: 1px solid transparent; border-radius: var(--radius-md, 0.5rem); background: transparent; color: color-mix(in srgb, var(--foreground, #1b1b1b) 60%, transparent); padding: 0 8px; font: 500 14px/1 var(--font-sans, Geist, system-ui, sans-serif); transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; } .ds-tab:hover { color: var(--foreground, #1b1b1b); } .ds-tab-active { background: var(--background, #ffffff); color: var(--foreground, #1b1b1b); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); } .ds-tab:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #ff5533) 45%, transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Operations Desk",
+    "overview": "SUN.RISER Dashboard is a product UI system for daily recruitment work. It uses a restrained light canvas, high-contrast ink, and a rare SUN orange accent to keep candidate review, scheduling, announcements, and admin work clear under repeated use.\n\nThe current identity is this Impeccable design system: Geist-backed, compact, shadcn-first, and task-focused. DESIGN.md, .impeccable/design.json, src/app/globals.css, src/styles/themes.css, and shared primitives in src/components/ui/ are the current source of visual truth. The legacy material/ design files are archival references only and should not drive new UI decisions.\n\nThis system rejects landing-page drama, generic SaaS decoration, heavy glass effects, and novelty controls. The product should feel calm around sensitive candidate data while still carrying enough warmth to belong to SUN Studio.",
+    "keyCharacteristics": [
+      "Light canvas with restrained contrast layers.",
+      "SUN orange for primary actions, selection, focus, and status emphasis.",
+      "Compact density for tables, filters, drawers, and admin flows.",
+      "Familiar shadcn primitives with lucide icons and Base UI behavior.",
+      "Motion used for state feedback, not page choreography.",
+      "Optional glass themes exist as appearance modes, not the baseline identity."
+    ],
+    "rules": [
+      {
+        "name": "The Orange Rarity Rule",
+        "body": "SUN orange is for action, current selection, and state. If it is used as decoration, remove it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mock Boundary Rule",
+        "body": "Use neutral or informational treatments when data is mock, local, or device-bound. Do not use confident success styling for temporary client state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glass Is Optional Rule",
+        "body": "Glass orange and glass blue are theme variants. The default design language is solid, readable, and restrained.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Product UI uses Geist across headings, buttons, labels, and data. Do not introduce display fonts into workspace controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The Compact Heading Rule",
+        "body": "Product headings stay fixed-size and readable. Do not use fluid hero typography inside workspace surfaces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Vietnamese Name Rule",
+        "body": "Names, universities, roles, and candidate messages may be long and multilingual. Layout must truncate or wrap intentionally.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border Before Shadow Rule",
+        "body": "In dense product UI, start with a warm border or tonal background. Add shadow only when depth changes the user's understanding.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Ghost Stack Rule",
+        "body": "Do not pair a decorative 1px border with a wide soft shadow on ordinary cards or buttons.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use #FF5533 for primary actions, selected states, active controls, progress, and state emphasis.",
+      "Do use #FCFCFC and #FFFFFF as the default workspace canvas and surface pair.",
+      "Do use #1B1B1B for primary text and keep muted text at readable contrast.",
+      "Do use shared src/components/ui/ primitives for buttons, inputs, checkboxes, dialogs, tabs, tables, tooltips, sidebars, and popovers.",
+      "Do keep workspace spacing compact: page padding around 12px to 24px, card padding around 12px to 16px, and section gaps around 16px.",
+      "Do show mock, local, pending, syncing, and permission states explicitly.",
+      "Do preserve Vietnamese text, long names, long URLs, and mixed-language candidate messages without overflow.",
+      "Do use lucide icons inside icon buttons and action buttons when an icon clarifies the command."
+    ],
+    "donts": [
+      "Don't treat the workspace like a landing page, campaign page, or SaaS marketing dashboard.",
+      "Don't use oversized hero layouts, promotional stat blocks, or decorative feature-card grids in product surfaces.",
+      "Don't use gradient text, colored side-stripe card accents, decorative stripe backgrounds, or generic AI dashboard ornament.",
+      "Don't make glassmorphism the default visual language. Existing glass themes are optional appearance modes, not the baseline product identity.",
+      "Don't overplay the game-industry context with playful UI if it slows candidate review.",
+      "Don't drift into dark terminal, finance cockpit, or heavy enterprise admin aesthetics unless a specific workflow requires it.",
+      "Don't invent unfamiliar controls for standard actions like filtering, sorting, selecting rows, editing records, opening details, or confirming destructive actions.",
+      "Don't imply that mock, local, or device-bound data is durable server data.",
+      "Don't introduce new font families into product controls.",
+      "Don't use display-scale typography inside compact dashboard cards, settings panels, drawers, or table controls.",
+      "Don't pair a decorative 1px border with a wide soft shadow on ordinary product containers."
+    ]
+  }
+}
