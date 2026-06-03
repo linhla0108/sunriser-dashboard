@@ -20,6 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **@dnd-kit**, **Recharts**, **lucide-react**, **sonner**, **cmdk**, **animejs**
 - **Vitest** for unit, **Playwright** for e2e
 
+## Mandatory workflow
+
+For any non-trivial code question, use CodeGraph first. Direct file reads are fallback, not the default.
+
 ## UI Primitive Rule
 
 - Prefer shared `shadcn/ui` primitives from `src/components/ui/` over raw HTML controls whenever an equivalent exists.
