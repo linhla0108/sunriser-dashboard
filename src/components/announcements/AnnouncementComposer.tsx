@@ -1,7 +1,7 @@
 "use client"
 
 import type { Dispatch, FormEvent, RefObject, SetStateAction } from "react"
-import { AtSign, ChevronDown, FileUp, Paperclip, UploadCloud, X } from "lucide-react"
+import { AtSign, FileUp, Paperclip, UploadCloud, X } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -20,10 +20,8 @@ interface AnnouncementComposerProps {
   activeMention: MentionMatch | null
   activeMentionIndex: number
   attachmentDragActive: boolean
-  attachmentsOpen: boolean
   body: string
   bodyRef: RefObject<HTMLTextAreaElement | null>
-  editingId: string | null
   fileInputRef: RefObject<HTMLInputElement | null>
   files: File[]
   filteredMentionCandidates: MentionCandidate[]
@@ -33,13 +31,11 @@ interface AnnouncementComposerProps {
   saving: boolean
   title: string
   windowState: AnnouncementWindowState
-  onCancelEdit: () => void
   onMentionSelect: (candidate: MentionCandidate) => void
   onQueueFiles: (incoming: File[]) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   setActiveMention: Dispatch<SetStateAction<MentionMatch | null>>
   setActiveMentionIndex: Dispatch<SetStateAction<number>>
-  setAttachmentsOpen: Dispatch<SetStateAction<boolean>>
   setBody: Dispatch<SetStateAction<string>>
   setFiles: Dispatch<SetStateAction<File[]>>
   setPinned: Dispatch<SetStateAction<boolean>>
@@ -53,10 +49,8 @@ export function AnnouncementComposer({
   activeMention,
   activeMentionIndex,
   attachmentDragActive,
-  attachmentsOpen,
   body,
   bodyRef,
-  editingId,
   fileInputRef,
   files,
   filteredMentionCandidates,
@@ -66,13 +60,11 @@ export function AnnouncementComposer({
   saving,
   title,
   windowState,
-  onCancelEdit,
   onMentionSelect,
   onQueueFiles,
   onSubmit,
   setActiveMention,
   setActiveMentionIndex,
-  setAttachmentsOpen,
   setBody,
   setFiles,
   setPinned,
@@ -82,9 +74,8 @@ export function AnnouncementComposer({
   syncMentionState,
 }: AnnouncementComposerProps) {
   return (
-    <section className="border-foreground/10 rounded-2xl border p-4">
-      <h2 className="text-base font-semibold">{editingId ? "Edit announcement" : "New announcement"}</h2>
-      <form className="mt-4 space-y-4" onSubmit={onSubmit}>
+    <div>
+      <form className="space-y-4" onSubmit={onSubmit}>
         <div className="space-y-1.5">
           <Label htmlFor="announcement-title">Title</Label>
           <Input
@@ -195,13 +186,15 @@ export function AnnouncementComposer({
                     role="radio"
                     aria-checked={priority === option}
                     className={cn(
-                      "h-auto items-start justify-start rounded-2xl px-3 py-3 text-left",
-                      priority === option ? "shadow-sm" : "text-foreground"
+                      "h-auto items-center justify-start rounded-2xl px-3 py-3 text-left transition-colors",
+                      priority === option ? optionUi.selectedClassName : "text-foreground"
                     )}
                     onClick={() => setPriority(option)}
                   >
-                    <div className="flex items-start gap-2">
-                      <Icon className="mt-0.5 size-4" />
+                    <div className="flex items-center gap-3">
+                      <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", optionUi.iconClassName)}>
+                        <Icon className="size-5" />
+                      </span>
                       <div>
                         <div className="font-medium">{optionUi.label}</div>
                         <div className={cn("text-xs", priority === option ? "text-primary-foreground/80" : "text-muted-foreground")}>
@@ -216,13 +209,13 @@ export function AnnouncementComposer({
           </div>
 
           <div className="flex w-full flex-col gap-2">
-            <Label htmlFor="announcement-active-window">Active window</Label>
+            <Label htmlFor="announcement-active-window">Thời gian chiến dịch</Label>
             <DateTimeRangePicker
               id="announcement-active-window"
               value={windowState}
               onChange={setWindowState}
               onClear={() => setWindowState(emptyAnnouncementWindowState())}
-              placeholder="Set active window"
+              placeholder="Chọn thời gian chiến dịch"
             />
           </div>
         </div>
@@ -245,94 +238,83 @@ export function AnnouncementComposer({
                 Drag files anywhere in this tab or browse to queue supporting documents for this announcement.
               </p>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => setAttachmentsOpen(open => !open)}>
-              {files.length > 0 ? `${files.length} queued` : "Optional"}
-              <ChevronDown className={cn("size-4 transition-transform", attachmentsOpen ? "rotate-180" : "")} />
-            </Button>
           </div>
 
-          {attachmentsOpen ? (
-            <div className="space-y-3">
-              <Button
-                type="button"
-                variant="plain"
-                size="plain"
-                className={cn(
-                  "border-border bg-muted/30 hover:bg-muted/50 flex w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-6 text-center transition-colors",
-                  attachmentDragActive && "border-primary bg-primary/5"
-                )}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <UploadCloud className="mb-2 size-5" />
-                <div className="font-medium">Drop attachments here</div>
-                <div className="text-muted-foreground mt-1 text-xs">PDF, DOCX, XLSX, PNG, JPG. Maximum 10 MB per file.</div>
-              </Button>
-
-              <Input
-                ref={fileInputRef}
-                id="announcement-files"
-                type="file"
-                multiple
-                accept={formatAttachmentAcceptValue()}
-                className="hidden"
-                onChange={event => {
-                  onQueueFiles(Array.from(event.target.files ?? []))
-                  event.target.value = ""
-                }}
-              />
-
-              {files.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="text-muted-foreground flex items-center justify-between text-xs">
-                    <span>
-                      {files.length} file{files.length === 1 ? "" : "s"} ready to upload
-                    </span>
-                    <span>{queuedAttachmentSizeLabel}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {files.map((file, index) => (
-                      <div
-                        key={`${file.name}:${file.size}:${file.lastModified}`}
-                        className="bg-background flex items-center justify-between gap-3 rounded-xl border px-3 py-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{file.name}</div>
-                          <div className="text-muted-foreground text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Remove ${file.name}`}
-                          onClick={() => setFiles(current => current.filter((_, currentIndex) => currentIndex !== index))}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-muted-foreground flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-xs">
-                  <FileUp className="size-4" />
-                  Drag files into this tab and they will be queued here instead of opening the old upload sheet.
-                </div>
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="plain"
+              size="plain"
+              className={cn(
+                "border-border bg-muted/30 hover:bg-muted/50 flex w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-6 text-center transition-colors",
+                attachmentDragActive && "border-primary bg-primary/5"
               )}
-            </div>
-          ) : null}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadCloud className="mb-2 size-5" />
+              <div className="font-medium">Drop attachments here</div>
+              <div className="text-muted-foreground mt-1 text-xs">PDF, DOCX, XLSX, PNG, JPG. Maximum 10 MB per file.</div>
+            </Button>
+
+            <Input
+              ref={fileInputRef}
+              id="announcement-files"
+              type="file"
+              multiple
+              accept={formatAttachmentAcceptValue()}
+              className="hidden"
+              onChange={event => {
+                onQueueFiles(Array.from(event.target.files ?? []))
+                event.target.value = ""
+              }}
+            />
+
+            {files.length > 0 ? (
+              <div className="space-y-2">
+                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                  <span>
+                    {files.length} file{files.length === 1 ? "" : "s"} ready to upload
+                  </span>
+                  <span>{queuedAttachmentSizeLabel}</span>
+                </div>
+                <div className="space-y-2">
+                  {files.map((file, index) => (
+                    <div
+                      key={`${file.name}:${file.size}:${file.lastModified}`}
+                      className="bg-background flex items-center justify-between gap-3 rounded-xl border px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{file.name}</div>
+                        <div className="text-muted-foreground text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Remove ${file.name}`}
+                        onClick={() => setFiles(current => current.filter((_, currentIndex) => currentIndex !== index))}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-xs">
+                <FileUp className="size-4" />
+                Drag files into this tab and they will be queued here instead of opening the old upload sheet.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving..." : editingId ? "Save changes" : "Publish announcement"}
+            {saving ? "Saving..." : "Publish announcement"}
           </Button>
-          {editingId ? (
-            <Button type="button" variant="outline" onClick={onCancelEdit} disabled={saving}>
-              Cancel edit
-            </Button>
-          ) : null}
         </div>
       </form>
-    </section>
+    </div>
   )
 }

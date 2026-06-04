@@ -17,6 +17,8 @@ const baseAnnouncement = {
 
 describe("AnnouncementInbox", () => {
   it("keeps the create action visible for publishers when the inbox is empty", () => {
+    const onCreate = vi.fn()
+
     render(
       <AnnouncementInbox
         announcements={[]}
@@ -24,12 +26,33 @@ describe("AnnouncementInbox", () => {
         error={null}
         canManageAnnouncements={true}
         onMarkRead={vi.fn()}
+        onCreate={onCreate}
         onOpenAttachment={vi.fn()}
       />
     )
 
-    expect(screen.getByRole("link", { name: /create/i })).toHaveAttribute("href", "/admin/announcements")
+    expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument()
     expect(screen.getByText("No announcements yet.")).toBeInTheDocument()
+  })
+
+  it("opens the create flow from the publisher action", async () => {
+    const onCreate = vi.fn()
+
+    render(
+      <AnnouncementInbox
+        announcements={[]}
+        loading={false}
+        error={null}
+        canManageAnnouncements={true}
+        onMarkRead={vi.fn()}
+        onCreate={onCreate}
+        onOpenAttachment={vi.fn()}
+      />
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /create/i }))
+
+    expect(onCreate).toHaveBeenCalledTimes(1)
   })
 
   it("does not render the create action for non-publishers", () => {
@@ -40,11 +63,12 @@ describe("AnnouncementInbox", () => {
         error={null}
         canManageAnnouncements={false}
         onMarkRead={vi.fn()}
+        onCreate={vi.fn()}
         onOpenAttachment={vi.fn()}
       />
     )
 
-    expect(screen.queryByRole("link", { name: /create/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /create/i })).not.toBeInTheDocument()
   })
 
   it("renders pinned announcements ahead of the inbox list", () => {
@@ -72,6 +96,7 @@ describe("AnnouncementInbox", () => {
         error={null}
         canManageAnnouncements={false}
         onMarkRead={vi.fn()}
+        onCreate={vi.fn()}
         onOpenAttachment={vi.fn()}
       />
     )
@@ -99,6 +124,7 @@ describe("AnnouncementInbox", () => {
         error={null}
         canManageAnnouncements={false}
         onMarkRead={onMarkRead}
+        onCreate={vi.fn()}
         onOpenAttachment={vi.fn()}
       />
     )

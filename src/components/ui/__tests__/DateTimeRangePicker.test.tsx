@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { useState } from "react"
 import { describe, expect, it, vi } from "vitest"
 import type { DateRange } from "react-day-picker"
 
@@ -15,8 +16,9 @@ vi.mock("@/components/ui/popover", () => ({
 }))
 
 vi.mock("@/components/ui/calendar", () => ({
-  Calendar: ({ onSelect }: { onSelect?: (range: DateRange | undefined) => void }) => (
+  Calendar: ({ numberOfMonths, onSelect }: { numberOfMonths?: number; onSelect?: (range: DateRange | undefined) => void }) => (
     <div data-testid="range-calendar">
+      <div>Months {numberOfMonths}</div>
       <button type="button" onClick={() => onSelect?.({ from: rangeStart, to: rangeEnd })}>
         Select full range
       </button>
@@ -37,11 +39,32 @@ function emptyValue(): DateTimeRangeValue {
   }
 }
 
+function ControlledDateTimeRangePicker({
+  initialValue,
+  onChange,
+}: {
+  initialValue: DateTimeRangeValue
+  onChange: (value: DateTimeRangeValue) => void
+}) {
+  const [value, setValue] = useState(initialValue)
+
+  return (
+    <DateTimeRangePicker
+      value={value}
+      onChange={nextValue => {
+        setValue(nextValue)
+        onChange(nextValue)
+      }}
+    />
+  )
+}
+
 describe("DateTimeRangePicker", () => {
   it("summarizes empty, open-ended, and complete ranges", () => {
-    const { rerender } = render(<DateTimeRangePicker value={emptyValue()} onChange={vi.fn()} placeholder="Set active window" />)
+    const { rerender } = render(<DateTimeRangePicker value={emptyValue()} onChange={vi.fn()} />)
 
-    expect(screen.getByRole("button", { name: /Set active window/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Chọn thời gian chiến dịch/i })).toBeInTheDocument()
+    expect(screen.getByText("Months 2")).toBeInTheDocument()
 
     rerender(
       <DateTimeRangePicker
@@ -93,8 +116,8 @@ describe("DateTimeRangePicker", () => {
     const onChange = vi.fn()
 
     render(
-      <DateTimeRangePicker
-        value={{
+      <ControlledDateTimeRangePicker
+        initialValue={{
           startsAt: { date: rangeStart, time: "" },
           endsAt: { date: rangeEnd, time: "17:00" },
         }}
@@ -108,9 +131,10 @@ describe("DateTimeRangePicker", () => {
       endsAt: { date: rangeEnd, time: "17:00" },
     })
 
-    fireEvent.change(screen.getByLabelText("Ends exact time"), { target: { value: "18:30" } })
+    await user.click(screen.getByRole("button", { name: "Ends hour 18" }))
+    await user.click(screen.getByRole("button", { name: "Ends minute 30" }))
     expect(onChange).toHaveBeenLastCalledWith({
-      startsAt: { date: rangeStart, time: "" },
+      startsAt: { date: rangeStart, time: "09:00" },
       endsAt: { date: rangeEnd, time: "18:30" },
     })
   })
@@ -137,7 +161,7 @@ describe("DateTimeRangePicker", () => {
       endsAt: { date: rangeEnd, time: "17:00" },
     })
 
-    await user.click(screen.getByRole("button", { name: "Clear active window" }))
+    await user.click(screen.getByRole("button", { name: "Xóa thời gian chiến dịch" }))
     expect(onClear).toHaveBeenCalledTimes(1)
   })
 })

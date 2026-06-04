@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { AnnouncementDetailDialog } from "@/components/announcements/AnnouncementDetailDialog"
+import { AnnouncementCreateDialog } from "@/components/announcements/AnnouncementCreateDialog"
 import { AnnouncementInbox } from "@/components/announcements/AnnouncementInbox"
 import { useAnnouncements } from "@/lib/announcements/AnnouncementProvider"
 import { getAnnouncementAttachmentUrl } from "@/lib/announcements/client"
@@ -13,6 +14,7 @@ export default function AnnouncementsPage() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [createOpen, setCreateOpen] = useState(false)
   const selectedAnnouncementId = searchParams.get("announcement")
   const selectedAnnouncement = useMemo(
     () => announcements.find(announcement => announcement.id === selectedAnnouncementId) ?? null,
@@ -42,8 +44,10 @@ export default function AnnouncementsPage() {
             toast.error(err instanceof Error ? err.message : "Failed to mark announcement as read")
           })
         }}
+        onCreate={() => setCreateOpen(true)}
         onOpenAttachment={openAttachment}
       />
+      <AnnouncementCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
       <AnnouncementDetailDialog
         announcement={selectedAnnouncement}
         open={selectedAnnouncement !== null}

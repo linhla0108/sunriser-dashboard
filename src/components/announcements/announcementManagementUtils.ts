@@ -9,23 +9,34 @@ export const PRIORITY_UI = {
     label: "Low",
     description: "General context or updates",
     icon: CircleDot,
+    iconClassName: "bg-muted text-muted-foreground",
+    selectedClassName: "border-muted-foreground/30 bg-muted text-foreground shadow-sm",
   },
   normal: {
     label: "Normal",
     description: "Standard team communication",
     icon: Flag,
+    iconClassName: "bg-primary/10 text-primary",
+    selectedClassName: "border-primary bg-primary text-primary-foreground shadow-sm",
   },
   high: {
     label: "High",
     description: "Action needed soon",
     icon: AtSign,
+    iconClassName: "bg-amber-100 text-amber-700",
+    selectedClassName: "border-amber-500 bg-amber-500 text-white shadow-sm",
   },
   urgent: {
     label: "Urgent",
     description: "Immediate attention required",
     icon: Siren,
+    iconClassName: "bg-destructive/10 text-destructive",
+    selectedClassName: "border-destructive bg-destructive text-destructive-foreground shadow-sm",
   },
-} satisfies Record<AnnouncementPriority, { label: string; description: string; icon: typeof CircleDot }>
+} satisfies Record<
+  AnnouncementPriority,
+  { label: string; description: string; icon: typeof CircleDot; iconClassName: string; selectedClassName: string }
+>
 
 export interface DateTimeParts {
   date: Date | undefined

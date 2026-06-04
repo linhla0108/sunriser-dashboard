@@ -1,13 +1,11 @@
 "use client"
 
 import { Download, Megaphone, PinIcon, Plus } from "lucide-react"
-import Link from "next/link"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatAnnouncementDateRange } from "@/lib/announcements/presentation"
 import type { AnnouncementSummary } from "@/lib/announcements/types"
-import { cn } from "@/lib/utils"
 import { AnnouncementPriorityBadge } from "./AnnouncementPriorityBadge"
 
 function formatDateTime(value: string) {
@@ -23,6 +21,7 @@ export function AnnouncementInbox({
   error,
   canManageAnnouncements,
   onMarkRead,
+  onCreate,
   onOpenAttachment,
 }: {
   announcements: AnnouncementSummary[]
@@ -30,6 +29,7 @@ export function AnnouncementInbox({
   error: string | null
   canManageAnnouncements: boolean
   onMarkRead: (announcementId: string) => void
+  onCreate: () => void
   onOpenAttachment: (attachmentId: string) => void
 }) {
   const pinned = announcements.filter(announcement => announcement.pinned)
@@ -38,13 +38,13 @@ export function AnnouncementInbox({
     <div className="mb-4 flex items-start justify-between gap-3">
       <div>
         <h1 className="text-xl font-semibold">Announcements</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Pinned items stay at the top. Active windows are informational only.</p>
+        <p className="text-muted-foreground mt-1 text-sm">Pinned items stay at the top. Campaign schedules control visibility.</p>
       </div>
       {canManageAnnouncements ? (
-        <Link href="/admin/announcements" className={cn(buttonVariants({ variant: "outline" }))}>
+        <Button type="button" variant="outline" onClick={onCreate}>
           <Plus className="size-4" />
           Create
-        </Link>
+        </Button>
       ) : null}
     </div>
   )

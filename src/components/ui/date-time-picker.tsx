@@ -7,7 +7,6 @@ import type { DateRange } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
@@ -25,6 +24,8 @@ type DateTimeRangeValue = {
 
 const EMPTY_PART: DateTimeParts = { date: undefined, time: "" }
 const TIME_PRESETS = ["09:00", "12:00", "17:00"] as const
+const HOURS = Array.from({ length: 24 }, (_, index) => index.toString().padStart(2, "0"))
+const MINUTES = Array.from({ length: 12 }, (_, index) => (index * 5).toString().padStart(2, "0"))
 
 function formatRangePart(part: DateTimeParts) {
   const dateLabel = part.date ? format(part.date, "MMM d") : ""
@@ -50,7 +51,7 @@ function DateTimeRangePicker({
   value,
   onChange,
   onClear,
-  placeholder = "Set active window",
+  placeholder = "Chọn thời gian chiến dịch",
   className,
 }: {
   id?: string
@@ -113,8 +114,8 @@ function DateTimeRangePicker({
       />
       <PopoverContent className="w-[min(calc(100vw-2rem),680px)] rounded-3xl p-0" align="start" sideOffset={8}>
         <div className="flex flex-col gap-3 p-3 md:flex-row">
-          <div className="bg-background rounded-2xl border p-2">
-            <Calendar mode="range" selected={{ from: value.startsAt.date, to: value.endsAt.date }} onSelect={updateRange} numberOfMonths={1} />
+          <div className="bg-background overflow-x-auto rounded-2xl border p-2">
+            <Calendar mode="range" selected={{ from: value.startsAt.date, to: value.endsAt.date }} onSelect={updateRange} numberOfMonths={2} />
           </div>
 
           <Separator className="md:hidden" />
@@ -124,14 +125,13 @@ function DateTimeRangePicker({
               <div className="flex items-center gap-2">
                 <CalendarIcon className="text-primary size-4" />
                 <div>
-                  <div className="text-sm font-medium">Active window</div>
+                  <div className="text-sm font-medium">Thời gian chiến dịch</div>
                   <p className="text-muted-foreground text-xs">Pick dates together, then tune each time.</p>
                 </div>
               </div>
             </div>
 
             <DateTimeRangeSide
-              id={`${id ?? "date-time-range"}-starts-at`}
               label="Starts"
               part={value.startsAt}
               onChange={part => updateSide("startsAt", part)}
@@ -139,7 +139,6 @@ function DateTimeRangePicker({
             />
 
             <DateTimeRangeSide
-              id={`${id ?? "date-time-range"}-ends-at`}
               label="Ends"
               part={value.endsAt}
               onChange={part => updateSide("endsAt", part)}
@@ -150,7 +149,7 @@ function DateTimeRangePicker({
 
             <Button type="button" variant="ghost" size="sm" className="w-full justify-center rounded-full" onClick={clearAll} disabled={!hasValue}>
               <XIcon className="size-4" />
-              Clear active window
+              Xóa thời gian chiến dịch
             </Button>
           </div>
         </div>
@@ -160,18 +159,22 @@ function DateTimeRangePicker({
 }
 
 function DateTimeRangeSide({
-  id,
   label,
   part,
   onChange,
   onClear,
 }: {
-  id: string
   label: "Starts" | "Ends"
   part: DateTimeParts
   onChange: (part: DateTimeParts) => void
   onClear: () => void
 }) {
+  const [selectedHour = "", selectedMinute = ""] = part.time.split(":")
+
+  function updateTime(nextHour: string, nextMinute: string) {
+    onChange({ ...part, time: `${nextHour}:${nextMinute}` })
+  }
+
   function setNow() {
     const now = new Date()
     onChange({ date: now, time: format(now, "HH:mm") })
@@ -181,9 +184,7 @@ function DateTimeRangeSide({
     <div className="bg-muted/20 space-y-2 rounded-2xl border p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Label htmlFor={`${id}-time`} className="text-sm">
-            {label}
-          </Label>
+          <Label className="text-sm">{label}</Label>
           <div className="text-muted-foreground text-xs">{formatRangePart(part) || "No date or time set"}</div>
         </div>
         <Button
@@ -218,14 +219,44 @@ function DateTimeRangeSide({
         ))}
       </div>
 
-      <Input
-        id={`${id}-time`}
-        type="time"
-        value={part.time}
-        onChange={event => onChange({ ...part, time: event.target.value })}
-        className="bg-background rounded-2xl"
-        aria-label={`${label} exact time`}
-      />
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.72fr)]">
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground text-xs font-medium">Hour</div>
+          <div className="grid grid-cols-6 gap-1">
+            {HOURS.map(hour => (
+              <Button
+                key={hour}
+                type="button"
+                variant={selectedHour === hour ? "default" : "outline"}
+                size="xs"
+                className="h-8 rounded-xl px-0 tabular-nums"
+                onClick={() => updateTime(hour, selectedMinute || "00")}
+                aria-label={`${label} hour ${hour}`}
+              >
+                {hour}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground text-xs font-medium">Minute</div>
+          <div className="grid grid-cols-4 gap-1">
+            {MINUTES.map(minute => (
+              <Button
+                key={minute}
+                type="button"
+                variant={selectedMinute === minute ? "default" : "outline"}
+                size="xs"
+                className="h-8 rounded-xl px-0 tabular-nums"
+                onClick={() => updateTime(selectedHour || "09", minute)}
+                aria-label={`${label} minute ${minute}`}
+              >
+                {minute}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

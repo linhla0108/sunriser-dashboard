@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Bell, CheckCheck, Copy, ExternalLink, Link2, PinIcon } from "lucide-react"
+import { Bell, CheckCheck, Copy, ExternalLink, Inbox, Link2, PinIcon } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ActionTooltip } from "@/components/common/ActionTooltip"
@@ -88,10 +89,23 @@ export function AnnouncementCenter() {
                   </div>
                 ) : null}
               </div>
-              {unreadCount > 0 ? <Badge>{unreadCount}</Badge> : null}
+              <ActionTooltip label="Open announcements page">
+                <Link
+                  href="/announcements"
+                  aria-label="Open announcements page"
+                  className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground inline-flex size-8 items-center justify-center rounded-lg transition"
+                  onClick={() => setPopoverOpen(false)}
+                >
+                  <Inbox className="size-4" />
+                </Link>
+              </ActionTooltip>
             </div>
 
-            <SegmentedControl.Root value={activeTab} onValueChange={value => setActiveTab(value as AnnouncementCenterTab)} className="mt-3 w-full">
+            <SegmentedControl.Root
+              value={activeTab}
+              onValueChange={value => setActiveTab(value as AnnouncementCenterTab)}
+              className="mt-3 w-full p-1"
+            >
               {TAB_CONFIG.map(tab => (
                 <SegmentedControl.Item key={tab.value} value={tab.value}>
                   {tab.label}
@@ -109,9 +123,7 @@ export function AnnouncementCenter() {
                   {error}
                 </div>
               ) : filteredAnnouncements.length === 0 ? (
-                <div className="text-muted-foreground rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
-                  No announcements in this tab.
-                </div>
+                <div className="bg-muted/40 text-muted-foreground rounded-2xl px-4 py-8 text-center text-sm">No announcements in this tab.</div>
               ) : (
                 filteredAnnouncements.map(announcement => (
                   <AnnouncementCenterItem
@@ -194,7 +206,6 @@ function AnnouncementCenterItem({
               </div>
               <div className="text-muted-foreground mt-2 text-xs leading-5">{formatAnnouncementDateRange(announcement)}</div>
             </div>
-            {unread ? <span className="bg-primary mt-1 size-2 shrink-0 rounded-full" aria-hidden="true" /> : null}
           </div>
         </Button>
       </ContextMenuTrigger>

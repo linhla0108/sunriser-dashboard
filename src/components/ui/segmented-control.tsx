@@ -7,17 +7,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const segmentedControlRootVariants = cva(
-  "border-primary/15 bg-primary/10 inline-flex w-fit items-center rounded-full border p-1 text-muted-foreground",
+  "bg-muted text-muted-foreground inline-flex w-fit items-center gap-0.5 rounded-full p-0.5 ring-1 ring-border/60",
   {
     variants: {
       size: {
-        "1": "h-8",
-        "2": "h-9",
-        "3": "h-10",
+        "1": "h-7",
+        "2": "h-8",
+        "3": "h-9",
       },
       variant: {
         surface: "",
-        classic: "bg-muted border-border",
+        classic: "bg-muted",
       },
       radius: {
         none: "rounded-none [&_[data-slot=segmented-control-item]]:rounded-none",
@@ -36,12 +36,12 @@ const segmentedControlRootVariants = cva(
 )
 
 const segmentedControlItemVariants = cva(
-  "text-foreground/70 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring inline-flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-transparent font-semibold whitespace-nowrap transition-all focus-visible:ring-[3px] focus-visible:outline-1 disabled:cursor-not-allowed disabled:opacity-50 data-pressed:bg-primary data-pressed:text-primary-foreground data-pressed:shadow-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 inline-flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full font-medium whitespace-nowrap transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 data-pressed:bg-primary data-pressed:text-primary-foreground data-pressed:font-semibold data-pressed:shadow-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       size: {
-        "1": "px-2 text-xs",
-        "2": "px-3 text-sm",
+        "1": "px-2.5 text-[0.75rem]",
+        "2": "px-3.5 text-[0.8125rem]",
         "3": "px-4 text-sm",
       },
     },
