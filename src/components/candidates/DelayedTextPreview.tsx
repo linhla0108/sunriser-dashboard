@@ -95,7 +95,7 @@ function HoverableTextPreview({ text, className }: { text: string; className?: s
         sideOffset={10}
         onMouseEnter={keepOpen}
         onMouseLeave={() => scheduleClose()}
-        className="max-w-[min(38rem,calc(100vw-1.5rem))] rounded-2xl px-4 py-3 text-base leading-7 shadow-xl select-text"
+        className="w-[min(52rem,calc(100vw-1.5rem))] rounded-2xl px-4 py-3 text-base leading-7 shadow-xl select-text"
       >
         <p className="text-foreground whitespace-pre-wrap">{text}</p>
       </PopoverContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState, type CSSProperties } from "react"
 import { usePathname } from "next/navigation"
 import { AiDrawer } from "@/components/chat/AiDrawer"
 import { RequireAuth } from "@/components/auth/RequireAuth"
@@ -33,9 +33,29 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
   const registry = useDrawerRegistry()
   const pathname = usePathname()
   const [reportOpen, setReportOpen] = useState(false)
+  const [dockFlowLayout, setDockFlowLayout] = useState(false)
   const toggleChat = useCallback(() => registry.toggle("chat"), [registry])
   const toggleNotes = useCallback(() => registry.toggle("notes"), [registry])
   const openReport = useCallback(() => setReportOpen(true), [])
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)")
+    const syncDockFlowLayout = () => setDockFlowLayout(media.matches)
+
+    syncDockFlowLayout()
+    media.addEventListener("change", syncDockFlowLayout)
+    return () => media.removeEventListener("change", syncDockFlowLayout)
+  }, [])
+
+  const workspaceInsetStyle = {
+    "--v2-docked-width": `${registry.dockedWidth}px`,
+    ...(dockFlowLayout
+      ? {
+          flex: "0 0 auto",
+          width: "calc(100vw - var(--sidebar-width) - var(--v2-docked-width))",
+        }
+      : {}),
+  } as CSSProperties
 
   return (
     <SidebarProvider
@@ -53,8 +73,9 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
             <Sidebar />
           </div>
           <SidebarInset
-            className="min-w-0 overflow-y-auto transition-[width] duration-200 lg:w-[calc(100vw-var(--sidebar-width)-var(--v2-docked-width))]"
-            style={{ "--v2-docked-width": `${registry.dockedWidth}px` } as React.CSSProperties}
+            data-workspace-inset="dock-flow"
+            className="min-w-0 overflow-y-auto transition-[width] duration-200"
+            style={workspaceInsetStyle}
           >
             <div className="sticky top-0 z-30 motion-safe:animate-[workspaceTopbarIn_720ms_cubic-bezier(0.16,1,0.3,1)_80ms_backwards]">
               <TopBar onOpenChat={toggleChat} onOpenNotes={toggleNotes} onCreateReport={openReport} />

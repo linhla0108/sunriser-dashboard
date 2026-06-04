@@ -8,16 +8,30 @@ interface ApplicantTableHeaderProps {
   onCycleSort: (key: CandidateSortKey) => void
   onSetSort: (key: CandidateSortKey, dir: CandidateSortDir) => void
   onResetSort: () => void
+  stickyShadowActive?: boolean
 }
 
-export function ApplicantTableHeader({ sortKey, sortDir, onCycleSort, onSetSort, onResetSort }: ApplicantTableHeaderProps) {
+export function ApplicantTableHeader({
+  sortKey,
+  sortDir,
+  onCycleSort,
+  onSetSort,
+  onResetSort,
+  stickyShadowActive = false,
+}: ApplicantTableHeaderProps) {
   const sortableProps = { sortKey, sortDir, onCycleSort, onSetSort, onResetSort }
+  const nameShadow = stickyShadowActive ? "shadow-[10px_0_18px_-12px_rgba(15,23,42,0.62)]" : "shadow-none"
 
   return (
-    <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
+    <TableHeader className="sticky top-0 z-20 bg-white shadow-[0_1px_0_rgba(15,23,42,0.08)]">
       <TableRow className="border-border bg-white hover:bg-white">
-        <TableHead className="text-muted-foreground w-11 min-w-11 px-0 py-3 text-center text-xs font-semibold tracking-wider uppercase">#</TableHead>
-        <TableHead className="px-3 py-3 text-left">
+        <TableHead className="text-muted-foreground sticky left-0 z-30 w-11 min-w-11 bg-white px-0 py-3 text-center text-xs font-semibold tracking-wider uppercase">
+          #
+        </TableHead>
+        <TableHead
+          data-sticky-shadow={stickyShadowActive ? "true" : "false"}
+          className={`sticky left-11 z-30 min-w-[240px] bg-white px-3 py-3 text-left ${nameShadow}`}
+        >
           <SortableHeader label="Name" col="name" {...sortableProps} />
         </TableHead>
         <TableHead className="px-3 py-3 text-left">

@@ -4,9 +4,10 @@ import { useState, type ReactNode } from "react"
 import { ExternalLink } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
 import { BinaryPreview } from "@/components/candidates/CandidateBinaryPreview"
 import { cn } from "@/lib/utils"
-import { displayHost, openPreviewTarget } from "./previewDialogUtils"
+import { openPreviewTarget } from "./previewDialogUtils"
 import type { CandidatePreviewDialogProps } from "./previewDialogTypes"
 
 export type { CandidatePreviewTarget } from "./previewDialogTypes"
@@ -66,17 +67,17 @@ export function CandidatePreviewDialog({ title, description, targets, triggerLab
             </DialogDescription>
           </DialogHeader>
 
-          <div className="text-muted-foreground flex min-w-0 shrink-0 items-center gap-2 text-xs">
-            <ExternalLink className="size-3.5 shrink-0" />
-            <span className="truncate">{displayHost(activeTarget.url)}</span>
-            <button
+          <div className="flex min-w-0 shrink-0 justify-end">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => openPreviewTarget(activeTarget.url)}
-              className="text-primary ml-auto inline-flex items-center gap-1 text-xs font-medium hover:underline"
+              className="h-8 rounded-full text-xs"
             >
               <ExternalLink className="size-3.5" />
               Open in new tab
-            </button>
+            </Button>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col">

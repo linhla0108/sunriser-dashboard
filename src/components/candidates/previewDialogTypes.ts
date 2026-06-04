@@ -35,6 +35,6 @@ export interface ReactPdfModule {
   }>
 }
 
-export const ZOOM_LEVELS = [25, 50, 75, 100, 125, 150, 175, 200] as const
+export const ZOOM_LEVELS = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200] as const
 export type ZoomLevel = (typeof ZOOM_LEVELS)[number]
 export type Rotation = 0 | 90 | 180 | 270

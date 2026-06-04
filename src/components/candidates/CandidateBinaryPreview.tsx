@@ -1,15 +1,26 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ExternalLink, Globe2, Minus, Plus, RotateCcw, RotateCw } from "lucide-react"
+import { ExternalLink, FileWarning, Loader2, Minus, Plus, RotateCcw, RotateCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DocxPreview } from "@/components/candidates/DocxPreview"
 import { proxiedCandidateFileUrl } from "@/lib/candidates/candidateLinks"
 import type { CandidateFilePreviewMetadata } from "@/lib/candidates/filePreview"
 import { cn } from "@/lib/utils"
-import { displayHost, nextRotation, nextZoomLevel, openPreviewTarget, readPreviewMetadata } from "./previewDialogUtils"
+import { nextRotation, nextZoomLevel, openPreviewTarget, readPreviewMetadata } from "./previewDialogUtils"
 import { ZOOM_LEVELS, type CandidatePreviewTarget, type ReactPdfModule, type Rotation, type ZoomLevel } from "./previewDialogTypes"
+
+function PreviewLoading({ label = "Loading preview..." }: { label?: string }) {
+  return (
+    <div className="text-muted-foreground grid min-h-full place-items-center text-sm" role="status" aria-live="polite">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="text-primary size-5 animate-spin" aria-hidden="true" />
+        <span className="sr-only">{label}</span>
+      </div>
+    </div>
+  )
+}
 
 function PreviewFallback({
   target,
@@ -23,17 +34,16 @@ function PreviewFallback({
   actionLabel?: string
 }) {
   return (
-    <div className="border-border bg-muted/30 flex min-h-0 flex-1 items-center justify-center rounded-xl border p-4 sm:p-6">
-      <div className="flex max-w-lg flex-col items-center gap-3 text-center">
-        <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-full">
-          <Globe2 className="size-5" />
+    <div className="border-border bg-muted/20 flex min-h-0 flex-1 items-center justify-center rounded-xl border p-4 sm:p-6">
+      <div className="flex max-w-md flex-col items-center gap-4 text-center">
+        <div className="bg-background text-primary ring-border flex size-12 items-center justify-center rounded-full ring-1">
+          <FileWarning className="size-5" />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <p className="text-foreground text-sm font-medium">{title}</p>
           <p className="text-muted-foreground text-sm leading-6">{message}</p>
-          <p className="text-muted-foreground text-xs">{displayHost(target.url)}</p>
         </div>
-        <Button type="button" size="sm" onClick={() => openPreviewTarget(target.url)}>
+        <Button type="button" size="sm" className="rounded-full" onClick={() => openPreviewTarget(target.url)}>
           <ExternalLink className="size-3.5" />
           {actionLabel}
         </Button>
@@ -176,7 +186,7 @@ export function BinaryPreview({ target }: { target: CandidatePreviewTarget }) {
   if (status === "loading") {
     return (
       <div className="border-border bg-muted/30 text-muted-foreground grid min-h-0 flex-1 place-items-center rounded-xl border text-sm">
-        Loading file preview...
+        <PreviewLoading label="Loading file preview..." />
       </div>
     )
   }
@@ -346,7 +356,10 @@ function PdfPreview({
   const [containerWidth, setContainerWidth] = useState(900)
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
   const [pdfModule, setPdfModule] = useState<ReactPdfModule | null>(null)
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const documentHostRef = useRef<HTMLDivElement | null>(null)
+  const wheelZoomRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -389,8 +402,50 @@ function PdfPreview({
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (!pdfModule || pageCount === 0) return
+
+    function updateHeight() {
+      const host = documentHostRef.current
+      if (!host) return
+      const maxHeight = Math.max(260, Math.floor(globalThis.innerHeight * 0.9) - 170)
+      const contentHeight = host.scrollHeight + 32
+      setViewportHeight(Math.min(maxHeight, Math.max(240, contentHeight)))
+    }
+
+    const frame = globalThis.requestAnimationFrame(updateHeight)
+    const host = documentHostRef.current
+    if (typeof ResizeObserver === "undefined" || !host) {
+      return () => globalThis.cancelAnimationFrame(frame)
+    }
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(host)
+    return () => {
+      globalThis.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [pageCount, pdfModule, rotation, zoomPercent])
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+
+    function handleWheelZoom(event: WheelEvent) {
+      if (!event.ctrlKey && !event.metaKey) return
+      if (Math.abs(event.deltaY) < 4) return
+      event.preventDefault()
+      const now = Date.now()
+      if (now - wheelZoomRef.current < 80) return
+      wheelZoomRef.current = now
+      onZoomChange(nextZoomLevel(zoomPercent, event.deltaY > 0 ? -1 : 1))
+    }
+
+    element.addEventListener("wheel", handleWheelZoom, { passive: false })
+    return () => element.removeEventListener("wheel", handleWheelZoom)
+  }, [onZoomChange, zoomPercent])
+
   return (
-    <div className="border-border bg-muted/40 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border">
+    <div className="border-border bg-muted/40 flex max-h-full min-h-0 flex-col overflow-hidden rounded-xl border">
       <div className="border-border bg-background/80 text-muted-foreground flex items-center justify-between gap-3 border-b px-4 py-2 text-xs">
         <div className="flex items-center gap-3">
           <span>PDF preview</span>
@@ -398,7 +453,12 @@ function PdfPreview({
         </div>
         <ZoomControls zoomPercent={zoomPercent} onZoomChange={onZoomChange} rotation={rotation} onRotationChange={onRotationChange} />
       </div>
-      <div ref={containerRef} className="min-h-0 flex-1 overflow-auto p-4">
+      <div
+        ref={containerRef}
+        data-testid="pdf-preview-viewport"
+        className="min-h-0 overflow-auto p-4"
+        style={viewportHeight ? { height: viewportHeight } : undefined}
+      >
         {status === "error" ? (
           <PreviewFallback
             target={target}
@@ -407,29 +467,31 @@ function PdfPreview({
             actionLabel="Open PDF"
           />
         ) : !pdfModule ? (
-          <div className="text-muted-foreground grid min-h-full place-items-center text-sm">Loading PDF preview...</div>
+          <PreviewLoading label="Loading PDF preview..." />
         ) : (
-          <pdfModule.Document
-            file={previewUrl}
-            loading={<div className="text-muted-foreground grid min-h-full place-items-center text-sm">Loading PDF preview...</div>}
-            onLoadSuccess={payload => {
-              setPageCount(payload.numPages)
-              setStatus("ready")
-            }}
-            onLoadError={() => setStatus("error")}
-            className="grid justify-center gap-4"
-          >
-            {Array.from({ length: pageCount || 0 }, (_, index) => (
-              <pdfModule.Page
-                key={index + 1}
-                pageNumber={index + 1}
-                width={Math.max(240, Math.floor((containerWidth * zoomPercent) / 100))}
-                rotate={rotation}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-              />
-            ))}
-          </pdfModule.Document>
+          <div ref={documentHostRef} className="grid justify-center">
+            <pdfModule.Document
+              file={previewUrl}
+              loading={<PreviewLoading label="Loading PDF preview..." />}
+              onLoadSuccess={payload => {
+                setPageCount(payload.numPages)
+                setStatus("ready")
+              }}
+              onLoadError={() => setStatus("error")}
+              className="grid justify-center gap-4"
+            >
+              {Array.from({ length: pageCount || 0 }, (_, index) => (
+                <pdfModule.Page
+                  key={index + 1}
+                  pageNumber={index + 1}
+                  width={Math.max(240, Math.floor((containerWidth * zoomPercent) / 100))}
+                  rotate={rotation}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                />
+              ))}
+            </pdfModule.Document>
+          </div>
         )}
       </div>
     </div>

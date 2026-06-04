@@ -248,6 +248,13 @@
   }
 }
 
+@media (min-width: 1024px) {
+  [data-workspace-inset="dock-flow"] {
+    flex: 0 0 auto !important;
+    width: calc(100vw - var(--sidebar-width) - var(--v2-docked-width)) !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

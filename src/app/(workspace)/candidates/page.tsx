@@ -170,7 +170,7 @@ export default function CandidatesPage() {
 
   return (
     <>
-      <div className="p-3 pb-36 sm:p-4 sm:pb-28 lg:p-6 lg:pb-28">
+      <div className="p-3 pb-44 sm:p-4 sm:pb-36 lg:p-6 lg:pb-36">
         {uploadSession ? (
           <div data-cid="uploaded-candidates-banner" className="mb-4 rounded-2xl border border-[#e2e2e2] bg-[#f9f9f9] p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -203,8 +203,6 @@ export default function CandidatesPage() {
           resultFilter={resultFilter}
           applicants={applicants}
           hasFilters={hasFilters}
-          total={applicants.length}
-          filteredCount={filtered.length}
           onSearchChange={setSearch}
           onPositionChange={setPositionFilter}
           onBatchChange={setBatchFilter}
@@ -266,7 +264,16 @@ export default function CandidatesPage() {
         ) : null}
         {urlState.view === "chart" ? <ChartView data={filtered} /> : null}
       </div>
-      <ViewPillNav view={urlState.view} onViewChange={view => updateUrlState({ view })} pagination={{ canGoPrev, canGoNext, goPrev, goNext }} />
+      <ViewPillNav
+        view={urlState.view}
+        onViewChange={view => updateUrlState({ view })}
+        pagination={{
+          canGoPrev,
+          canGoNext,
+          goPrev,
+          goNext,
+        }}
+      />
       <ApplicantDetailDrawer
         applicant={detailApplicant}
         open={!!detailApplicant}

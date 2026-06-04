@@ -146,4 +146,24 @@ describe("WorkspaceShell keyboard shortcuts", () => {
     expect(container.querySelector('[class*="workspaceTopbarIn"]')).toBeInTheDocument()
     expect(container.querySelector('[class*="workspaceContentIn"]')).toBeInTheDocument()
   })
+
+  it("reserves workspace flow width for docked drawers", async () => {
+    localStorage.setItem("v2.chat.open", JSON.stringify(true))
+    localStorage.setItem("v2.chat.mode", JSON.stringify("dock"))
+    localStorage.setItem("v2.notes.open", JSON.stringify(true))
+    localStorage.setItem("v2.notes.mode", JSON.stringify("dock"))
+
+    const { container } = render(
+      <WorkspaceShell>
+        <div>page</div>
+      </WorkspaceShell>,
+      { wrapper: Providers }
+    )
+
+    await screen.findByText("page")
+    const inset = container.querySelector('[data-slot="sidebar-inset"]')
+    expect(inset).toBeInTheDocument()
+    expect(inset).toHaveAttribute("data-workspace-inset", "dock-flow")
+    expect(inset).toHaveStyle({ "--v2-docked-width": "404px" })
+  })
 })

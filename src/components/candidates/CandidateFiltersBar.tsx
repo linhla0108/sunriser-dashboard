@@ -34,8 +34,6 @@ interface CandidateFiltersBarProps {
   resultFilter: string
   applicants?: Applicant[]
   hasFilters: boolean
-  total: number
-  filteredCount: number
   onSearchChange: (v: string) => void
   onPositionChange: (v: string) => void
   onBatchChange: (v: string) => void
@@ -56,8 +54,6 @@ export function CandidateFiltersBar({
   resultFilter,
   applicants = [],
   hasFilters,
-  total,
-  filteredCount,
   onSearchChange,
   onPositionChange,
   onBatchChange,
@@ -318,9 +314,9 @@ export function CandidateFiltersBar({
 
   return (
     <>
-      <div className="border-border mb-3 flex flex-wrap items-center gap-2 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur">
+      <div className="border-border/80 mb-3 flex flex-wrap items-center gap-2 rounded-2xl border bg-white/90 p-2 shadow-sm backdrop-blur">
         <div className="relative max-w-xs min-w-[180px] flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+          <Search className="text-primary absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             data-v2-field=""
             data-cid="table-search"
@@ -328,7 +324,7 @@ export function CandidateFiltersBar({
             placeholder="Search name, email, position..."
             value={search}
             onChange={e => onSearchChange(e.target.value)}
-            className="border-border text-foreground placeholder:text-muted-foreground focus-visible:border-primary h-9 rounded-2xl bg-white/80 pr-4 pl-9 text-sm backdrop-blur"
+            className="border-border/80 text-foreground focus-visible:border-primary h-9 rounded-2xl bg-white pr-4 pl-9 text-sm shadow-none placeholder:text-[#767676]"
           />
         </div>
 
@@ -339,7 +335,7 @@ export function CandidateFiltersBar({
             options={positionOptions}
             onValueChange={v => onPositionChange(v === "all" ? "" : v)}
             placeholder={positionLabel}
-            className="text-muted-foreground focus-visible:border-primary h-9 w-[180px] rounded-2xl bg-white/80 backdrop-blur"
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[180px] rounded-2xl bg-white"
           />
         </div>
 
@@ -350,7 +346,7 @@ export function CandidateFiltersBar({
             options={batchOptions}
             onValueChange={v => onBatchChange(v === "all" ? "" : v)}
             placeholder={batchLabel}
-            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white"
           />
         </div>
 
@@ -361,7 +357,7 @@ export function CandidateFiltersBar({
             options={resultOptions}
             onValueChange={v => onResultChange(v === "all" ? "" : v)}
             placeholder={resultLabel}
-            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white/80 backdrop-blur"
+            className="text-muted-foreground focus-visible:border-primary h-9 w-[132px] rounded-2xl bg-white"
           />
         </div>
 
@@ -370,7 +366,7 @@ export function CandidateFiltersBar({
           variant="outline"
           onClick={() => setMobileFilterOpen(true)}
           data-v2-field=""
-          className="text-muted-foreground h-9 rounded-2xl bg-white/80 backdrop-blur sm:hidden"
+          className="text-muted-foreground h-9 rounded-2xl bg-white sm:hidden"
         >
           <SlidersHorizontal data-icon="inline-start" />
           {activeCount > 0 && (
@@ -391,11 +387,7 @@ export function CandidateFiltersBar({
           </Button>
         ) : null}
 
-        {bulkActions ?? (
-          <span className="text-muted-foreground ml-auto text-xs font-medium">
-            {filteredCount} of {total}
-          </span>
-        )}
+        {bulkActions}
       </div>
 
       {mobileFilterOpen && (
@@ -436,7 +428,7 @@ export function CandidateFiltersBar({
                   options={positionOptions}
                   onValueChange={v => onPositionChange(v === "all" ? "" : v)}
                   placeholder={positionLabel}
-                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white"
                 />
               </div>
               <div>
@@ -447,7 +439,7 @@ export function CandidateFiltersBar({
                   options={batchOptions}
                   onValueChange={v => onBatchChange(v === "all" ? "" : v)}
                   placeholder={batchLabel}
-                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white"
                 />
               </div>
               <div>
@@ -458,7 +450,7 @@ export function CandidateFiltersBar({
                   options={resultOptions}
                   onValueChange={v => onResultChange(v === "all" ? "" : v)}
                   placeholder={resultLabel}
-                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white/80 backdrop-blur"
+                  className="text-muted-foreground focus-visible:border-primary h-10 w-full rounded-2xl bg-white"
                 />
               </div>
             </div>

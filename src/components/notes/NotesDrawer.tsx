@@ -25,10 +25,12 @@ export function NotesDrawer() {
           </Button>
         </ActionTooltip>
         {items.length === 0 ? (
-          <p className="border-foreground/15 text-muted-foreground rounded-2xl border border-dashed p-5 text-center text-sm">No notes yet.</p>
+          <p className="border-foreground/10 bg-background/45 text-muted-foreground rounded-2xl border p-5 text-center text-sm backdrop-blur-sm">
+            No notes yet.
+          </p>
         ) : null}
         {items.map(note => (
-          <article key={note.id} data-v2-card="" className="border-foreground/10 bg-background/70 rounded-2xl border p-3">
+          <article key={note.id} data-v2-card="" className="border-foreground/10 bg-background/50 rounded-2xl border p-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <input
                 value={note.title}
@@ -51,7 +53,7 @@ export function NotesDrawer() {
               value={note.body}
               onChange={event => updateNote(note.id, { body: event.target.value })}
               placeholder="Write a quick note..."
-              className="border-foreground/10 bg-card text-foreground focus:border-primary mt-2 min-h-28 w-full resize-none rounded-xl border p-2 text-sm outline-none"
+              className="border-foreground/10 bg-background/60 text-foreground focus:border-primary mt-2 min-h-28 w-full resize-none rounded-xl border p-2 text-sm backdrop-blur-sm outline-none"
               data-v2-field=""
             />
             <p className="text-muted-foreground mt-1 text-xs">Saved {new Date(note.updatedAt).toLocaleTimeString()}</p>

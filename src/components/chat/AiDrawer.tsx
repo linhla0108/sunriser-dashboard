@@ -18,7 +18,11 @@ export function AiDrawer() {
           {messages.map(message => (
             <div
               key={message.id}
-              className={`rounded-2xl px-3 py-2 text-sm ${message.role === "assistant" ? "bg-foreground/5 text-foreground" : "bg-primary text-primary-foreground ml-8"}`}
+              className={`rounded-2xl px-3 py-2 text-sm backdrop-blur-sm ${
+                message.role === "assistant"
+                  ? "border-foreground/10 bg-background/50 text-foreground border"
+                  : "bg-primary/95 text-primary-foreground ml-8"
+              }`}
             >
               {message.content}
             </div>
@@ -38,7 +42,7 @@ export function AiDrawer() {
             value={draft}
             onChange={event => setDraft(event.target.value)}
             placeholder="Ask about candidates..."
-            className="border-foreground/10 bg-background/80 text-foreground focus:border-primary h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm outline-none"
+            className="border-foreground/10 bg-background/60 text-foreground focus:border-primary h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm backdrop-blur-sm outline-none"
           />
           <ActionTooltip label="Send message">
             <Button

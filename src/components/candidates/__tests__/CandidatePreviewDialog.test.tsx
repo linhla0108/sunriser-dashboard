@@ -23,7 +23,11 @@ vi.mock("react-pdf", () => ({
       </div>
     )
   },
-  Page: ({ pageNumber }: { pageNumber: number }) => <div>PDF page {pageNumber}</div>,
+  Page: ({ pageNumber, width }: { pageNumber: number; width: number }) => (
+    <div data-testid={`pdf-page-${pageNumber}`} data-width={width}>
+      PDF page {pageNumber}
+    </div>
+  ),
 }))
 
 vi.mock("docx-preview", () => ({
@@ -184,7 +188,7 @@ describe("CandidatePreviewDialog", () => {
 
     expect(await screen.findByRole("button", { name: /reset preview zoom to 100 percent/i })).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: /zoom in preview/i }))
-    expect(screen.getByRole("button", { name: /currently 125 percent/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /currently 110 percent/i })).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: /zoom out preview/i }))
     expect(screen.getByRole("button", { name: /currently 100 percent/i })).toBeInTheDocument()
   })
@@ -243,7 +247,72 @@ describe("CandidatePreviewDialog", () => {
     expect(await screen.findByText("PDF page 1")).toBeInTheDocument()
     expect(screen.getByText("2 pages")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: /zoom in preview/i }))
-    expect(screen.getByRole("button", { name: /currently 125 percent/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /currently 110 percent/i })).toBeInTheDocument()
+  })
+
+  it("supports modifier-gated 10 percent PDF zoom steps with the mouse wheel", async () => {
+    const fetchSpy = vi.fn().mockResolvedValueOnce(
+      new Response(null, {
+        headers: {
+          "content-length": "42",
+          "content-type": "application/pdf",
+        },
+      })
+    )
+    vi.stubGlobal("fetch", fetchSpy)
+
+    render(
+      <CandidatePreviewDialog
+        title="Academic file"
+        triggerLabel="Preview academic file"
+        icon={FileText}
+        targets={[
+          {
+            label: "Academic file",
+            url: "https://api.typeform.com/responses/files/example/transcript.pdf",
+          },
+        ]}
+      />,
+      { wrapper: Providers }
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /preview academic file/i }))
+    expect(await screen.findByText("PDF page 1")).toBeInTheDocument()
+
+    const viewport = screen.getByTestId("pdf-preview-viewport")
+
+    fireEvent.wheel(viewport, { deltaY: -120 })
+    expect(screen.getByRole("button", { name: /currently 100 percent/i })).toBeInTheDocument()
+
+    fireEvent.wheel(viewport, { ctrlKey: true, deltaY: -120 })
+
+    expect(screen.getByRole("button", { name: /currently 110 percent/i })).toBeInTheDocument()
+  })
+
+  it("uses an animated status icon while loading file previews", async () => {
+    const fetchSpy = vi.fn().mockReturnValueOnce(new Promise(() => {}))
+    vi.stubGlobal("fetch", fetchSpy)
+
+    render(
+      <CandidatePreviewDialog
+        title="Academic file"
+        triggerLabel="Preview academic file"
+        icon={FileText}
+        targets={[
+          {
+            label: "Academic file",
+            url: "https://api.typeform.com/responses/files/example/transcript.pdf",
+          },
+        ]}
+      />,
+      { wrapper: Providers }
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: /preview academic file/i }))
+
+    const status = await screen.findByRole("status")
+    expect(status.querySelector(".animate-spin")).toBeInTheDocument()
+    expect(screen.getByText("Loading file preview...")).toHaveClass("sr-only")
   })
 
   it("renders DOCX academic files through the docx preview renderer", async () => {
@@ -314,6 +383,7 @@ describe("CandidatePreviewDialog", () => {
     await userEvent.click(screen.getByRole("button", { name: /preview academic file/i }))
 
     expect(await screen.findByText("This academic file cannot be previewed inline")).toBeInTheDocument()
+    expect(screen.queryByText("api.typeform.com")).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: /open or download file/i }))
     expect(openSpy).toHaveBeenCalledWith("https://api.typeform.com/responses/files/example/transcript.zip", "_blank", "noopener,noreferrer")
   })
@@ -376,6 +446,7 @@ describe("DelayedTextPreview", () => {
     expect(popoverContent).toBeInTheDocument()
     expect(popoverContent).toHaveTextContent(text)
     expect(popoverContent).toHaveClass("select-text")
+    expect(popoverContent).toHaveClass("w-[min(52rem,calc(100vw-1.5rem))]")
 
     fireEvent.mouseLeave(trigger)
     fireEvent.mouseEnter(popoverContent as Element)

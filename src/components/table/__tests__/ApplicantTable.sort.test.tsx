@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import type { Applicant } from "@/lib/types"
@@ -110,6 +110,79 @@ describe("ApplicantTable — 3-state column sort", () => {
       expect(labels.some(l => l?.startsWith(col))).toBe(true)
     }
     expect(labels.some(l => l?.startsWith("Actions"))).toBe(false)
+  })
+
+  it("keeps the number and name columns sticky and hides table row reorder", () => {
+    render(<ApplicantTable data={applicants} />)
+
+    expect(screen.queryByRole("button", { name: /grab row to reorder/i })).not.toBeInTheDocument()
+
+    const headerCells = screen.getAllByRole("columnheader")
+    expect(headerCells[0]).toHaveClass("sticky", "left-0")
+    expect(headerCells[1]).toHaveClass("sticky", "left-11")
+
+    const firstBodyCells = within(screen.getAllByRole("row")[1]).getAllByRole("cell")
+    expect(firstBodyCells[0]).toHaveClass("sticky", "left-0")
+    expect(firstBodyCells[1]).toHaveClass("sticky", "left-11")
+  })
+
+  it("toggles sticky name shadow only after horizontal table scroll", () => {
+    const { container } = render(<ApplicantTable data={applicants} />)
+
+    const tableContainer = container.querySelector('[data-slot="table-container"]') as HTMLDivElement
+    const headerCells = screen.getAllByRole("columnheader")
+    const firstBodyCells = within(screen.getAllByRole("row")[1]).getAllByRole("cell")
+
+    expect(headerCells[1]).toHaveAttribute("data-sticky-shadow", "false")
+    expect(firstBodyCells[1]).toHaveAttribute("data-sticky-shadow", "false")
+
+    Object.defineProperty(tableContainer, "scrollLeft", { configurable: true, value: 24 })
+    fireEvent.scroll(tableContainer)
+
+    expect(headerCells[1]).toHaveAttribute("data-sticky-shadow", "true")
+    expect(firstBodyCells[1]).toHaveAttribute("data-sticky-shadow", "true")
+    expect(headerCells[1]).toHaveClass("shadow-[10px_0_18px_-12px_rgba(15,23,42,0.62)]")
+    expect(firstBodyCells[1]).toHaveClass("shadow-[10px_0_18px_-12px_rgba(15,23,42,0.62)]")
+  })
+
+  it("keeps sticky and normal cells on an opaque neutral hover surface", () => {
+    render(<ApplicantTable data={applicants} />)
+
+    const firstRow = screen.getAllByRole("row")[1]
+    const firstBodyCells = within(firstRow).getAllByRole("cell")
+
+    expect(firstRow).toHaveAttribute("data-row-hover", "neutral-opaque")
+    expect(firstRow).toHaveStyle({
+      "--candidate-row-hover-surface": "var(--muted)",
+    })
+    expect(firstBodyCells[0]).toHaveAttribute("data-sticky-cell", "number")
+    expect(firstBodyCells[1]).toHaveAttribute("data-sticky-cell", "name")
+    expect(firstBodyCells[0]).toHaveClass("bg-[var(--candidate-row-surface)]", "group-hover:bg-[var(--candidate-row-hover-surface)]")
+    expect(firstBodyCells[1]).toHaveClass("bg-[var(--candidate-row-surface)]", "group-hover:bg-[var(--candidate-row-hover-surface)]")
+    expect(firstBodyCells[2]).toHaveClass("group-hover:bg-[var(--candidate-row-hover-surface)]")
+  })
+
+  it("renders rows per page and page count at the table bottom right", () => {
+    const onPageSizeChange = vi.fn()
+
+    render(
+      <ApplicantTable
+        data={applicants}
+        paginationInfo={{
+          start: 0,
+          end: 3,
+          total: 6,
+          currentPage: 1,
+          totalPages: 2,
+          pageSize: 20,
+          onPageSizeChange,
+        }}
+      />
+    )
+
+    expect(screen.getByText("Rows per page")).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: /rows per page/i })).toBeInTheDocument()
+    expect(screen.getByText((_, element) => element?.textContent === "Page 1 / 2")).toBeInTheDocument()
   })
 
   it("starts with Name sorted asc (default initial state)", () => {

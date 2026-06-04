@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode, type UIEvent } from "react"
 import { animate, type JSAnimation } from "animejs"
 import {
   DndContext,
@@ -85,6 +85,7 @@ export default function ApplicantTable({
   const [sortDir, setSortDir] = useState<CandidateSortDir>(initialSort?.dir ?? "asc")
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [selectedPanelMounted, setSelectedPanelMounted] = useState(selectedSectionOpen && selectedData.length > 0)
+  const [tableScrolledX, setTableScrolledX] = useState(false)
   const selectedPanelRef = useRef<HTMLDivElement>(null)
   const selectedPanelAnimationRef = useRef<JSAnimation | null>(null)
   const sortStateRef = useRef<{ sortKey: CandidateSortKey | null; sortDir: CandidateSortDir }>({
@@ -277,6 +278,11 @@ export default function ApplicantTable({
     setActiveDragId(null)
   }
 
+  function handleTableContainerScroll(event: UIEvent<HTMLDivElement>) {
+    const nextScrolledX = event.currentTarget.scrollLeft > 0
+    setTableScrolledX(current => (current === nextScrolledX ? current : nextScrolledX))
+  }
+
   const activeDragSelected = activeDragId ? selectedItems.some(a => a.id === activeDragId) : false
 
   return (
@@ -298,11 +304,21 @@ export default function ApplicantTable({
         >
           <Table
             containerClassName="h-[calc(100dvh-18.5rem)] overflow-auto overscroll-contain sm:h-[calc(100dvh-15.5rem)]"
+            containerProps={{
+              onScroll: handleTableContainerScroll,
+            }}
             className="min-w-[1180px]"
           >
-            <ApplicantTableHeader sortKey={sortKey} sortDir={sortDir} onCycleSort={handleSort} onSetSort={setColumnSort} onResetSort={resetSort} />
+            <ApplicantTableHeader
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onCycleSort={handleSort}
+              onSetSort={setColumnSort}
+              onResetSort={resetSort}
+              stickyShadowActive={tableScrolledX}
+            />
             <SortableContext items={[...selectedItems, ...items].map(a => a.id)} strategy={verticalListSortingStrategy}>
-              <TableBody>
+              <TableBody className="[&_tr[data-cid=candidate-row]:last-child]:border-b">
                 {hasSelectedSection ? (
                   <>
                     <TableRow className="border-border bg-[#fff5f3] hover:bg-[#fff5f3]">
@@ -344,6 +360,7 @@ export default function ApplicantTable({
                                     onBulkRound1={onBulkRound1}
                                     onBulkRound2={onBulkRound2}
                                     onBulkDelete={onBulkDelete}
+                                    stickyShadowActive={tableScrolledX}
                                   />
                                 ))}
                               </tbody>
@@ -378,6 +395,7 @@ export default function ApplicantTable({
                       onBulkRound1={onBulkRound1}
                       onBulkRound2={onBulkRound2}
                       onBulkDelete={onBulkDelete}
+                      stickyShadowActive={tableScrolledX}
                     />
                   ))
                 ) : (

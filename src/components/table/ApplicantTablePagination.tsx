@@ -15,15 +15,8 @@ export function ApplicantTablePagination({ paginationInfo }: { paginationInfo?: 
   if (!paginationInfo) return null
 
   return (
-    <div className="text-muted-foreground mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
-      <div className="flex items-center gap-3">
-        <span>
-          <span className="text-foreground font-medium">
-            {paginationInfo.start + 1}–{paginationInfo.end}
-          </span>
-          {" of "}
-          <span className="text-foreground font-medium">{paginationInfo.total}</span>
-        </span>
+    <div className="mt-3 flex justify-end px-1">
+      <div className="border-border bg-card/80 text-muted-foreground flex flex-wrap items-center justify-end gap-2 rounded-full border px-4 py-2 text-xs shadow-sm">
         {paginationInfo.pageSize !== undefined && paginationInfo.onPageSizeChange ? (
           <div className="flex items-center gap-2">
             <span>Rows per page</span>
@@ -44,13 +37,14 @@ export function ApplicantTablePagination({ paginationInfo }: { paginationInfo?: 
             </Select>
           </div>
         ) : null}
+        <span className="bg-border h-4 w-px" aria-hidden="true" />
+        <span>
+          {"Page "}
+          <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>
+          {" / "}
+          <span className="text-foreground font-medium">{paginationInfo.totalPages}</span>
+        </span>
       </div>
-      <span>
-        {"Page "}
-        <span className="text-foreground font-medium">{paginationInfo.currentPage}</span>
-        {" / "}
-        <span className="text-foreground font-medium">{paginationInfo.totalPages}</span>
-      </span>
     </div>
   )
 }

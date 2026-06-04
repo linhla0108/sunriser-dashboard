@@ -2,8 +2,8 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Eye, GripVertical, FileText } from "lucide-react"
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { Eye, FileText } from "lucide-react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchHighlight } from "@/components/candidates/SearchHighlight"
@@ -31,6 +31,7 @@ interface DraggableRowProps {
   onBulkRound1?: (result: string) => void
   onBulkRound2?: (result: string) => void
   onBulkDelete?: () => void
+  stickyShadowActive?: boolean
 }
 
 function effectiveStatus(a: Applicant): string | undefined {
@@ -53,9 +54,10 @@ export default function DraggableRow({
   onBulkRound1,
   onBulkRound2,
   onBulkDelete,
+  stickyShadowActive = false,
 }: DraggableRowProps) {
   const { has: isPinned, add: pinAdd, remove: pinRemove } = usePinned()
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
     id: applicant.id,
   })
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null)
@@ -119,23 +121,29 @@ export default function DraggableRow({
     setSubMenu(which)
   }
 
+  const status = effectiveStatus(applicant)
+  const showSelectionCheckbox = selectionMode || isSelected
+  const useBulkContext = !!isSelected && selectedCount > 0
+  const rowSurface =
+    status === "Passed" ? "#ecfdf5" : status === "Failed" ? "#fef2f2" : status === "Waiting list" ? "#fffbeb" : isSelected ? "#fff5f3" : "#ffffff"
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  }
-
-  const status = effectiveStatus(applicant)
-  const showSelectionCheckbox = selectionMode || isSelected
-  const useBulkContext = !!isSelected && selectedCount > 0
-  const rowBg =
+    "--candidate-row-surface": rowSurface,
+    "--candidate-row-hover-surface": "var(--muted)",
+  } as CSSProperties
+  const statusStripe =
     status === "Passed"
-      ? "border-l-2 border-l-emerald-300 bg-emerald-50"
+      ? "border-l-2 border-l-emerald-300"
       : status === "Failed"
-        ? "border-l-2 border-l-red-300 bg-red-50"
+        ? "border-l-2 border-l-red-300"
         : status === "Waiting list"
-          ? "border-l-2 border-l-amber-300 bg-amber-50"
-          : ""
+          ? "border-l-2 border-l-amber-300"
+          : "border-l-2 border-l-transparent"
+  const stickyCellBg = "bg-[var(--candidate-row-surface)] group-hover:bg-[var(--candidate-row-hover-surface)]"
+  const regularCellBg = "group-hover:bg-[var(--candidate-row-hover-surface)] transition-colors"
+  const nameShadow = stickyShadowActive ? "shadow-[10px_0_18px_-12px_rgba(15,23,42,0.62)]" : "shadow-none"
   const selectedRowStyle = isSelected
     ? status === "Passed"
       ? "shadow-[inset_2px_0_0_rgb(110,231,183),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
@@ -143,7 +151,7 @@ export default function DraggableRow({
         ? "shadow-[inset_2px_0_0_rgb(252,165,165),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
         : status === "Waiting list"
           ? "shadow-[inset_2px_0_0_rgb(252,211,77),inset_0_0_0_1px_rgba(255,85,51,0.24)]"
-          : "bg-[#fff5f3] shadow-[inset_2px_0_0_#FF5533,inset_0_0_0_1px_rgba(255,85,51,0.22)]"
+          : "shadow-[inset_2px_0_0_#FF5533,inset_0_0_0_1px_rgba(255,85,51,0.22)]"
     : ""
   const portfolioLinks = candidateLinksFromApplicant(applicant)
   const academicTargets = applicant.academicFile ? [{ label: "Academic file", url: applicant.academicFile }] : []
@@ -163,10 +171,15 @@ export default function DraggableRow({
         ref={setNodeRef}
         style={style}
         onContextMenu={handleContextMenu}
+        data-cid="candidate-row"
         data-selected={isSelected ? "true" : undefined}
-        className={`group hover:bg-muted/70 border-border border-b text-sm transition-colors ${isDragging ? "cursor-grabbing shadow-lg" : ""} ${rowBg} ${selectedRowStyle}`}
+        data-row-hover="neutral-opaque"
+        className={`group border-border border-b bg-[var(--candidate-row-surface)] text-sm transition-colors hover:bg-[var(--candidate-row-hover-surface)] ${isDragging ? "shadow-lg" : ""} ${selectedRowStyle}`}
       >
-        <td className="text-foreground w-11 min-w-11 px-0 py-3 text-center font-mono text-xs">
+        <td
+          data-sticky-cell="number"
+          className={`text-foreground sticky left-0 z-[3] w-11 min-w-11 px-0 py-3 text-center font-mono text-xs transition-colors ${stickyCellBg} ${statusStripe}`}
+        >
           <div className="relative mx-auto h-4 w-6">
             <span
               className={`absolute inset-0 flex items-center justify-center transition-opacity ${
@@ -192,7 +205,11 @@ export default function DraggableRow({
         </td>
 
         {/* Name — always visible */}
-        <td className="px-3 py-3">
+        <td
+          data-sticky-cell="name"
+          data-sticky-shadow={stickyShadowActive ? "true" : "false"}
+          className={`sticky left-11 z-[3] min-w-[240px] px-3 py-3 transition-colors ${nameShadow} ${stickyCellBg}`}
+        >
           <div>
             <p className="text-foreground max-w-[140px] truncate font-medium sm:max-w-none">
               <SearchHighlight text={applicant.name} query={searchQuery} />
@@ -204,21 +221,21 @@ export default function DraggableRow({
         </td>
 
         {/* Position — always visible */}
-        <td className="px-3 py-3">
+        <td className={`px-3 py-3 ${regularCellBg}`}>
           <span className="text-foreground text-xs whitespace-nowrap">
             <SearchHighlight text={applicant.position1.replace(" Intern", "")} query={searchQuery} />
           </span>
         </td>
 
         {/* University — desktop only */}
-        <td className="hidden px-3 py-3 lg:table-cell">
+        <td className={`hidden px-3 py-3 lg:table-cell ${regularCellBg}`}>
           <span className="text-foreground text-xs">
             <SearchHighlight text={applicant.university} query={searchQuery} />
           </span>
         </td>
 
         {/* GPA — tablet+ */}
-        <td className="hidden px-3 py-3 text-center sm:table-cell">
+        <td className={`hidden px-3 py-3 text-center sm:table-cell ${regularCellBg}`}>
           <span
             className={`text-sm font-semibold ${applicant.gpa >= 8.5 ? "text-foreground" : applicant.gpa >= 7.0 ? "text-muted-foreground" : "text-amber-600"}`}
           >
@@ -227,7 +244,7 @@ export default function DraggableRow({
         </td>
 
         {/* Academic file — desktop only */}
-        <td className="hidden px-3 py-3 text-center lg:table-cell">
+        <td className={`hidden px-3 py-3 text-center lg:table-cell ${regularCellBg}`}>
           <CandidatePreviewDialog
             title={`${applicant.name} academic file`}
             targets={academicTargets}
@@ -237,12 +254,12 @@ export default function DraggableRow({
         </td>
 
         {/* Description — wide desktop only */}
-        <td className="hidden max-w-[260px] px-3 py-3 xl:table-cell">
+        <td className={`hidden max-w-[260px] px-3 py-3 xl:table-cell ${regularCellBg}`}>
           <DelayedTextPreview text={applicant.experienceDesc} />
         </td>
 
         {/* Portfolio — desktop only */}
-        <td className="hidden px-3 py-3 text-center lg:table-cell">
+        <td className={`hidden px-3 py-3 text-center lg:table-cell ${regularCellBg}`}>
           {portfolioLinks.length > 0 ? (
             <div className="inline-flex max-w-[88px] flex-wrap items-center justify-center gap-1">
               {portfolioLinks.map((url, linkIndex) => (
@@ -260,27 +277,27 @@ export default function DraggableRow({
         </td>
 
         {/* Message — wide desktop only */}
-        <td className="hidden max-w-[260px] px-3 py-3 xl:table-cell">
+        <td className={`hidden max-w-[260px] px-3 py-3 xl:table-cell ${regularCellBg}`}>
           <DelayedTextPreview text={applicant.sunStudioMessage} />
         </td>
 
         {/* Year — desktop only */}
-        <td className="hidden px-3 py-3 text-center lg:table-cell">
-          <span className="text-muted-foreground text-xs">{applicant.yearOfStudy.replace("Năm ", "")}</span>
+        <td className={`hidden px-3 py-3 text-center lg:table-cell ${regularCellBg}`}>
+          <span className="text-muted-foreground text-sm font-medium tabular-nums">{applicant.yearOfStudy.replace("Năm ", "")}</span>
         </td>
 
         {/* Batch — tablet+ */}
-        <td className="hidden px-3 py-3 text-center sm:table-cell">
+        <td className={`hidden px-3 py-3 text-center sm:table-cell ${regularCellBg}`}>
           <BatchChip value={applicant.batch} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { batch: v }) : undefined} />
         </td>
 
         {/* PIC — desktop only */}
-        <td className="hidden px-3 py-3 lg:table-cell">
+        <td className={`hidden px-3 py-3 lg:table-cell ${regularCellBg}`}>
           <PicChip value={applicant.pic} onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { pic: v }) : undefined} />
         </td>
 
         {/* Round 1 — always visible */}
-        <td className="px-3 py-3">
+        <td className={`px-3 py-3 ${regularCellBg}`}>
           <RoundChip
             value={applicant.round1Result}
             onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round1Result: v }) : undefined}
@@ -288,27 +305,15 @@ export default function DraggableRow({
         </td>
 
         {/* Round 2 — tablet+ */}
-        <td className="hidden px-3 py-3 sm:table-cell">
+        <td className={`hidden px-3 py-3 sm:table-cell ${regularCellBg}`}>
           <RoundChip
             value={applicant.round2Result}
             onChange={onUpdateApplicant ? v => onUpdateApplicant(applicant.id, { round2Result: v }) : undefined}
           />
         </td>
 
-        <td className="px-3 py-3 pr-4">
+        <td className={`px-3 py-3 pr-4 ${regularCellBg}`}>
           <div className="flex items-center justify-end gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              {...attributes}
-              {...listeners}
-              className="text-muted-foreground hover:text-muted-foreground cursor-grab touch-none rounded-full active:cursor-grabbing"
-              aria-label="Grab row to reorder"
-              title="Grab row to reorder"
-            >
-              <GripVertical />
-            </Button>
             {pinAction}
             <Button
               type="button"
