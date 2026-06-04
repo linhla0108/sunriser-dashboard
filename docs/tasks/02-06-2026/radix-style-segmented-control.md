@@ -23,7 +23,7 @@ Replace the announcement filter tabs with a dedicated segmented control that fol
 
 ## Report
 
-Status: Done | Commit: pending
+Status: Done | Commit: 82f89a8
 
 Added a local `SegmentedControl` primitive with `Root` and `Item` exports, following the Radix Themes component shape without adding `@radix-ui/themes` as a dependency. The announcement popup now uses this segmented control for `Unread`, `Pinned`, and `All`; shared `Tabs` was restored to its tab styling.
 

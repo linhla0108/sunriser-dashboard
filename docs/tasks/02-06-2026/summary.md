@@ -1,11 +1,14 @@
 # Tasks - 02 June 2026
 
-| #   | Task                                | Tag         | Status      | Note                                                                    |
-| --- | ----------------------------------- | ----------- | ----------- | ----------------------------------------------------------------------- |
-| 1   | Announcement Center Redesign Spec   | ui/spec     | In Progress | Replacing the header popup interaction contract                         |
-| 2   | Shadcn Calendar Primitive Alignment | ui/fix      | Done        | Replace custom calendar wrapper with shadcn shape                       |
-| 3   | Shared iOS-Style Segmented Tabs     | ui/refactor | Superseded  | Replaced by a dedicated segmented control                               |
-| 4   | Radix-Style Segmented Control       | ui/refactor | Done        | Local Root/Item primitive for announcement filter                       |
-| 5   | Combined Date-Time Range Picker     | ui/fix      | Done        | Replace two announcement datetime pickers                               |
-| 6   | Full Codebase Audit Follow-Up       | repo/chore  | Done        | Executed safe findings from the read-only audit                         |
-| 7   | Complexity And Dependency Cleanup   | repo/chore  | Done        | Removed lab, disabled XLSX parser, split oversized implementation files |
+| #   | Task                                | Tag            | Status      | Note                                                                    |
+| --- | ----------------------------------- | -------------- | ----------- | ----------------------------------------------------------------------- |
+| 1   | Announcement Center Redesign Spec   | ui/spec        | In Progress | Replacing the header popup interaction contract                         |
+| 2   | Shadcn Calendar Primitive Alignment | ui/fix         | Done        | Replace custom calendar wrapper with shadcn shape                       |
+| 3   | Shared iOS-Style Segmented Tabs     | ui/refactor    | Superseded  | Replaced by a dedicated segmented control                               |
+| 4   | Radix-Style Segmented Control       | ui/refactor    | Done        | Local Root/Item primitive for announcement filter                       |
+| 5   | Combined Date-Time Range Picker     | ui/fix         | Done        | Replace two announcement datetime pickers                               |
+| 6   | Full Codebase Audit Follow-Up       | repo/chore     | Done        | Executed safe findings from the read-only audit                         |
+| 7   | Complexity And Dependency Cleanup   | repo/chore     | Done        | Removed lab, disabled XLSX parser, split oversized implementation files |
+| 8   | Candidates UI Annotation Fix        | candidates/fix | Done        | Polish table, filters, nav, and preview annotations                     |
+| 9   | Announcement Create Modal           | ui/refactor    | Done        | Move announcement creation into inbox modal                             |
+| 10  | Candidate Preview And Pager Polish  | candidates/fix | Done        | Require modifier-wheel PDF zoom and split table paging controls         |

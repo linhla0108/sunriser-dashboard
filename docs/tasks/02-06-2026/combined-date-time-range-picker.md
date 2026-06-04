@@ -25,7 +25,7 @@ Replace the two announcement datetime controls with one compact range picker tha
 
 ## Report
 
-Status: Done
+Status: Done | Commit: 82f89a8
 
 Added a shared `DateTimeRangePicker` and replaced the announcement form's two separate datetime controls with one active-window picker. The new picker keeps open-ended windows, uses the shared shadcn-style primitives, supports range date selection, preset time chips, exact time input, per-side clear actions, and clear-all.
 

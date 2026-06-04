@@ -22,7 +22,7 @@ Align the shared calendar primitive with the shadcn Calendar component contract 
 
 ## Report
 
-Status: Done
+Status: Done | Commit: 82f89a8
 
 Aligned the shared Calendar primitive with the shadcn component structure. The component now renders calendar day buttons through the local `Button` primitive and keeps `react-day-picker` as the underlying shadcn dependency.
 
